@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="b0e063aa-5f23-4c09-b845-b72058de053f" name="Changes" comment="customeproperties">
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/.editorconfig" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/bpmn-modeler/bpmn-modeler.component.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/bpmn-modeler/bpmn-modeler.component.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/bpmn-modeler/bpmn-modeler.component.spec.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/bpmn-modeler/bpmn-modeler.component.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/dashboard/dashboard.component.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/dashboard/dashboard.component.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/dashboard/dashboard.component.spec.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/dashboard/dashboard.component.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/dialog-box/dialog-box.component.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/dialog-box/dialog-box.component.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/dialog-box/dialog-box.component.spec.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/dialog-box/dialog-box.component.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/layout/layout.component.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/layout/layout.component.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/layout/layout.component.spec.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/layout/layout.component.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/list-files/list-files.component.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/list-files/list-files.component.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/list-files/list-files.component.spec.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/list-files/list-files.component.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/login/login.component.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/login/login.component.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/login/login.component.spec.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/login/login.component.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/register/register.component.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/register/register.component.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/register/register.component.spec.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/register/register.component.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/settings/settings.component.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/settings/settings.component.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/settings/settings.component.spec.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/settings/settings.component.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/un-save-dialog/un-save-dialog.component.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/un-save-dialog/un-save-dialog.component.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/un-save-dialog/un-save-dialog.component.spec.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/un-save-dialog/un-save-dialog.component.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/services/authentication.service.spec.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/services/authentication.service.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/services/bpmn.service.spec.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/services/bpmn.service.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/services/file.service.spec.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/services/file.service.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/services/integration.service.spec.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/services/integration.service.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/services/local-storage.service.spec.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/services/local-storage.service.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/services/notification.service.spec.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/services/notification.service.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/services/settings.service.spec.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/services/settings.service.ts" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Enum" />
+        <option value="Interface" />
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;Paaraskevi&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Paaraskevi/bpmnProject.git&quot;,
+    &quot;accountId&quot;: &quot;d068adde-f1a1-4a53-9efc-1f662dbd9362&quot;
+  }
+}</component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="mavenHomeTypeForPersistence" value="WRAPPER" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 4
+}</component>
+  <component name="ProjectId" id="2xlO2FntQDCaDSsdQ4t1CJGtggN" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.Bpmn.executor": "Run",
+    "Gradle.bpmnJavaBackend [:bpmnProject.akon.bpmnJavaBackend.BpmnJavaBackendApplication.main()].executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/pasp/Bpmn-project/bpmnJavaBackend",
+    "settings.editor.selected.configurable": "reference.projectsettings.compiler.annotationProcessors"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="ExtractSuperBase.RECENT_KEYS">
+      <recent name="bpmnProject.akon.bpmnJavaBackend.Config" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="Bpmn" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" value="bpmnProject.akon.bpmnJavaBackend.BpmnJavaBackendApplication" />
+      <module name="bpmnJavaBackend" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="b0e063aa-5f23-4c09-b845-b72058de053f" name="Changes" comment="" />
+      <created>1748508985589</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1748508985589</updated>
+    </task>
+    <task id="LOCAL-00001" summary="sofar">
+      <option name="closed" value="true" />
+      <created>1748600227470</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1748600227470</updated>
+    </task>
+    <task id="LOCAL-00002" summary="chenge for register">
+      <option name="closed" value="true" />
+      <created>1748843830379</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1748843830379</updated>
+    </task>
+    <task id="LOCAL-00003" summary="chenge for register">
+      <option name="closed" value="true" />
+      <created>1748846173121</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1748846173121</updated>
+    </task>
+    <task id="LOCAL-00004" summary="chenge for register">
+      <option name="closed" value="true" />
+      <created>1748848655957</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1748848655957</updated>
+    </task>
+    <task id="LOCAL-00005" summary="registerdone">
+      <option name="closed" value="true" />
+      <created>1748856260108</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1748856260108</updated>
+    </task>
+    <task id="LOCAL-00006" summary="registerdone">
+      <option name="closed" value="true" />
+      <created>1748859847794</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1748859847794</updated>
+    </task>
+    <task id="LOCAL-00007" summary="login">
+      <option name="closed" value="true" />
+      <created>1748861886905</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1748861886905</updated>
+    </task>
+    <task id="LOCAL-00008" summary="trying to get roles">
+      <option name="closed" value="true" />
+      <created>1748866027146</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1748866027146</updated>
+    </task>
+    <task id="LOCAL-00009" summary="trying to get roles">
+      <option name="closed" value="true" />
+      <created>1748935027791</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1748935027791</updated>
+    </task>
+    <task id="LOCAL-00010" summary="logindoneinroles-token">
+      <option name="closed" value="true" />
+      <created>1748944382136</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1748944382136</updated>
+    </task>
+    <task id="LOCAL-00011" summary="logindoneinroles-token">
+      <option name="closed" value="true" />
+      <created>1748958783872</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1748958783872</updated>
+    </task>
+    <task id="LOCAL-00012" summary="logindoneinroles-token">
+      <option name="closed" value="true" />
+      <created>1748958819665</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1748958819665</updated>
+    </task>
+    <task id="LOCAL-00013" summary="roles-done">
+      <option name="closed" value="true" />
+      <created>1749551011247</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1749551011247</updated>
+    </task>
+    <task id="LOCAL-00014" summary="roles-done">
+      <option name="closed" value="true" />
+      <created>1749551035159</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1749551035159</updated>
+    </task>
+    <task id="LOCAL-00015" summary="trying to exportpdf">
+      <option name="closed" value="true" />
+      <created>1749558162569</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1749558162569</updated>
+    </task>
+    <task id="LOCAL-00016" summary="done for the save file - not pdf">
+      <option name="closed" value="true" />
+      <created>1749561653438</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1749561653438</updated>
+    </task>
+    <task id="LOCAL-00017" summary="done for the save file - not pdf">
+      <option name="closed" value="true" />
+      <created>1749563283607</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1749563283607</updated>
+    </task>
+    <task id="LOCAL-00018" summary="settings thing">
+      <option name="closed" value="true" />
+      <created>1750062756819</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1750062756820</updated>
+    </task>
+    <task id="LOCAL-00019" summary="change the rights adding a settings component">
+      <option name="closed" value="true" />
+      <created>1750062967741</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1750062967741</updated>
+    </task>
+    <task id="LOCAL-00020" summary="change the rights adding a settings component">
+      <option name="closed" value="true" />
+      <created>1750068176886</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1750068176886</updated>
+    </task>
+    <task id="LOCAL-00021" summary="searchdoneit">
+      <option name="closed" value="true" />
+      <created>1750077449426</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1750077449426</updated>
+    </task>
+    <task id="LOCAL-00022" summary="customeproperties">
+      <option name="closed" value="true" />
+      <created>1750755887498</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1750755887498</updated>
+    </task>
+    <task id="LOCAL-00023" summary="customeproperties">
+      <option name="closed" value="true" />
+      <created>1750768657263</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1750768657263</updated>
+    </task>
+    <option name="localTasksCounter" value="24" />
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="sofar" />
+    <MESSAGE value="chenge for register" />
+    <MESSAGE value="registerdone" />
+    <MESSAGE value="login" />
+    <MESSAGE value="trying to get roles" />
+    <MESSAGE value="logindoneinroles-token" />
+    <MESSAGE value="roles-done" />
+    <MESSAGE value="trying to exportpdf" />
+    <MESSAGE value="done for the save file - not pdf" />
+    <MESSAGE value="settings thing" />
+    <MESSAGE value="change the rights adding a settings component" />
+    <MESSAGE value="searchdoneit" />
+    <MESSAGE value="customeproperties" />
+    <option name="LAST_COMMIT_MESSAGE" value="customeproperties" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <breakpoint enabled="true" type="java-exception">
+          <properties class="org.hibernate.QueryParameterException" package="org.hibernate" />
+          <option name="timeStamp" value="1" />
+        </breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>

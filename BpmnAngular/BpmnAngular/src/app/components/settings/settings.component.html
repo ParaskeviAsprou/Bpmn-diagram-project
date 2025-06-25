@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings Component Template</title>
+
+</head>
+<body>
+    <!-- This is the Angular template content -->
+    <div class="settings-container">
+        <!-- Settings Header -->
+        <div class="settings-header">
+            <h1>Settings</h1>
+            <p>Manage your account settings and preferences</p>
+        </div>
+
+        <!-- Permission Notice -->
+        <div *ngIf="isViewerOnly" class="permission-notice">
+            <strong>Notice:</strong> You have view-only access. Contact an administrator to modify settings.
+        </div>
+
+        <!-- Loading State -->
+        <div *ngIf="loading" class="form-section">
+            <div style="text-align: center; padding: 40px;">
+                <div class="loading-spinner"></div>
+                <p style="margin-top: 16px; color: #7f8c8d;">Loading settings...</p>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div *ngIf="!loading">
+            <!-- Tab Navigation -->
+            <div class="tab-navigation">
+                <button 
+                    class="tab-button" 
+                    [class.active]="activeTab === 'profile'"
+                    (click)="setActiveTab('profile')">
+                    Profile
+                </button>
+                <button 
+                    class="tab-button" 
+                    [class.active]="activeTab === 'preferences'"
+                    (click)="setActiveTab('preferences')">
+                   
+                    Preferences
+                </button>
+                <button 
+                    class="tab-button" 
+                    [class.active]="activeTab === 'security'"
+                    (click)="setActiveTab('security')">
+      
+                    Security
+                </button>
+                <button 
+                    class="tab-button" 
+                    [class.active]="activeTab === 'password'"
+                    (click)="setActiveTab('password')">
+
+                    Password
+                </button>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Profile Tab -->
+                <div class="tab-panel" [class.active]="activeTab === 'profile'">
+                    <form [formGroup]="profileForm" (ngSubmit)="onSaveProfile()">
+                        <div class="form-section">
+                            <h3>Personal Information</h3>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="firstName">First Name *</label>
+                                    <input 
+                                        type="text" 
+                                        id="firstName"
+                                        formControlName="firstName"
+                                        [disabled]="isFormDisabled"
+                                        placeholder="Enter your first name">
+                                    <div *ngIf="profileForm.get('firstName')?.invalid && profileForm.get('firstName')?.touched" class="error-message">
+                                        First name is required
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="lastName">Last Name *</label>
+                                    <input 
+                                        type="text" 
+                                        id="lastName"
+                                        formControlName="lastName"
+                                        [disabled]="isFormDisabled"
+                                        placeholder="Enter your last name">
+                                    <div *ngIf="profileForm.get('lastName')?.invalid && profileForm.get('lastName')?.touched" class="error-message">
+                                        Last name is required
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="email">Email Address *</label>
+                                    <input 
+                                        type="email" 
+                                        id="email"
+                                        formControlName="email"
+                                        [disabled]="isFormDisabled"
+                                        placeholder="Enter your email address">
+                                    <div *ngIf="profileForm.get('email')?.invalid && profileForm.get('email')?.touched" class="error-message">
+                                        Please enter a valid email address
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="phone">Phone Number</label>
+                                    <input 
+                                        type="tel" 
+                                        id="phone"
+                                        formControlName="phone"
+                                        [disabled]="isFormDisabled"
+                                        placeholder="Enter your phone number">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group full-width">
+                                    <label for="address">Address</label>
+                                    <textarea 
+                                        id="address"
+                                        formControlName="address"
+                                        [disabled]="isFormDisabled"
+                                        rows="3"
+                                        placeholder="Enter your address"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group full-width">
+                                    <label for="profilePicture">Profile Picture URL</label>
+                                    <input 
+                                        type="text" 
+                                        id="profilePicture"
+                                        formControlName="profilePicture"
+                                        [disabled]="isFormDisabled"
+                                        placeholder="Enter profile picture URL">
+                                </div>
+                            </div>
+
+                            <div class="button-group" *ngIf="!isFormDisabled">
+                                <button type="button" class="btn btn-secondary">
+                                    Cancel
+                                </button>
+                                <button 
+                                    type="submit" 
+                                    class="btn btn-primary"
+                                    
+                                    [disabled]="profileForm.invalid || saving">
+                                    <div *ngIf="saving" class="loading-spinner"></div>
+                                    Save Profile
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Preferences Tab -->
+                <div class="tab-panel" [class.active]="activeTab === 'preferences'">
+                    <form [formGroup]="preferencesForm" (ngSubmit)="onSavePreferences()">
+                        <div class="form-section">
+                            <h3>Application Preferences</h3>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="theme">Theme</label>
+                                    <select 
+                                        id="theme"
+                                        formControlName="theme"
+                                        [disabled]="isFormDisabled">
+                                        <option value="light">Light</option>
+                                        <option value="dark">Dark</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="language">Language</label>
+                                    <select 
+                                        id="language"
+                                        formControlName="language"
+                                        [disabled]="isFormDisabled">
+                                        <option *ngFor="let lang of languages" [value]="lang.code">
+                                            {{ lang.name }}
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="timezone">Timezone</label>
+                                    <select 
+                                        id="timezone"
+                                        formControlName="timezone"
+                                        [disabled]="isFormDisabled">
+                                        <option *ngFor="let tz of timezones" [value]="tz.value">
+                                            {{ tz.name }}
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="dateFormat">Date Format</label>
+                                    <select 
+                                        id="dateFormat"
+                                        formControlName="dateFormat"
+                                        [disabled]="isFormDisabled">
+                                        <option *ngFor="let format of dateFormats" [value]="format.value">
+                                            {{ format.name }}
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h3>Notification Preferences</h3>
+                            <div formGroupName="notifications">
+                                <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input 
+                                            type="checkbox" 
+                                            id="emailNotifications"
+                                            formControlName="email"
+                                            [disabled]="isFormDisabled">
+                                        <label for="emailNotifications">Email Notifications</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input 
+                                            type="checkbox" 
+                                            id="inAppNotifications"
+                                            formControlName="inApp"
+                                            [disabled]="isFormDisabled">
+                                        <label for="inAppNotifications">In-App Notifications</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input 
+                                            type="checkbox" 
+                                            id="pushNotifications"
+                                            formControlName="push"
+                                            [disabled]="isFormDisabled">
+                                        <label for="pushNotifications">Push Notifications</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="button-group" *ngIf="!isFormDisabled">
+                                <button type="button" class="btn btn-secondary">
+                                    Reset
+                                </button>
+                                <button 
+                                    type="submit" 
+                                    class="btn btn-primary"
+                                    [disabled]="preferencesForm.invalid || saving">
+                                    <div *ngIf="saving" class="loading-spinner"></div>
+                                    Save Preferences
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Security Tab -->
+                <div class="tab-panel" [class.active]="activeTab === 'security'">
+                    <form [formGroup]="securityForm" (ngSubmit)="onSaveSecurity()">
+                        <div class="form-section">
+                            <h3>Security Settings</h3>
+                            
+                            <div class="checkbox-group">
+                                <div class="checkbox-item">
+                                    <input 
+                                        type="checkbox" 
+                                        id="twoFactorAuth"
+                                        formControlName="twoFactorAuth"
+                                        [disabled]="isFormDisabled">
+                                    <label for="twoFactorAuth">
+                                        <strong>Two-Factor Authentication</strong><br>
+                                        <small style="color: #7f8c8d;">Add an extra layer of security to your account</small>
+                                    </label>
+                                </div>
+
+                                <div class="checkbox-item">
+                                    <input 
+                                        type="checkbox" 
+                                        id="loginNotifications"
+                                        formControlName="loginNotifications"
+                                        [disabled]="isFormDisabled">
+                                    <label for="loginNotifications">
+                                        <strong>Login Notifications</strong><br>
+                                        <small style="color: #7f8c8d;">Get notified when someone logs into your account</small>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-row" style="margin-top: 24px;">
+                                <div class="form-group">
+                                    <label for="sessionTimeout">Session Timeout (minutes)</label>
+                                    <input 
+                                        type="number" 
+                                        id="sessionTimeout"
+                                        formControlName="sessionTimeout"
+                                        [disabled]="isFormDisabled"
+                                        min="1"
+                                        max="480"
+                                        placeholder="Session timeout in minutes">
+                                    <div *ngIf="securityForm.get('sessionTimeout')?.invalid && securityForm.get('sessionTimeout')?.touched" class="error-message">
+                                        Session timeout must be between 1 and 480 minutes
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="button-group" *ngIf="!isFormDisabled">
+                                <button type="button" class="btn btn-secondary">
+                                    Cancel
+                                </button>
+                                <button 
+                                    type="submit" 
+                                    class="btn btn-primary"
+                                    [disabled]="securityForm.invalid || saving">
+                                    <div *ngIf="saving" class="loading-spinner"></div>
+                                    Save Security Settings
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Password Tab -->
+                <div class="tab-panel" [class.active]="activeTab === 'password'">
+                    <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()">
+                        <div class="form-section">
+                            <h3>Change Password</h3>
+                            
+                            <div class="form-row">
+                                <div class="form-group full-width">
+                                    <label for="currentPassword">Current Password *</label>
+                                    <input 
+                                        type="password" 
+                                        id="currentPassword"
+                                        formControlName="currentPassword"
+                                        [disabled]="isFormDisabled"
+                                        placeholder="Enter your current password">
+                                    <div *ngIf="passwordForm.get('currentPassword')?.invalid && passwordForm.get('currentPassword')?.touched" class="error-message">
+                                        Current password is required
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="newPassword">New Password *</label>
+                                    <input 
+                                        type="password" 
+                                        id="newPassword"
+                                        formControlName="newPassword"
+                                        [disabled]="isFormDisabled"
+                                        placeholder="Enter new password">
+                                    <div *ngIf="passwordForm.get('newPassword')?.invalid && passwordForm.get('newPassword')?.touched" class="error-message">
+                                        Password must be at least 8 characters long
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="confirmPassword">Confirm New Password *</label>
+                                    <input 
+                                        type="password" 
+                                        id="confirmPassword"
+                                        formControlName="confirmPassword"
+                                        [disabled]="isFormDisabled"
+                                        placeholder="Confirm new password">
+                                    <div *ngIf="passwordForm.get('confirmPassword')?.invalid && passwordForm.get('confirmPassword')?.touched" class="error-message">
+                                        Please confirm your password
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div *ngIf="passwordForm.hasError('passwordMismatch') && passwordForm.get('confirmPassword')?.touched" class="error-message" style="margin-bottom: 16px;">
+                                Passwords do not match
+                            </div>
+
+                            <div class="button-group" *ngIf="!isFormDisabled">
+                                <button type="button" class="btn btn-secondary" (click)="passwordForm.reset()">
+                                    Clear
+                                </button>
+                                <button 
+                                    type="submit" 
+                                    class="btn btn-primary"
+                                    [disabled]="passwordForm.invalid || saving">
+                                    <div *ngIf="saving" class="loading-spinner"></div>
+                                    Change Password
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

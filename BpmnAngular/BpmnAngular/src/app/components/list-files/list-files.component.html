@@ -1,0 +1,205 @@
+<div class="files-container">
+  <!-- User Info Banner -->
+  <div class="user-info-section">
+    <div class="user-details">
+      <h1>Your BPMN Files</h1>
+      <div class="user-badge">
+        <span class="user-name">{{ currentUserFullName }}</span>
+        <span class="user-role"
+          [class.admin]="authenticationService.isAdmin()"
+          [class.modeler]="authenticationService.isModeler()"
+          [class.viewer]="authenticationService.isViewer()">
+          {{ currentUserRole }}
+        </span>
+      </div>
+    </div>
+    <div class="permissions-info">
+      <span class="permission-badge" *ngIf="canView" title="Can view files">
+        View</span>
+      <span class="permission-badge" *ngIf="canEdit" title="Can edit files">
+        Edit</span>
+      <span class="permission-badge" *ngIf="canCreate"
+        title="Can create files">Create</span>
+      <span class="permission-badge" *ngIf="canDelete"
+        title="Can delete files">Delete</span>
+    </div>
+  </div>
+
+  <div class="header-section">
+    <p>Manage and access your recent projects</p>
+
+    <!-- Permission-based actions -->
+    <div class="header-actions" *ngIf="canView">
+      <button class="btn-primary"
+        *ngIf="canCreate"
+        (click)="navigateToModeler()"
+        title="Create new BPMN diagram">
+        <i data-feather="plus"></i>
+        Create New Diagram
+      </button>
+      <button class="btn-secondary"
+        (click)="getFiles()"
+        title="Refresh file list">
+        <i data-feather="refresh-cw"></i>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- No permissions message -->
+  <div *ngIf="!canView" class="no-permission-state">
+    <i data-feather="lock" class="no-permission-icon"></i>
+    <h3>Access Restricted</h3>
+    <p>You do not have permission to view files. Please contact your
+      administrator for access.</p>
+    <div class="permission-details">
+      <p><strong>Your role:</strong> {{ currentUserRole }}</p>
+      <p><strong>Required permission:</strong> View Files</p>
+    </div>
+  </div>
+
+  <!-- Loading state -->
+  <div *ngIf="isLoading && canView" class="loading-state">
+    <div class="loading-spinner"></div>
+    <p>Loading your files...</p>
+  </div>
+
+  <!-- Empty state -->
+  <div *ngIf="!isLoading && canView && (!appFile || appFile.length === 0)"
+    class="empty-state">
+    <i data-feather="folder" class="empty-icon"></i>
+    <h3>No files found</h3>
+    <p>You haven't created any BPMN files yet.</p>
+    <button class="btn-primary"
+      *ngIf="canCreate"
+      (click)="navigateToModeler()">
+      <i data-feather="plus"></i>
+      Create Your First Diagram
+    </button>
+    <p *ngIf="!canCreate" class="no-create-message">
+      Contact your administrator to get permissions for creating new diagrams.
+    </p>
+  </div>
+
+  <!-- Files grid -->
+  <div *ngIf="!isLoading && canView && appFile && appFile.length > 0"
+    class="files-grid">
+    <div *ngFor="let file of appFile" class="file-card">
+      <div [id]="'file-content-' + file.id" class="file-export-content">
+        <div class="file-header">
+          <div class="file-icon">
+            <i data-feather="file-text"></i>
+          </div>
+          <div class="file-actions">
+            <button class="action-btn edit-btn"
+              *ngIf="canEditFile(file)"
+              (click)="openFile(file)"
+              title="Edit file">
+              <i data-feather="edit-3"></i>
+            </button>
+
+            <!-- View action - for viewers who can't edit -->
+            <button class="action-btn view-btn"
+              *ngIf="!canEditFile(file) && canView"
+              (click)="openFile(file)"
+              title="View file (read-only)">
+              <i data-feather="eye"></i>
+            </button>
+            <!-- <button class="action-btn view-btn"
+              *ngIf="canView"
+              (click)="exportToPdf()"
+              title="Export to PDF">
+              <i class="bx bx-file"></i>Export PDF
+            </button> -->
+
+            <!-- Delete action - only for admins -->
+            <button mat-raised-button color="warn" class="action-btn delete-btn"
+              *ngIf="canDeleteFile(file) && file.id !== undefined"
+              (click)="deleteFile(file.id!)"
+              title="Delete file">
+              <i data-feather="trash-2"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="file-content">
+          <h3 class="file-name">{{ file.fileName || 'Untitled' }}</h3>
+          <p class="file-description">{{ file.content }}</p>
+
+          <div class="file-meta">
+            <span class="file-size" *ngIf="file.fileSize">
+              <i data-feather="hard-drive"></i>
+              {{ formatFileSize(file.fileSize) }}
+            </span>
+            <span class="file-date" *ngIf="file.uploadTime">
+              <i data-feather="calendar"></i>
+              {{ formatDate(file.uploadTime) }}
+            </span>
+            <span class="file-type" *ngIf="file.fileType">
+              <i data-feather="tag"></i>
+              {{ file.fileType }}
+            </span>
+          </div>
+
+          <!-- Permission indicators -->
+          <div class="file-permissions">
+            <span class="permission-indicator view"
+              title="You can view this file">
+              <i data-feather="eye"></i>
+            </span>
+            <span class="permission-indicator edit"
+              *ngIf="canEditFile(file)"
+              title="You can edit this file">
+              <i data-feather="edit"></i>
+            </span>
+            <span class="permission-indicator readonly"
+              *ngIf="!canEditFile(file)"
+              title="Read-only access">
+              <i data-feather="lock"></i>
+            </span>
+          </div>
+        </div>
+      </div>
+      <!-- END of exportable content wrapper -->
+
+      <!-- File footer - outside the exportable content -->
+      <div class="file-footer">
+        <!-- Open button with role-specific text -->
+        <button class="btn-primary" (click)="openFile(file)">
+          <i data-feather="eye" *ngIf="isViewerOnly"></i>
+          <i data-feather="edit-3" *ngIf="!isViewerOnly"></i>
+          {{ isViewerOnly ? 'View' : 'Open' }}
+        </button>
+
+        <!-- Download button - for all users with view permission -->
+        <button class="btn-secondary"
+          *ngIf="canDownloadFile(file) && file.content"
+          (click)="downloadFile(file)">
+          <i data-feather="download"></i>
+          Download
+        </button>
+
+        <!-- Export to PDF button - FIXED
+           <button class="toolbar-btn"
+                *ngIf="canView"
+                (click)="exportToPdf()"
+                title="Export to PDF">
+                <i class="bx bx-file"></i>Export PDF
+            </button> -->
+        <!-- View-only indicator -->
+        <span class="readonly-badge" *ngIf="isViewerOnly">
+          <i data-feather="eye"></i>
+          Read Only
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Back to dashboard button -->
+  <div class="back-section">
+    <button class="btn-outline" (click)="navigateToDashboard()">
+      <i data-feather="arrow-left"></i>
+      Back to Dashboard
+    </button>
+  </div>
+</div>

@@ -1,0 +1,61 @@
+<div class="signup-card">
+  <!-- Display message if exists -->
+  <h1 *ngIf="msg">
+    {{ msg }}
+  </h1>
+
+  <div class="card-title">
+    <h1>Create Account</h1>
+    <span>Already have an account? <a routerLink="/login">Sign In</a></span>
+  </div>
+
+  <form class="form-group" [formGroup]="signupForm" (ngSubmit)="onSubmit()">
+    <!-- First Name -->
+    <input type="text" name="firstName" placeholder="First Name" formControlName="firstName" />
+    <div class="text-danger" *ngIf="signupForm.controls['firstName'].touched && signupForm.controls['firstName'].hasError('required')">
+      <span>First name is required</span>
+    </div>
+
+    <!-- Last Name -->
+    <input type="text" name="lastName" placeholder="Last Name" formControlName="lastName" />
+    <div class="text-danger" *ngIf="signupForm.controls['lastName'].touched && signupForm.controls['lastName'].hasError('required')">
+      <span>Last name is required</span>
+    </div>
+
+    <!-- Username -->
+    <input type="text" name="username" placeholder="Username" formControlName="username" />
+    <div class="text-danger" *ngIf="signupForm.controls['username'].touched && signupForm.controls['username'].hasError('required')">
+      <span>Username is required</span>
+    </div>
+
+    <!-- Email -->
+    <input type="email" name="email" placeholder="Email" formControlName="email" />
+    <div class="text-danger" *ngIf="signupForm.controls['email'].touched">
+      <span *ngIf="signupForm.controls['email'].hasError('required')">Email is required</span>
+      <span *ngIf="signupForm.controls['email'].hasError('email')">Please enter a valid email address</span>
+    </div>
+
+    <!-- Password -->
+    <input type="password" name="password" placeholder="Password" formControlName="password" />
+    <div class="text-danger" *ngIf="signupForm.controls['password'].touched">
+      <span *ngIf="signupForm.controls['password'].hasError('required')">Password is required</span>
+      <span *ngIf="signupForm.controls['password'].hasError('minlength')">Password must be at least 8 characters long</span>
+    </div>
+
+    <!-- Optional Fields -->
+    <input type="text" name="address" placeholder="Address (Optional)" formControlName="address" />
+    <input type="text" name="mobileno" placeholder="Mobile No (Optional)" formControlName="mobileno" />
+    <input type="text" name="age" placeholder="Age (Optional)" formControlName="age" />
+
+    <!-- Submit Button -->
+    <input type="submit" [disabled]="!signupForm.valid" value="Signup" />
+  </form>
+
+  <!-- Terms of Service -->
+  <div class="card-terms">
+    <input type="checkbox" id="terms" />
+    <label for="terms">
+      I have read and agree to the <a href="#">Terms of Service</a>
+    </label>
+  </div>
+</div>

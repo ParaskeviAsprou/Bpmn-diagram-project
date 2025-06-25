@@ -1,0 +1,378 @@
+<!-- Enhanced bpmn-modeler.component.html -->
+
+<div class="bpmn-container">
+    <!-- User Info and Permissions Banner -->
+    <div class="user-info-banner">
+        <div class="user-details">
+            <span class="user-name">{{ currentUserFullName }}</span>
+            <span class="user-role"
+                [class.admin]="isAdmin"
+                [class.modeler]="isModeler"
+                [class.viewer]="isViewer">
+                {{ currentUserRole }}
+            </span>
+        </div>
+        <div class="permissions-indicator">
+            <span class="permission" *ngIf="canView" title="Can view diagrams">
+                <i class="bx bx-show"></i> View
+            </span>
+            <span class="permission" *ngIf="canEdit" title="Can edit diagrams">
+                <i class="bx bx-edit"></i> Edit
+            </span>
+            <span class="permission" *ngIf="canCreate" title="Can create diagrams">
+                <i class="bx bx-plus"></i> Create
+            </span>
+            <span class="permission" *ngIf="canDelete" title="Can delete diagrams">
+                <i class="bx bx-trash"></i> Delete
+            </span>
+            <span class="permission" *ngIf="canManageCustomProperties" title="Can manage custom properties">
+                <i class="bx bx-cog"></i> Properties
+            </span>
+        </div>
+    </div>
+
+    <!-- Enhanced Toolbar -->
+    <div class="bpmn-toolbar">
+        <div class="toolbar-group">
+            <!-- Create button -->
+            <button class="toolbar-btn"
+                *ngIf="canCreate"
+                (click)="createNewDiagram()"
+                title="Create new diagram">
+                <i class="bx bx-plus"></i>
+                <span>New</span>
+            </button>
+
+            <!-- Open button -->
+            <input
+                #fileInput
+                type="file"
+                accept=".bpmn,.xml"
+                (change)="onFileChange($event)"
+                style="display: none" />
+            <button class="toolbar-btn"
+                *ngIf="canView"
+                (click)="fileInput.click()"
+                title="Open diagram">
+                <i class="bx bx-folder-open"></i>
+                <span>Open</span>
+            </button>
+
+            <!-- Save button -->
+            <button class="toolbar-btn"
+                *ngIf="canEdit"
+                (click)="saveDiagram()"
+                title="Save diagram"
+                [class.has-changes]="hasUnsavedChanges">
+                <i class="bx bx-save"></i>
+                <span>Save</span>
+                <span *ngIf="hasUnsavedChanges" class="unsaved-indicator">*</span>
+            </button>
+
+            <!-- Export dropdown -->
+            <div class="export-dropdown" *ngIf="canView">
+                <button class="toolbar-btn" 
+                    (click)="toggleExportDropdown()"
+                    title="Export options">
+                    <i class="bx bx-export"></i>
+                    <span>Export</span>
+                    <i class="bx bx-chevron-down"></i>
+                </button>
+                <div class="dropdown-menu" *ngIf="showExportDropdown">
+                    <button class="dropdown-item" 
+                        *ngFor="let format of exportFormats"
+                        (click)="exportDiagram(format.format)">
+                        <i class="bx" [class]="format.icon"></i>
+                        <div class="dropdown-content">
+                            <span class="dropdown-title">{{ format.label }}</span>
+                            <small class="dropdown-description">{{ format.description }}</small>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Viewer-only indicator -->
+            <div class="viewer-mode-indicator" *ngIf="isViewerOnly">
+                <i class="bx bx-show"></i>
+                <span>View Only Mode</span>
+            </div>
+        </div>
+
+        <!-- Zoom controls -->
+        <div class="toolbar-group">
+            <button class="toolbar-btn zoom-btn" (click)="zoomIn()" title="Zoom in">
+                <i class="bx bx-zoom-in"></i>
+            </button>
+            <button class="toolbar-btn zoom-btn" (click)="zoomOut()" title="Zoom out">
+                <i class="bx bx-zoom-out"></i>
+            </button>
+            <button class="toolbar-btn zoom-btn" (click)="zoomToFit()" title="Fit to viewport">
+                <i class="bx bx-fullscreen"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main modeler container -->
+    <div #modelerContainer class="modeler-container" id="js-canvas"></div>
+
+    <!-- Enhanced Properties Panel -->
+    <div class="properties-panel" *ngIf="selectedElement">
+        <div class="properties-header">
+            <h3>
+                <i class="bx bx-cog"></i>
+                Element Properties
+            </h3>
+            <div class="element-type-badge">{{ selectedElement.type }}</div>
+        </div>
+
+        <!-- Element Information Section -->
+        <div class="properties-section">
+            <div class="section-header">
+                <h4 class="section-title">
+                    <i class="bx bx-info-circle"></i>
+                    Element Information
+                </h4>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>Element ID:</label>
+                    <span class="info-value">{{ selectedElement.id }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Element Type:</label>
+                    <span class="info-value">{{ selectedElement.type }}</span>
+                </div>
+                <div class="info-item" *ngIf="selectedElement.businessObject">
+                    <label>Business Object:</label>
+                    <span class="info-value">{{ selectedElement.businessObject.$type }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Standard Properties Section -->
+        <div class="properties-section">
+            <div class="section-header">
+                <h4 class="section-title">
+                    <i class="bx bx-edit-alt"></i>
+                    Standard Properties
+                </h4>
+                <div class="section-actions" *ngIf="canEditProperties">
+                    <button
+                        class="action-btn edit-btn"
+                        (click)="toggleEditMode()"
+                        [class.active]="isEditMode"
+                        title="Edit element properties">
+                        <i class="bx" [class.bx-edit]="!isEditMode" [class.bx-check]="isEditMode"></i>
+                        {{ isEditMode ? 'Save' : 'Edit' }}
+                    </button>
+                    
+                    <button
+                        *ngIf="isEditMode"
+                        class="action-btn cancel-btn"
+                        (click)="cancelEdit()"
+                        title="Cancel editing">
+                        <i class="bx bx-x"></i>
+                        Cancel
+                    </button>
+                </div>
+                <div class="readonly-indicator" *ngIf="!canEditProperties && selectedElement">
+                    <i class="bx bx-lock"></i>
+                    <span>Read Only</span>
+                </div>
+            </div>
+
+            <!-- Read-only mode -->
+            <div *ngIf="!isEditMode" class="properties-readonly">
+                <div class="property-item">
+                    <label>Name:</label>
+                    <span class="property-value">{{ selectedElement.businessObject?.name || selectedElement.name || 'N/A' }}</span>
+                </div>
+                <div class="property-item" *ngIf="selectedElement.businessObject?.documentation">
+                    <label>Documentation:</label>
+                    <span class="property-value">{{ selectedElement.businessObject.documentation?.[0]?.text || 'N/A' }}</span>
+                </div>
+            </div>
+
+            <!-- Edit mode -->
+            <div *ngIf="isEditMode && canEditProperties" class="properties-edit">
+                <div class="property-item">
+                    <label for="name">Name:</label>
+                    <input
+                        id="name"
+                        type="text"
+                        [(ngModel)]="editableProperties.name"
+                        class="property-input"
+                        placeholder="Enter element name">
+                </div>
+
+                <div class="property-item">
+                    <label for="documentation">Documentation:</label>
+                    <textarea
+                        id="documentation"
+                        [(ngModel)]="editableProperties.documentation"
+                        class="property-textarea"
+                        placeholder="Enter documentation"
+                        rows="3"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Properties Section -->
+        <div class="properties-section">
+            <div class="section-header">
+                <h4 class="section-title">
+                    <i class="bx bx-customize"></i>
+                    Custom Properties
+                    <span class="property-count" *ngIf="hasCustomProperties()">
+                        ({{ getCustomPropertiesCount() }})
+                    </span>
+                </h4>
+                <div class="section-actions" *ngIf="canManageCustomProperties">
+                    <button
+                        class="action-btn add-btn"
+                        (click)="openCustomPropertiesDialog()"
+                        title="Manage custom properties">
+                        <i class="bx bx-plus"></i>
+                        Manage
+                    </button>
+                </div>
+            </div>
+
+            <!-- Custom Properties Display -->
+            <div class="custom-properties-list" *ngIf="hasCustomProperties(); else noCustomProperties">
+                <div *ngFor="let property of elementCustomProperties; let i = index" 
+                     class="custom-property-item">
+                    <div class="property-header">
+                        <div class="property-title-section">
+                            <span class="property-title">{{ property.title }}</span>
+                            <span class="property-type-badge" [ngClass]="'type-' + property.type">
+                                {{ property.type }}
+                            </span>
+                            <span class="property-required" *ngIf="property.required" title="Required property">*</span>
+                        </div>
+                        
+                        <div class="property-actions" *ngIf="canManageCustomProperties">
+                            <button class="property-action-btn edit-property-btn" 
+                                    (click)="editCustomProperty(property)"
+                                    title="Edit property">
+                                <i class="bx bx-edit"></i>
+                            </button>
+                            <button class="property-action-btn delete-property-btn" 
+                                    (click)="deleteCustomProperty(property.id)"
+                                    title="Delete property">
+                                <i class="bx bx-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="property-content">
+                        <div class="property-value">
+                            <!-- Display value based on type -->
+                            <span *ngIf="property.type === 'boolean'" 
+                                  [ngClass]="property.value ? 'value-true' : 'value-false'">
+                                <i class="bx" [class.bx-check]="property.value" [class.bx-x]="!property.value"></i>
+                                {{ property.value ? 'Yes' : 'No' }}
+                            </span>
+                            <span *ngIf="property.type === 'date' && property.value">
+                                <i class="bx bx-calendar"></i>
+                                {{ property.value | date:'short' }}
+                            </span>
+                            <span *ngIf="property.type === 'number'">
+                                <i class="bx bx-hash"></i>
+                                {{ property.value || 0 }}
+                            </span>
+                            <span *ngIf="property.type === 'text'">
+                                <i class="bx bx-text"></i>
+                                {{ property.value || 'Not set' }}
+                            </span>
+                            <span *ngIf="property.type === 'textarea'">
+                                <i class="bx bx-note"></i>
+                                {{ property.value || 'Not set' }}
+                            </span>
+                            <span *ngIf="property.type === 'select'">
+                                <i class="bx bx-list-ul"></i>
+                                {{ property.value || 'Not selected' }}
+                            </span>
+                        </div>
+                        
+                        <div class="property-description" *ngIf="property.description">
+                            <i class="bx bx-info-circle"></i>
+                            <small>{{ property.description }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- No Custom Properties Template -->
+            <ng-template #noCustomProperties>
+                <div class="no-custom-properties">
+                    <div class="empty-state-icon">
+                        <i class="bx bx-customize"></i>
+                    </div>
+                    <p class="empty-state-text">No custom properties defined</p>
+                    <button *ngIf="canManageCustomProperties"
+                            class="btn-link"
+                            (click)="openCustomPropertiesDialog()">
+                        <i class="bx bx-plus"></i>
+                        Add custom properties
+                    </button>
+                </div>
+            </ng-template>
+        </div>
+
+        <!-- Quick Actions Section -->
+        <div class="quick-actions-section" *ngIf="canEditProperties && selectedElement">
+            <div class="section-header">
+                <h4 class="section-title">
+                    <i class="bx bx-zap"></i>
+                    Quick Actions
+                </h4>
+            </div>
+            
+            <div class="quick-actions-grid">
+                <button class="quick-action-btn color-btn" 
+                    (click)="setElementColor()"
+                    title="Set Element Color">
+                    <i class="bx bx-palette"></i>
+                    <span>Color</span>
+                </button>
+
+                <!-- Custom Properties Quick Actions -->
+                <div class="quick-action-divider"></div>
+                
+                <button *ngIf="canManageCustomProperties"
+                        class="quick-action-btn priority-btn" 
+                        (click)="quickAddProperty('select', 'Priority')"
+                        title="Quick add Priority property">
+                    <i class="bx bx-flag"></i>
+                    <span>Priority</span>
+                </button>
+                
+                <button *ngIf="canManageCustomProperties"
+                        class="quick-action-btn date-btn" 
+                        (click)="quickAddProperty('date', 'Due Date')"
+                        title="Quick add Due Date property">
+                    <i class="bx bx-calendar"></i>
+                    <span>Due Date</span>
+                </button>
+                
+                <button *ngIf="canManageCustomProperties"
+                        class="quick-action-btn status-btn" 
+                        (click)="quickAddProperty('boolean', 'Completed')"
+                        title="Quick add Completed property">
+                    <i class="bx bx-check-circle"></i>
+                    <span>Completed</span>
+                </button>
+
+                <button *ngIf="canManageCustomProperties"
+                        class="quick-action-btn assignee-btn" 
+                        (click)="quickAddProperty('text', 'Assignee')"
+                        title="Quick add Assignee property">
+                    <i class="bx bx-user"></i>
+                    <span>Assignee</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

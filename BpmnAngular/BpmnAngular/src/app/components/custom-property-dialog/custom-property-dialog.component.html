@@ -1,1 +1,151 @@
-<p>custom-property-dialog works!</p>
+ <div class="custom-property-dialog">
+      <div class="dialog-header">
+        <h2 mat-dialog-title>
+          <mat-icon>settings</mat-icon>
+          Custom Properties for {{ data.elementName }}
+        </h2>
+        <button mat-icon-button (click)="onCancel()" class="close-btn">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <mat-dialog-content class="dialog-content">
+        <div class="element-info">
+          <div class="info-item">
+            <span class="label">Element Type:</span>
+            <span class="value">{{ data.elementType }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Element ID:</span>
+            <span class="value">{{ data.elementId }}</span>
+          </div>
+        </div>
+
+        <form [formGroup]="propertyForm" class="properties-form">
+          <div class="section-header">
+            <h3>Properties ({{ propertiesArray.length }})</h3>
+            <button type="button" mat-raised-button color="primary" 
+                    (click)="addProperty()" class="add-btn">
+              <mat-icon>add</mat-icon>
+              Add Property
+            </button>
+          </div>
+
+          <div formArrayName="properties" class="properties-list">
+            <div *ngFor="let property of propertiesArray.controls; let i = index" 
+                 [formGroupName]="i" class="property-item">
+              
+              <div class="property-header">
+                <div class="property-number">{{ i + 1 }}</div>
+                <button type="button" mat-icon-button color="warn" 
+                        (click)="removeProperty(i)" class="delete-btn">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+
+              <div class="property-fields">
+                <div class="field-row">
+                  <mat-form-field appearance="outline" class="field-title">
+                    <mat-label>Property Name</mat-label>
+                    <input matInput formControlName="title" placeholder="Enter property name">
+                    <mat-error *ngIf="property.get('title')?.hasError('required')">
+                      Property name is required
+                    </mat-error>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="field-type">
+                    <mat-label>Type</mat-label>
+                    <mat-select formControlName="type" (selectionChange)="onTypeChange(i, $event.value)">
+                      <mat-option value="text">Text</mat-option>
+                      <mat-option value="textarea">Textarea</mat-option>
+                      <mat-option value="number">Number</mat-option>
+                      <mat-option value="boolean">Boolean</mat-option>
+                      <mat-option value="date">Date</mat-option>
+                      <mat-option value="select">Select</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+
+                <div class="field-row">
+                  <mat-form-field appearance="outline" class="field-description">
+                    <mat-label>Description (Optional)</mat-label>
+                    <input matInput formControlName="description" placeholder="Enter description">
+                  </mat-form-field>
+
+                  <div class="field-required">
+                    <mat-checkbox formControlName="required">Required</mat-checkbox>
+                  </div>
+                </div>
+
+                <!-- Options for select type -->
+                <div *ngIf="property.get('type')?.value === 'select'" class="select-options">
+                  <mat-form-field appearance="outline" class="field-options">
+                    <mat-label>Options (comma separated)</mat-label>
+                    <textarea matInput formControlName="optionsText" 
+                              placeholder="Option 1, Option 2, Option 3"
+                              rows="2"></textarea>
+                  </mat-form-field>
+                </div>
+
+                <!-- Value field based on type -->
+                <div class="field-row">
+                  <mat-form-field appearance="outline" class="field-value">
+                    <mat-label>Default Value</mat-label>
+                    
+                    <!-- Text input -->
+                    <input *ngIf="property.get('type')?.value === 'text'" 
+                           matInput formControlName="value" placeholder="Enter default value">
+                    
+                    <!-- Textarea -->
+                    <textarea *ngIf="property.get('type')?.value === 'textarea'" 
+                              matInput formControlName="value" 
+                              placeholder="Enter default value" rows="3"></textarea>
+                    
+                    <!-- Number input -->
+                    <input *ngIf="property.get('type')?.value === 'number'" 
+                           matInput type="number" formControlName="value" 
+                           placeholder="Enter default value">
+                    
+                    <!-- Date input -->
+                    <input *ngIf="property.get('type')?.value === 'date'" 
+                           matInput [matDatepicker]="picker" formControlName="value">
+                    <mat-datepicker-toggle *ngIf="property.get('type')?.value === 'date'" 
+                                           matSuffix [for]="picker"></mat-datepicker-toggle>
+                    <mat-datepicker #picker></mat-datepicker>
+                    
+                    <!-- Select input -->
+                    <mat-select *ngIf="property.get('type')?.value === 'select'" 
+                                formControlName="value">
+                      <mat-option *ngFor="let option of getSelectOptions(i)" [value]="option">
+                        {{ option }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  <!-- Boolean checkbox -->
+                  <div *ngIf="property.get('type')?.value === 'boolean'" class="field-boolean">
+                    <mat-checkbox formControlName="value">Default Value</mat-checkbox>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="propertiesArray.length === 0" class="no-properties">
+              <mat-icon>info</mat-icon>
+              <p>No properties defined. Click "Add Property" to create one.</p>
+            </div>
+          </div>
+        </form>
+      </mat-dialog-content>
+
+      <mat-dialog-actions class="dialog-actions">
+        <button mat-button (click)="onCancel()" class="cancel-btn">
+          Cancel
+        </button>
+        <button mat-raised-button color="primary" (click)="onSave()" 
+                [disabled]="!propertyForm.valid" class="save-btn">
+          <mat-icon>save</mat-icon>
+          Save Properties
+        </button>
+      </mat-dialog-actions>
+    </div>

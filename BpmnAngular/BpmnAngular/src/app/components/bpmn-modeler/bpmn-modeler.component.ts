@@ -1,4 +1,3 @@
-// components/bpmn-modeler/bpmn-modeler.component.ts
 import { Component, ElementRef, OnInit, OnDestroy, ViewChild, AfterViewInit, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -20,9 +19,8 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatButtonModule } from '@angular/material/button';
-
-import { customPropertyService } from '../../services/custom-properties.service';
 import { CustomProperty, CustomPropertyDialogComponent, CustomPropertyDialogData } from '../custom-property-dialog/custom-property-dialog.component';
+import { CustomePropertyService } from '../../services/custom-properties.service';
 
 
 export interface ExportFormat {
@@ -135,7 +133,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     private fileService: FileService,
     private route: ActivatedRoute,
     private router: Router,
-    private customPropertyService: customPropertyService
+    private customPropertyService: CustomePropertyService
   ) { }
 
   @HostListener('document:click', ['$event'])
@@ -471,39 +469,43 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // ============= CUSTOM PROPERTIES METHODS =============
 
-  openCustomPropertiesDialog(): void {
-    if (!this.customPropertyService.canManageProperties()) {
-      this.showMessage('You do not have permission to manage custom properties.', 'error');
-      return;
-    }
-
-    if (!this.selectedElement) {
-      this.showMessage('Please select an element first.', 'warning');
-      return;
-    }
-
-    const dialogData: CustomPropertyDialogData = {
-      elementId: this.selectedElement.id,
-      elementType: this.selectedElement.type,
-      elementName: this.selectedElement.businessObject?.name || this.selectedElement.id,
-      existingProperties: this.elementCustomProperties
-    };
-
-    const dialogRef = this.popup.open(CustomPropertyDialogComponent, {
-      width: '900px',
-      maxWidth: '95vw',
-      maxHeight: '90vh',
-      data: dialogData,
-      disableClose: true,
-      panelClass: 'custom-property-dialog-panel'
-    });
-
-    dialogRef.afterClosed().subscribe((result: CustomProperty[] | undefined) => {
-      if (result) {
-        this.onCustomPropertiesSave(result);
-      }
-    });
+ openCustomPropertiesDialog(): void {
+  if (!this.customPropertyService.canManageProperties()) {
+    this.showMessage('You do not have permission to manage custom properties.', 'error');
+    return;
   }
+
+  if (!this.selectedElement) {
+    this.showMessage('Please select an element first.', 'warning');
+    return;
+  }
+
+  const dialogData: CustomPropertyDialogData = {
+    elementId: this.selectedElement.id,
+    elementType: this.selectedElement.type,
+    elementName: this.selectedElement.businessObject?.name || this.selectedElement.id,
+    existingProperties: this.elementCustomProperties
+  };
+
+  const dialogRef = this.popup.open(CustomPropertyDialogComponent, {
+    width: '900px',
+    maxWidth: '95vw',
+    maxHeight: '90vh',
+    data: dialogData,
+    disableClose: true,
+    panelClass: 'custom-property-dialog-panel', 
+    autoFocus: false,
+    restoreFocus: false,
+    hasBackdrop: true,
+    backdropClass: 'custom-dialog-backdrop'
+  });
+
+  dialogRef.afterClosed().subscribe((result: CustomProperty[] | undefined) => {
+    if (result) {
+      this.onCustomPropertiesSave(result);
+    }
+  });
+}
 
   onCustomPropertiesSave(properties: CustomProperty[]): void {
     if (!this.selectedElement) {

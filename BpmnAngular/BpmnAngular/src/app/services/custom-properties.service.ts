@@ -20,7 +20,7 @@ export interface ElementCustomProperties {
 @Injectable({
   providedIn: 'root'
 })
-export class customPropertyService {
+export class CustomePropertyService {
   private readonly STORAGE_KEY = 'bpmn_custom_properties';
   private propertiesSubject = new BehaviorSubject<ElementCustomProperties[]>([]);
   public properties$ = this.propertiesSubject.asObservable();

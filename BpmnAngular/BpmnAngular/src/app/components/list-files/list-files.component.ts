@@ -1,4 +1,4 @@
-import { Component, ViewChild, ElementRef, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, ViewChild, ElementRef, OnInit, OnDestroy, inject, Input } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FileService } from '../../services/file.service';
@@ -23,6 +23,7 @@ import { MatIconModule } from '@angular/material/icon';
 })
 export class ListFilesComponent implements OnInit, OnDestroy {
   @ViewChild('listfiles', { static: true }) listfiles!: ElementRef;
+  @Input() currentFolder: any;
 
   appFile: AppFile[] = [];
   isLoading = true;

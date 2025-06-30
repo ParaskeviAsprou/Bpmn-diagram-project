@@ -58,7 +58,7 @@ export interface RegisterRequest {
 })
 export class AuthenticationService {
   private readonly API_URL = 'http://localhost:8080/api/v1/auth';
-  private readonly TOKEN_KEY = 'token'; // Changed from 'auth-key' to 'token'
+  private readonly TOKEN_KEY = 'token';
   private readonly USER_KEY = 'currentUser';
 
   private currentUserSubject = new BehaviorSubject<User | null>(this.getUserFromStorage());
@@ -66,13 +66,23 @@ export class AuthenticationService {
 
   private tokenSubject = new BehaviorSubject<string | null>(this.getToken());
   public token$ = this.tokenSubject.asObservable();
-  private http: HttpClient;
+  
+  // ΕΔΩΕ: Lazy loading του HttpClient για να αποφύγουμε circular dependency
+  private _http: HttpClient | null = null;
 
-  constructor(private injector: Injector,
+  constructor(
+    private injector: Injector,
     private router: Router
   ) {
-    this.http = this.injector.get(HttpClient);
     this.checkTokenValidity();
+  }
+
+  // Lazy getter για HttpClient
+  private get http(): HttpClient {
+    if (!this._http) {
+      this._http = this.injector.get(HttpClient);
+    }
+    return this._http;
   }
 
   private getUserFromStorage(): User | null {
@@ -164,7 +174,6 @@ export class AuthenticationService {
     if (typeof window !== 'undefined') {
       localStorage.removeItem(this.TOKEN_KEY);
       localStorage.removeItem(this.USER_KEY);
-      // Also clear from sessionStorage if it exists there
       sessionStorage.removeItem(this.TOKEN_KEY);
       sessionStorage.removeItem(this.USER_KEY);
     }
@@ -175,7 +184,6 @@ export class AuthenticationService {
 
   getToken(): string | null {
     if (typeof window !== 'undefined') {
-      // Check localStorage first, then sessionStorage
       return localStorage.getItem(this.TOKEN_KEY) || sessionStorage.getItem(this.TOKEN_KEY);
     }
     return null;
@@ -188,7 +196,6 @@ export class AuthenticationService {
       return false;
     }
 
-    // Check if token is expired
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       const now = Date.now() / 1000;
@@ -333,10 +340,8 @@ export class AuthenticationService {
     console.error('Authentication error details:', error);
 
     if (error.error instanceof ErrorEvent) {
-      // Client-side error
       errorMessage = error.error.message;
     } else {
-      // Server-side error
       if (error.status === 401) {
         errorMessage = 'Invalid credentials';
       } else if (error.status === 403) {

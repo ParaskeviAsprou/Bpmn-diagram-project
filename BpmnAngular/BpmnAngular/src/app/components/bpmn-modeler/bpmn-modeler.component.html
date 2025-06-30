@@ -340,38 +340,6 @@
 
                 <!-- Custom Properties Quick Actions -->
                 <div class="quick-action-divider"></div>
-                
-                <button *ngIf="canManageCustomProperties"
-                        class="quick-action-btn priority-btn" 
-                        (click)="quickAddProperty('select', 'Priority')"
-                        title="Quick add Priority property">
-                    <i class="bx bx-flag"></i>
-                    <span>Priority</span>
-                </button>
-                
-                <button *ngIf="canManageCustomProperties"
-                        class="quick-action-btn date-btn" 
-                        (click)="quickAddProperty('date', 'Due Date')"
-                        title="Quick add Due Date property">
-                    <i class="bx bx-calendar"></i>
-                    <span>Due Date</span>
-                </button>
-                
-                <button *ngIf="canManageCustomProperties"
-                        class="quick-action-btn status-btn" 
-                        (click)="quickAddProperty('boolean', 'Completed')"
-                        title="Quick add Completed property">
-                    <i class="bx bx-check-circle"></i>
-                    <span>Completed</span>
-                </button>
-
-                <button *ngIf="canManageCustomProperties"
-                        class="quick-action-btn assignee-btn" 
-                        (click)="quickAddProperty('text', 'Assignee')"
-                        title="Quick add Assignee property">
-                    <i class="bx bx-user"></i>
-                    <span>Assignee</span>
-                </button>
             </div>
         </div>
     </div>

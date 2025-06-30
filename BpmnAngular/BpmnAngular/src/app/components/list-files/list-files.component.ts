@@ -13,7 +13,7 @@ import BpmnViewer from 'bpmn-js/lib/Viewer';
 import { MatDialog } from '@angular/material/dialog';
 import { DialogBoxComponent } from '../dialog-box/dialog-box.component';
 import { MatIconModule } from '@angular/material/icon';
-import { FileTreeComponent } from '../file-tree/file-tree.component';
+
 
 @Component({
   selector: 'app-list-files',

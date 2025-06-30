@@ -1,0 +1,116 @@
+ <div class="save-options-dialog">
+      <div class="dialog-header">
+        <h2 mat-dialog-title>
+          <mat-icon>save</mat-icon>
+          Save Options
+        </h2>
+        <button mat-icon-button (click)="onCancel()" class="close-btn">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <mat-dialog-content class="dialog-content">
+        <div class="file-info" *ngIf="!data.isNewFile">
+          <div class="info-item">
+            <span class="label">Current File:</span>
+            <span class="value">{{ data.currentFileName }}</span>
+          </div>
+          <div class="changes-indicator" *ngIf="data.hasUnsavedChanges">
+            <mat-icon class="warning-icon">edit</mat-icon>
+            <span>You have unsaved changes</span>
+          </div>
+        </div>
+
+        <form [formGroup]="saveForm" class="save-form">
+          <div class="save-options">
+            <h3>How would you like to save?</h3>
+            
+            <mat-radio-group formControlName="saveType" class="save-options-group">
+              <div 
+                *ngFor="let option of saveOptions" 
+                class="save-option-card"
+                [class.selected]="saveForm.get('saveType')?.value === option.type">
+                
+                <mat-radio-button [value]="option.type" class="save-option-radio">
+                  <div class="option-content">
+                    <div class="option-header">
+                      <mat-icon [class]="getOptionIconClass(option.type)">{{ option.icon }}</mat-icon>
+                      <span class="option-title">{{ option.label }}</span>
+                    </div>
+                    <p class="option-description">{{ option.description }}</p>
+                  </div>
+                </mat-radio-button>
+              </div>
+            </mat-radio-group>
+          </div>
+
+          <!-- New File Name Input -->
+          <div class="new-file-section" *ngIf="saveForm.get('saveType')?.value === 'new-file'">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>New File Name</mat-label>
+              <input 
+                matInput 
+                formControlName="fileName"
+                placeholder="Enter new file name"
+                [value]="suggestedFileName">
+              <mat-icon matSuffix>drive_file_rename_outline</mat-icon>
+              <mat-error *ngIf="saveForm.get('fileName')?.hasError('required')">
+                File name is required
+              </mat-error>
+              <mat-error *ngIf="saveForm.get('fileName')?.hasError('pattern')">
+                File name can only contain letters, numbers, spaces, hyphens, and underscores
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <!-- Version Notes -->
+          <div class="version-notes-section" *ngIf="saveForm.get('saveType')?.value !== 'overwrite'">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Version Notes (Optional)</mat-label>
+              <textarea 
+                matInput 
+                formControlName="versionNotes"
+                placeholder="Describe what changed in this version..."
+                rows="3"
+                maxlength="500"></textarea>
+              <mat-icon matSuffix>notes</mat-icon>
+              <mat-hint>{{ getVersionNotesLength() }}/500 characters</mat-hint>
+            </mat-form-field>
+          </div>
+
+          <!-- Preview Section -->
+          <div class="preview-section" *ngIf="saveForm.get('saveType')?.value">
+            <h4>What will happen:</h4>
+            <div class="preview-content">
+              <div class="preview-item" *ngIf="saveForm.get('saveType')?.value === 'overwrite'">
+                <mat-icon class="preview-icon overwrite">save</mat-icon>
+                <span>Current file will be updated with your changes</span>
+              </div>
+              <div class="preview-item" *ngIf="saveForm.get('saveType')?.value === 'new-version'">
+                <mat-icon class="preview-icon version">content_copy</mat-icon>
+                <span>A new version will be created while keeping the original</span>
+              </div>
+              <div class="preview-item" *ngIf="saveForm.get('saveType')?.value === 'new-file'">
+                <mat-icon class="preview-icon new-file">note_add</mat-icon>
+                <span>A completely new file will be created: "{{ getNewFileName() }}"</span>
+              </div>
+            </div>
+          </div>
+        </form>
+      </mat-dialog-content>
+
+      <mat-dialog-actions class="dialog-actions">
+        <button mat-button (click)="onCancel()" class="cancel-btn">
+          Cancel
+        </button>
+        <button 
+          mat-raised-button 
+          color="primary" 
+          (click)="onSave()"
+          [disabled]="!saveForm.valid"
+          class="save-btn">
+          <mat-icon>{{ getSaveButtonIcon() }}</mat-icon>
+          {{ getSaveButtonText() }}
+        </button>
+      </mat-dialog-actions>
+    </div>

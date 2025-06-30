@@ -4,58 +4,106 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b0e063aa-5f23-4c09-b845-b72058de053f" name="Changes" comment="customeproperties">
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/.editorconfig" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/bpmn-modeler/bpmn-modeler.component.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/bpmn-modeler/bpmn-modeler.component.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/bpmn-modeler/bpmn-modeler.component.spec.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/bpmn-modeler/bpmn-modeler.component.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/dashboard/dashboard.component.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/dashboard/dashboard.component.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/dashboard/dashboard.component.spec.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/dashboard/dashboard.component.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/dialog-box/dialog-box.component.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/dialog-box/dialog-box.component.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/dialog-box/dialog-box.component.spec.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/dialog-box/dialog-box.component.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/layout/layout.component.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/layout/layout.component.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/layout/layout.component.spec.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/layout/layout.component.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/list-files/list-files.component.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/list-files/list-files.component.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/list-files/list-files.component.spec.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/list-files/list-files.component.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/login/login.component.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/login/login.component.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/login/login.component.spec.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/login/login.component.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/register/register.component.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/register/register.component.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/register/register.component.spec.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/register/register.component.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/settings/settings.component.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/settings/settings.component.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/settings/settings.component.spec.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/settings/settings.component.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/un-save-dialog/un-save-dialog.component.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/un-save-dialog/un-save-dialog.component.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/un-save-dialog/un-save-dialog.component.spec.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/components/un-save-dialog/un-save-dialog.component.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/services/authentication.service.spec.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/services/authentication.service.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/services/bpmn.service.spec.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/services/bpmn.service.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/services/file.service.spec.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/services/file.service.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/services/integration.service.spec.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/services/integration.service.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/services/local-storage.service.spec.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/services/local-storage.service.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/services/notification.service.spec.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/services/notification.service.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/services/settings.service.spec.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/src/app/services/settings.service.ts" beforeDir="false" />
+    <list default="true" id="b0e063aa-5f23-4c09-b845-b72058de053f" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/ElementAttachment.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/ElementAttachmentRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/ElementAttachmentService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FileVersion.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FileVersionRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FileVersionService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/Folder.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FolderRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FolderService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/app.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/app.config.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/bpmn-modeler/bpmn-modeler.component.css" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/bpmn-modeler/bpmn-modeler.component.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/bpmn-modeler/bpmn-modeler.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/bpmn-modeler/bpmn-modeler.component.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/bpmn-modeler/bpmn-modeler.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/bpmn-modeler/bpmn-modeler.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/custom-property-dialog/custom-property-dialog.component.css" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/custom-property-dialog/custom-property-dialog.component.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/custom-property-dialog/custom-property-dialog.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/custom-property-dialog/custom-property-dialog.component.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/custom-property-dialog/custom-property-dialog.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/custom-property-dialog/custom-property-dialog.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/interceptors/jwt.interceptor.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/interceptors/jwt.interceptor.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/services/authentication.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/services/authentication.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/services/custom-properties.service.spec.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/services/custom-properties.service.spec.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/services/custom-properties.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/services/custom-properties.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/styles.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/File.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/File.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FileController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FileController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FileRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FileRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FileService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FileService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Auditing/ApplicationAuditAware.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Auditing/ApplicationAuditAware.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Auth/AuthenticationController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Auth/AuthenticationController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Auth/AuthenticationRequest$AuthenticationRequestBuilder.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Auth/AuthenticationRequest$AuthenticationRequestBuilder.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Auth/AuthenticationRequest.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Auth/AuthenticationRequest.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Auth/AuthenticationResponse$AuthenticationResponseBuilder.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Auth/AuthenticationResponse$AuthenticationResponseBuilder.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Auth/AuthenticationResponse.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Auth/AuthenticationResponse.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Auth/AuthenticationService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Auth/AuthenticationService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Auth/LoginRequest$LoginRequestBuilder.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Auth/LoginRequest$LoginRequestBuilder.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Auth/LoginRequest.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Auth/LoginRequest.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Auth/RefreshTokenRequest$RefreshTokenRequestBuilder.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Auth/RefreshTokenRequest$RefreshTokenRequestBuilder.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Auth/RefreshTokenRequest.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Auth/RefreshTokenRequest.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Auth/RegisterRequest$RegisterRequestBuilder.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Auth/RegisterRequest$RegisterRequestBuilder.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Auth/RegisterRequest.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Auth/RegisterRequest.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/BpmnJavaBackendApplication.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/BpmnJavaBackendApplication.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Config/ApplicationConfig.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Config/ApplicationConfig.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Config/DataLoader.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Config/DataLoader.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Config/JwtAuthenticationFilter.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Config/JwtAuthenticationFilter.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Config/JwtService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Config/JwtService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Config/LogoutService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Config/LogoutService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Config/OpenApiConfig.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Config/OpenApiConfig.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Config/SecurityConfiguration.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Config/SecurityConfiguration.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Demo/AdminController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Demo/AdminController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Demo/ManagementController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Demo/ManagementController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/ChangePasswordDto$ChangePasswordDtoBuilder.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/ChangePasswordDto$ChangePasswordDtoBuilder.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/ChangePasswordDto.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/ChangePasswordDto.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/NotificationsDto$NotificationsDtoBuilder.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/NotificationsDto$NotificationsDtoBuilder.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/NotificationsDto.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/NotificationsDto.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/PreferencesDto$PreferencesDtoBuilder.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/PreferencesDto$PreferencesDtoBuilder.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/PreferencesDto.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/PreferencesDto.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/ProfileSettingsDto$ProfileSettingsDtoBuilder.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/ProfileSettingsDto$ProfileSettingsDtoBuilder.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/ProfileSettingsDto.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/ProfileSettingsDto.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/RoleDto$RoleDtoBuilder.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/RoleDto$RoleDtoBuilder.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/RoleDto.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/RoleDto.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/SecuritySettingsDto$SecuritySettingsDtoBuilder.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/SecuritySettingsDto$SecuritySettingsDtoBuilder.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/SecuritySettingsDto.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/SecuritySettingsDto.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/SettingsDto$SettingsDtoBuilder.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/SettingsDto$SettingsDtoBuilder.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/SettingsDto.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/SettingsDto.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/UserDto$UserDtoBuilder.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/UserDto$UserDtoBuilder.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/UserDto.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/UserDto.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/UserSettingsDto$UserSettingsDtoBuilder.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/UserSettingsDto$UserSettingsDtoBuilder.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/UserSettingsDto.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/UserSettingsDto.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/BpmnPdfService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/BpmnPdfService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/DownloadService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/DownloadService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/File.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/File.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileService$FileStats.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileService$FileStats.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Settings/SettingsController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Settings/SettingsController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Settings/SettingsService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Settings/SettingsService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Settings/UserPreferenceRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Settings/UserPreferenceRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Settings/UserPreferences$UserPreferencesBuilder.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Settings/UserPreferences$UserPreferencesBuilder.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Settings/UserPreferences.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Settings/UserPreferences.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Settings/UserSecuritySettings$UserSecuritySettingsBuilder.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Settings/UserSecuritySettings$UserSecuritySettingsBuilder.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Settings/UserSecuritySettings.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Settings/UserSecuritySettings.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Settings/UserSecuritySettingsRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Settings/UserSecuritySettingsRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Token/Token$TokenBuilder.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Token/Token$TokenBuilder.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Token/Token.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Token/Token.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Token/TokenRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Token/TokenRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Token/TokenType.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Token/TokenType.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/User/ChangePasswordRequest$ChangePasswordRequestBuilder.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/User/ChangePasswordRequest$ChangePasswordRequestBuilder.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/User/ChangePasswordRequest.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/User/ChangePasswordRequest.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/User/Permission.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/User/Permission.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/User/Role$RoleBuilder.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/User/Role$RoleBuilder.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/User/Role.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/User/Role.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/User/RoleRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/User/RoleRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/User/User$UserBuilder.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/User/User$UserBuilder.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/User/User.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/User/User.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/User/UserController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/User/UserController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/User/UserRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/User/UserRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/User/UserService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/User/UserService.class" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -87,7 +135,7 @@
 }</component>
   <component name="GithubPullRequestsUISettings">{
   &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/Paaraskevi/bpmnProject.git&quot;,
+    &quot;url&quot;: &quot;https://github.com/Paaraskevi/Bpmn-diagram-project.git&quot;,
     &quot;accountId&quot;: &quot;d068adde-f1a1-4a53-9efc-1f662dbd9362&quot;
   }
 }</component>
@@ -110,18 +158,18 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Application.Bpmn.executor": "Run",
-    "Gradle.bpmnJavaBackend [:bpmnProject.akon.bpmnJavaBackend.BpmnJavaBackendApplication.main()].executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/pasp/Bpmn-project/bpmnJavaBackend",
-    "settings.editor.selected.configurable": "reference.projectsettings.compiler.annotationProcessors"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.Bpmn.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.bpmnJavaBackend [:bpmnProject.akon.bpmnJavaBackend.BpmnJavaBackendApplication.main()].executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/pasp/Bpmn-diagramProject/bpmnJavaBackend&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;project.propVCSSupport.DirectoryMappings&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="ExtractSuperBase.RECENT_KEYS">
       <recent name="bpmnProject.akon.bpmnJavaBackend.Config" />

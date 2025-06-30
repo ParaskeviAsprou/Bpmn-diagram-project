@@ -1,4 +1,4 @@
-import { Component, ViewChild, ElementRef, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, ViewChild, ElementRef, OnInit, OnDestroy, inject, Input } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FileService } from '../../services/file.service';
@@ -13,16 +13,18 @@ import BpmnViewer from 'bpmn-js/lib/Viewer';
 import { MatDialog } from '@angular/material/dialog';
 import { DialogBoxComponent } from '../dialog-box/dialog-box.component';
 import { MatIconModule } from '@angular/material/icon';
+import { FileTreeComponent } from '../file-tree/file-tree.component';
 
 @Component({
   selector: 'app-list-files',
   standalone: true,
-  imports: [CommonModule,MatIconModule],
+  imports: [CommonModule,MatIconModule,FileTreeComponent],
   templateUrl: './list-files.component.html',
   styleUrl: './list-files.component.css'
 })
 export class ListFilesComponent implements OnInit, OnDestroy {
   @ViewChild('listfiles', { static: true }) listfiles!: ElementRef;
+  @Input() currentFolder: any;
 
   appFile: AppFile[] = [];
   isLoading = true;

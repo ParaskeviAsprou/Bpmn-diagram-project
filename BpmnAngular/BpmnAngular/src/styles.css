@@ -436,3 +436,51 @@ body {
 }
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+
+/* dialogs
+::ng-deep .custom-dialog-backdrop {
+  background: rgba(45, 55, 72, 0.6) !important;
+  backdrop-filter: blur(4px) !important;
+  transition: all 0.3s ease !important;
+}
+
+::ng-deep .cdk-overlay-container {
+  z-index: 1000;
+}
+
+::ng-deep .cdk-global-overlay-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+::ng-deep .custom-property-dialog-panel {
+  animation: dialogSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes dialogSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+} */
+/* Change the outline (border) color when the field is focused */
+::ng-deep .mat-form-field-appearance-outline.mat-focused .mat-form-field-outline-thick {
+  stroke: yellow !important; /* outline color */
+}
+
+/* Optional: change the default (unfocused) outline color */
+::ng-deep .mat-form-field-appearance-outline .mat-form-field-outline {
+  stroke: yellow !important;
+}
+
+/* Change input text color */
+::ng-deep .mat-form-field-appearance-outline .mat-input-element {
+  color: yellow !important;
+}

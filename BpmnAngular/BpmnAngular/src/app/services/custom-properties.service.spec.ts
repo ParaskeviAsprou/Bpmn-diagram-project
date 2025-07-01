@@ -1,14 +1,15 @@
 import { TestBed } from '@angular/core/testing';
-import { CustomePropertyService } from './custom-properties.service';
+import { CustomPropertyService } from './custom-properties.service';
+
 
 
 
 describe('CustomPropertiesService', () => {
-  let service: CustomePropertyService;
+  let service: CustomPropertyService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(CustomePropertyService);
+    service = TestBed.inject(CustomPropertyService);
   });
 
   it('should be created', () => {

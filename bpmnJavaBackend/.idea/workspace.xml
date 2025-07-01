@@ -5,29 +5,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b0e063aa-5f23-4c09-b845-b72058de053f" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/app.routes.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/app.routes.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/Diagram/DiagramController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/Diagram/DiagramRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/Diagram/DiagramService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/Diagram/diagram.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/DtoClasses/DiagramDto.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/DtoClasses/ElementColorDto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/color-dialog/color-dialog.component.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/color-dialog/color-dialog.component.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/color-dialog/color-dialog.component.spec.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/color-dialog/color-dialog.component.ts" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/bpmn-modeler/bpmn-modeler.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/bpmn-modeler/bpmn-modeler.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/file-manager/file-manager.component.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/file-manager/file-manager.component.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/file-manager/file-manager.component.spec.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/file-manager/file-manager.component.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/list-files/list-files.component.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/list-files/list-files.component.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/list-files/list-files.component.spec.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/list-files/list-files.component.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/file-tree/file-tree.component.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/file-tree/file-tree.component.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/file-tree/file-tree.component.spec.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/file-tree/file-tree.component.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/files.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/services/file.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/services/file.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/services/folder.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/services/folder.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/styles.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/services/custom-properties.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/services/custom-properties.service.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/Config/SecurityConfiguration.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/Config/SecurityConfiguration.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FileController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FileController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FileService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FileService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileController.class" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

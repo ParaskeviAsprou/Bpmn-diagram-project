@@ -1,14 +1,19 @@
 package bpmnProject.akon.bpmnJavaBackend.File;
 
 
+import org.hibernate.sql.Update;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+
+
 
 @Service
 @Transactional
@@ -152,6 +157,10 @@ public class FileService {
                         .orElseThrow(() -> new RuntimeException("Folder not found with id: " + folderId));
             }
 
+            String fileName = multipartFile.getOriginalFilename();
+            if (fileName != null && fileExistsInFolder(fileName, folderId)) {
+                throw new RuntimeException("File with name '" + fileName + "' already exists in this location");
+            }
             // Create file entity
             File file = new File();
             file.setFileName(multipartFile.getOriginalFilename());
@@ -170,6 +179,13 @@ public class FileService {
             File savedFile = fileRepository.save(file);
             System.out.println("File uploaded to folder: " + (folder != null ? folder.getFolderName() : "root"));
 
+            if (folderId != null) {
+                updateFolderStatistics(folderId);
+            }
+
+            System.out.println("File '" + fileName + "' uploaded successfully to folder: " +
+                    (folder != null ? folder.getFolderName() : "root"));
+
             return savedFile;
 
         } catch (Exception e) {
@@ -179,6 +195,32 @@ public class FileService {
         }
     }
 
+    @Transactional
+    public void updateFolderStatistics(Long folderId){
+        try {
+            if ( folderId == null) return;
+            Optional<Folder>folderOpt = folderRepository.findById(folderId);
+            if(folderOpt.isPresent()){
+                Folder folder = folderOpt.get();
+                folder.setUpdatedTime(LocalDateTime.now());
+                folderRepository.save(folder);
+            }
+        }catch (Exception e){
+            System.err.println("Error updating folder statistics" + e.getMessage());
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public boolean fileExistsInFolder(String fileName, Long folderId) {
+        try {
+            List<File> filesInFolder = getFilesInFolder(folderId);
+            return filesInFolder.stream()
+                    .anyMatch(file -> fileName.equals(file.getFileName()));
+        } catch (Exception e) {
+            System.err.println("Error checking file existence: " + e.getMessage());
+            return false;
+        }
+    }
     /**
      * Get files in specific folder
      */
@@ -445,6 +487,7 @@ public class FileService {
 
     @Transactional
     public File updateFile(File file) {
+        try{
         if (file.getId() == null) {
             throw new RuntimeException("File ID is required for update");
         }
@@ -461,8 +504,31 @@ public class FileService {
         }
 
         existingFile.setUpdatedTime(LocalDateTime.now());
+        File updatedFile = fileRepository.save(existingFile);
 
-        return fileRepository.save(existingFile);
+            if (existingFile.getFolder() != null) {
+                updateFolderStatistics(existingFile.getFolder().getId());
+            }
+
+            return updatedFile;
+
+        } catch (Exception e) {
+            System.err.println("Error updating file: " + e.getMessage());
+            throw new RuntimeException("Failed to update file: " + e.getMessage(), e);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public List<File>getFilesByFolder(Folder folder){
+        try{
+            if(folder==null){
+                return  fileRepository.findByFolderIsNullOrderByUploadTimeDesc();
+            }
+            return fileRepository.findByFolderOrderByUploadTimeDesc(folder);
+        }catch (Exception e){
+            System.err.println("Error getting files by folder: " + e.getMessage());
+            throw new RuntimeException("Failed to retrieve files", e);
+        }
     }
 
     // Response classes

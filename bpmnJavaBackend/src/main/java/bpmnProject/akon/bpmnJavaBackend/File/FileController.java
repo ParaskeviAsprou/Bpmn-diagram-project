@@ -16,8 +16,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
@@ -58,16 +60,59 @@ public class FileController {
 
     @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> deleteFile(@PathVariable Long id) {
+    public ResponseEntity<?> deleteFile(@PathVariable("id") Long id) {
+        System.out.println("Attempting to delete file with id: " + id);
         try {
+            // Check if file exists
+            File file = fileService.findFileById(id);
+            if (file == null) {
+                return new ResponseEntity<>(
+                        Map.of("error", "File not found with id: " + id),
+                        HttpStatus.NOT_FOUND
+                );
+            }
+
+            String fileName = file.getFileName();
+
+            // Delete the file
             fileService.deleteByFile(id);
-            return new ResponseEntity<>(Map.of("message", "File deleted successfully"), HttpStatus.OK);
+
+            return new ResponseEntity<>(
+                    Map.of(
+                            "message", "File deleted successfully",
+                            "fileName", fileName,
+                            "fileId", id
+                    ),
+                    HttpStatus.OK
+            );
         } catch (Exception e) {
+            System.err.println("Error deleting file with id " + id + ": " + e.getMessage());
             e.printStackTrace();
-            return new ResponseEntity<>(Map.of("error", "Failed to delete file"), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(
+                    Map.of("error", "Failed to delete file: " + e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
+    @GetMapping("/root-files")
+    @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
+    public ResponseEntity<List<File>> getRootFiles() {
+        try {
+            List<File> files = fileService.getFilesInFolder(null); // null means root folder
+            files.forEach(file -> {
+                if (file.getData() != null) {
+                    file.setBase64Data(java.util.Base64.getEncoder().encodeToString(file.getData()));
+                    file.setData(null); // Don't send raw data in response
+                }
+            });
+            return new ResponseEntity<>(files, HttpStatus.OK);
+        } catch (Exception e) {
+            System.err.println("Error fetching root files: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
     @GetMapping("/{id}/export/pdf")
     @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
     public ResponseEntity<byte[]> exportFileToPdf(@PathVariable Long id) {
@@ -291,22 +336,106 @@ public class FileController {
 
     @PostMapping("/upload")
     @PreAuthorize("hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<File> uploadFile(
+    public ResponseEntity<?> uploadFile(
             @RequestParam("file") MultipartFile multipartFile,
             @RequestParam(value = "folderId", required = false) Long folderId,
             @RequestParam(value = "description", required = false) String description,
-            @RequestParam(value = "tags", required = false) String tags) throws IOException {
+            @RequestParam(value = "tags", required = false) String tags,
+            @RequestParam(value = "customName", required = false) String customName) {
         try {
+            // Validate file
+            if (multipartFile.isEmpty()) {
+                return new ResponseEntity<>(
+                        Map.of("error", "File is empty"),
+                        HttpStatus.BAD_REQUEST
+                );
+            }
+
+            // Validate file size (e.g., max 50MB)
+            long maxFileSize = 50 * 1024 * 1024; // 50MB
+            if (multipartFile.getSize() > maxFileSize) {
+                return new ResponseEntity<>(
+                        Map.of("error", "File size exceeds maximum limit of 50MB"),
+                        HttpStatus.PAYLOAD_TOO_LARGE
+                );
+            }
+
+            // Validate file type
+            String contentType = multipartFile.getContentType();
+            if (contentType != null && !isAllowedFileType(contentType)) {
+                return new ResponseEntity<>(
+                        Map.of("error", "File type not supported: " + contentType),
+                        HttpStatus.UNSUPPORTED_MEDIA_TYPE
+                );
+            }
+
             String currentUser = getCurrentUsername();
-            File file = fileService.uploadFileToFolder(multipartFile, folderId, description, tags, currentUser);
+            String fileName = customName != null && !customName.trim().isEmpty()
+                    ? customName
+                    : multipartFile.getOriginalFilename();
+
+            File file = fileService.uploadFileToFolder(
+                    multipartFile,
+                    folderId,
+                    description,
+                    tags,
+                    currentUser
+            );
+
+            // If custom name was provided, update the file name
+            if (customName != null && !customName.trim().isEmpty()) {
+                file.setFileName(customName);
+                file = fileService.updateFile(file);
+            }
+
             return new ResponseEntity<>(file, HttpStatus.CREATED);
         } catch (Exception e) {
             System.err.println("Error uploading file: " + e.getMessage());
             e.printStackTrace();
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(
+                    Map.of("error", "Failed to upload file: " + e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
+    @PutMapping("/{id}/content")
+    @PreAuthorize("hasRole('MODELER') or hasRole('ADMIN')")
+    public ResponseEntity<?> updateFileContent(
+            @PathVariable Long id,
+            @RequestParam("content") String content) {
+        try {
+            File existingFile = fileService.findFileById(id);
+            if (existingFile == null) {
+                return new ResponseEntity<>(
+                        Map.of("error", "File not found with id: " + id),
+                        HttpStatus.NOT_FOUND
+                );
+            }
+
+            // Update file content
+            existingFile.setData(content.getBytes());
+            existingFile.setUpdatedTime(LocalDateTime.now());
+            existingFile.setUpdatedBy(getCurrentUsername());
+
+            File updatedFile = fileService.updateFile(existingFile);
+
+            // Convert to base64 for response
+            if (updatedFile.getData() != null) {
+                updatedFile.setBase64Data(java.util.Base64.getEncoder().encodeToString(updatedFile.getData()));
+                updatedFile.setData(null);
+            }
+
+            return new ResponseEntity<>(updatedFile, HttpStatus.OK);
+        } catch (Exception e) {
+            System.err.println("Error updating file content: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>(
+                    Map.of("error", "Failed to update file content: " + e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
     @PostMapping("/{id}/save-version")
     @PreAuthorize("hasRole('MODELER') or hasRole('ADMIN')")
     public ResponseEntity<FileVersion> saveNewVersion(
@@ -433,15 +562,49 @@ public class FileController {
 
     @GetMapping("/folders/{folderId}/files")
     @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<List<File>> getFolderFiles(@PathVariable Long folderId) {
-        List<File> files = fileService.getFilesInFolder(folderId);
-        files.forEach(file -> {
-            if (file.getData() != null) {
-                file.setBase64Data(java.util.Base64.getEncoder().encodeToString(file.getData()));
-                file.setData(null);
+    public ResponseEntity<?> getFolderFiles(@PathVariable Long folderId) {
+        try {
+            // Check if folder exists
+            Optional<Folder> folderOpt = folderService.getFolderWithStats(folderId);
+            if (!folderOpt.isPresent()) {
+                return new ResponseEntity<>(
+                        Map.of("error", "Folder not found with id: " + folderId),
+                        HttpStatus.NOT_FOUND
+                );
             }
-        });
-        return ResponseEntity.ok(files);
+
+            List<File> files = fileService.getFilesInFolder(folderId);
+            files.forEach(file -> {
+                if (file.getData() != null) {
+                    file.setBase64Data(java.util.Base64.getEncoder().encodeToString(file.getData()));
+                    file.setData(null);
+                }
+            });
+
+            return new ResponseEntity<>(files, HttpStatus.OK);
+        } catch (Exception e) {
+            System.err.println("Error fetching files for folder " + folderId + ": " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>(
+                    Map.of("error", "Failed to retrieve files: " + e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    private boolean isAllowedFileType(String contentType) {
+        List<String> allowedTypes = Arrays.asList(
+                "application/xml",
+                "text/xml",
+                "application/json",
+                "text/plain",
+                "application/octet-stream", // For .bpmn files
+                "text/bpmn+xml"
+        );
+
+        return allowedTypes.stream().anyMatch(contentType::startsWith)
+                || contentType.contains("xml")
+                || contentType.contains("bpmn");
     }
 
     @PostMapping("/folders/{folderId}/move")
@@ -472,7 +635,7 @@ public class FileController {
         }
     }
 
-    @DeleteMapping("/folders/{folderId}")
+    @DeleteMapping("/folders/delete/{folderId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> deleteFolder(@PathVariable Long folderId) {
         try {
@@ -627,18 +790,34 @@ public class FileController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<File> getFileById(@PathVariable("id") Long id) {
+    public ResponseEntity<?> getFileById(@PathVariable("id") Long id) {
         try {
             File file = fileService.findFileById(id);
+            if (file == null) {
+                return new ResponseEntity<>(
+                        Map.of("error", "File not found with id: " + id),
+                        HttpStatus.NOT_FOUND
+                );
+            }
+
+            // Convert binary data to base64 for JSON response
             if (file.getData() != null) {
                 file.setBase64Data(java.util.Base64.getEncoder().encodeToString(file.getData()));
+                // Don't send raw data in JSON response for performance
+                file.setData(null);
             }
+
             return new ResponseEntity<>(file, HttpStatus.OK);
         } catch (Exception e) {
+            System.err.println("Error fetching file with id " + id + ": " + e.getMessage());
             e.printStackTrace();
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(
+                    Map.of("error", "Failed to retrieve file: " + e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
+
 
     @PostMapping("/{fileId}/move-to-folder")
     @PreAuthorize("hasRole('MODELER') or hasRole('ADMIN')")

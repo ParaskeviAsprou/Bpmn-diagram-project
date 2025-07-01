@@ -1,0 +1,92 @@
+<p>create-folder-dialog works!</p>
+<div class="create-folder-dialog">
+  <!-- Dialog Header -->
+  <div mat-dialog-title class="dialog-header">
+    <div class="header-content">
+      <mat-icon class="header-icon">create_new_folder</mat-icon>
+      <div class="header-text">
+        <h2>Create New Folder</h2>
+        <p class="parent-path">
+          <mat-icon class="path-icon">folder</mat-icon>
+          <span>in {{ data.parentFolderName }}</span>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dialog Content -->
+  <div mat-dialog-content class="dialog-content">
+    <form [formGroup]="folderForm" (keydown)="onKeyDown($event)" class="folder-form">
+      <!-- Folder Name Field -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Folder Name</mat-label>
+        <input
+          matInput
+          formControlName="name"
+          placeholder="Enter folder name"
+          maxlength="100"
+          autocomplete="off">
+        <mat-icon matSuffix>folder</mat-icon>
+        <mat-hint align="end">{{ nameControl?.value?.length || 0 }}/100</mat-hint>
+        <mat-error *ngIf="nameControl?.invalid && nameControl?.touched">
+          {{ getNameErrorMessage() }}
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Description Field -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Description (Optional)</mat-label>
+        <textarea
+          matInput
+          formControlName="description"
+          placeholder="Enter folder description"
+          rows="3"
+          maxlength="500"
+          autocomplete="off"></textarea>
+        <mat-icon matSuffix>description</mat-icon>
+        <mat-hint align="end">{{ descriptionControl?.value?.length || 0 }}/500</mat-hint>
+        <mat-error *ngIf="descriptionControl?.invalid && descriptionControl?.touched">
+          {{ getDescriptionErrorMessage() }}
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Form Help Text -->
+      <div class="form-help">
+        <mat-icon class="help-icon">info</mat-icon>
+        <div class="help-text">
+          <p>Folder names can contain letters, numbers, spaces, and common symbols (-, _, ., ()).</p>
+          <p class="keyboard-hint">
+            <kbd>Enter</kbd> to create • <kbd>Ctrl + Enter</kbd> to create from description
+          </p>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Dialog Actions -->
+  <div mat-dialog-actions class="dialog-actions">
+    <div class="actions-container">
+      <button
+        mat-button
+        type="button"
+        (click)="onCancel()"
+        [disabled]="isCreating"
+        class="cancel-btn">
+        <mat-icon>close</mat-icon>
+        Cancel
+      </button>
+      
+      <button
+        mat-raised-button
+        color="primary"
+        type="submit"
+        (click)="onSubmit()"
+        [disabled]="folderForm.invalid || isCreating"
+        class="create-btn">
+        <mat-icon *ngIf="!isCreating">create_new_folder</mat-icon>
+        <mat-icon *ngIf="isCreating" class="spinning">Refresh</mat-icon>
+        {{ isCreating ? 'Creating...' : 'Create Folder' }}
+      </button>
+    </div>
+  </div>
+</div>

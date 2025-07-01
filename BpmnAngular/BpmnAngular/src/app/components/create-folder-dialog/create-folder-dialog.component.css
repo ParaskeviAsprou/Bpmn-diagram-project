@@ -1,0 +1,261 @@
+.create-folder-dialog {
+  max-width: 500px;
+  min-width: 400px;
+}
+
+/* Dialog Header */
+.dialog-header {
+  padding: 24px 24px 16px 24px;
+  margin: 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.header-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.header-icon {
+  color: #1976d2;
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+  margin-top: 4px;
+}
+
+.header-text h2 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: 500;
+  color: #212121;
+}
+
+.parent-path {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #666;
+  font-size: 14px;
+  margin: 0;
+}
+
+.path-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  color: #9e9e9e;
+}
+
+/* Dialog Content */
+.dialog-content {
+  padding: 24px;
+  min-height: 200px;
+}
+
+.folder-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+/* Form Fields */
+.mat-form-field {
+  font-size: 14px;
+}
+
+.mat-form-field-appearance-outline .mat-form-field-outline {
+  border-radius: 8px;
+}
+
+.mat-form-field-appearance-outline .mat-form-field-outline-thick {
+  border-width: 2px;
+}
+
+/* Form Help Section */
+.form-help {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  border-left: 4px solid #1976d2;
+}
+
+.help-icon {
+  color: #1976d2;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.help-text {
+  flex: 1;
+}
+
+.help-text p {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  color: #666;
+  line-height: 1.4;
+}
+
+.help-text p:last-child {
+  margin-bottom: 0;
+}
+
+.keyboard-hint {
+  font-size: 12px !important;
+  color: #888 !important;
+}
+
+kbd {
+  background-color: #f1f1f1;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-family: monospace;
+  color: #333;
+}
+
+/* Dialog Actions */
+.dialog-actions {
+  padding: 16px 24px 24px 24px;
+  margin: 0;
+  border-top: 1px solid #e0e0e0;
+}
+
+.actions-container {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.cancel-btn {
+  min-width: 100px;
+  height: 40px;
+  color: #666;
+}
+
+.cancel-btn:hover {
+  background-color: #f5f5f5;
+}
+
+.create-btn {
+  min-width: 140px;
+  height: 40px;
+  font-weight: 500;
+}
+
+.create-btn:disabled {
+  background-color: #e0e0e0 !important;
+  color: #9e9e9e !important;
+}
+
+/* Button Icons */
+.mat-button mat-icon,
+.mat-raised-button mat-icon {
+  margin-right: 8px;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+/* Loading Animation */
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error States */
+.mat-error {
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+  .create-folder-dialog {
+    min-width: 320px;
+    max-width: 90vw;
+  }
+  
+  .dialog-header {
+    padding: 16px 16px 12px 16px;
+  }
+  
+  .dialog-content {
+    padding: 16px;
+  }
+  
+  .dialog-actions {
+    padding: 12px 16px 16px 16px;
+  }
+  
+  .header-content {
+    gap: 12px;
+  }
+  
+  .header-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+  }
+  
+  .header-text h2 {
+    font-size: 20px;
+  }
+  
+  .actions-container {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+  
+  .cancel-btn,
+  .create-btn {
+    width: 100%;
+  }
+}
+
+/* Focus States */
+.mat-form-field-appearance-outline.mat-focused .mat-form-field-outline-thick {
+  border-color: #1976d2;
+}
+
+/* Accessibility */
+.mat-button:focus,
+.mat-raised-button:focus {
+  outline: 2px solid #1976d2;
+  outline-offset: 2px;
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .form-help {
+    border: 2px solid #1976d2;
+    background-color: #fff;
+  }
+  
+  .parent-path {
+    color: #000;
+  }
+  
+  .help-text p {
+    color: #000;
+  }
+}

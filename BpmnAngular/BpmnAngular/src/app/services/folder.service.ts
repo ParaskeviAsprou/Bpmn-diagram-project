@@ -4,44 +4,10 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError, BehaviorSubject } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 import { AuthenticationService } from './authentication.service';
-
-export interface Folder {
-  id: number;
-  folderName: string;
-  description?: string;
-  createdTime: string;
-  updatedTime?: string;
-  createdBy: string;
-  folderPath: string;
-  isRoot: boolean;
-  fileCount?: number;
-  subFolderCount?: number;
-  totalSize?: number;
-}
-
-export interface FolderTreeNode {
-  id: number;
-  name: string;
-  path: string;
-  fileCount: number;
-  subFolderCount: number;
-  children: FolderTreeNode[];
-  expanded?: boolean;
-  selected?: boolean;
-}
-
-export interface FolderBreadcrumb {
-  id: number;
-  name: string;
-  path: string;
-}
-
-export interface FolderStatistics {
-  fileCount: number;
-  subFolderCount: number;
-  totalSize: number;
-  lastModified?: string;
-}
+import { Folder } from '../models/Folder';
+import { FolderTreeNode } from '../models/FolderTreeNode';
+import { FolderBreadcrumb } from '../models/FolderBreadcrumb';
+import { FolderStatistics } from '../models/FolderStatistics';
 
 @Injectable({
   providedIn: 'root'
@@ -186,12 +152,9 @@ export class FolderService {
    * Delete folder
    */
   deleteFolder(folderId: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/folders/${folderId}`, {
+    return this.http.delete(`${this.apiUrl}/folders/delete/${folderId}`, {
       headers: this.getAuthHeaders()
-    }).pipe(
-      tap(() => this.loadFolderTree()),
-      catchError(this.handleError)
-    );
+    });
   }
 
   /**
@@ -437,4 +400,12 @@ export class FolderService {
     
     return throwError(() => new Error(errorMessage));
   };
+
+  createFolder(name: string, description: string, parentFolderId?: number): Observable<Folder> {
+    if (parentFolderId !== undefined && parentFolderId !== null) {
+      return this.createSubFolder(parentFolderId, name, description);
+    } else {
+      return this.createRootFolder(name, description);
+    }
+  }
 }

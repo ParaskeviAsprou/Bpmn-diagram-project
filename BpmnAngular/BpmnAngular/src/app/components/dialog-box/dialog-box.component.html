@@ -1,22 +1,28 @@
-<div class="dialog-container">
-    <button mat-icon-button mat-dialog-close>
-        <mat-icon fontIcon="close"></mat-icon>
-    </button>
-    <h2 style="text-align: center;"mat-dialog-title>Confirm Delete</h2>
+  <div class="dialog-container">
+      <h2 mat-dialog-title [class]="'dialog-title-' + (data.type || 'info')">
+        <mat-icon>{{ getIconForType() }}</mat-icon>
+        {{ data.title || 'Confirm Action' }}
+      </h2>
 
-    <mat-dialog-content>
-        <div class="dialog-content">
-            <mat-icon class="warning-icon">warning</mat-icon>
-            <p>Are you sure you want to delete this file?</p>
-            <p class="warning-text">This action cannot be undone.</p>
-        </div>
-    </mat-dialog-content>
+    <mat-dialog-content class="dialog-content">
+        <p class="dialog-message">{{ data.message }}</p>
+        <p *ngIf="data.warning" class="dialog-warning">
+          <mat-icon>warning</mat-icon>
+          {{ data.warning }}
+        </p>
+      </mat-dialog-content>
 
-    <mat-dialog-actions>
-        <button mat-button mat-dialog-close="false" color="primary" class="cancel-btn">Cancel</button>
-        <button mat-raised-button color="warn" mat-dialog-close="true" class="delete-btn">
-            <mat-icon>delete</mat-icon>
-            Delete
+   <mat-dialog-actions class="dialog-actions">
+        <button mat-button 
+                (click)="onCancel()" 
+                class="cancel-button">
+          {{ data.cancelText || 'Cancel' }}
         </button>
-    </mat-dialog-actions>
+        <button mat-raised-button 
+                [color]="getButtonColor()" 
+                (click)="onConfirm()" 
+                class="confirm-button">
+          {{ data.confirmText || 'Confirm' }}
+        </button>
+      </mat-dialog-actions>
 </div>

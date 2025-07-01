@@ -2,17 +2,19 @@ import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http
 import { Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { AppFile } from '../files';
 import { AuthenticationService } from './authentication.service';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { AppFile } from '../models/File';
+import { Folder } from '../models/Folder';
+
 
 @Injectable({
   providedIn: 'root'
 })
 export class FileService {
   private apiServerUrl = "http://localhost:8080/api/v1/file";
-  
+
   constructor(
     private http: HttpClient,
     private authService: AuthenticationService
@@ -24,11 +26,11 @@ export class FileService {
   public uploadFile(file: File): Observable<AppFile> {
     const formData = new FormData();
     formData.append("file", file, file.name);
-    
+
     const headers = this.getUploadHeaders();
-    
+
     console.log('Uploading file with headers:', headers.keys());
-    
+
     return this.http.post<AppFile>(`${this.apiServerUrl}/upload`, formData, {
       headers: headers
     }).pipe(
@@ -89,6 +91,13 @@ export class FileService {
     );
   }
 
+  getRootFiles(): Observable<AppFile[]> {
+    return this.http.get<AppFile[]>(`${this.apiServerUrl}/root-files`, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
   /**
    * Get file content as string
    */
@@ -96,9 +105,7 @@ export class FileService {
     return this.http.get(`${this.apiServerUrl}/${id}/content`, {
       headers: this.getAuthHeaders(),
       responseType: 'text'
-    }).pipe(
-      catchError(this.handleError)
-    );
+    });
   }
 
   /**
@@ -123,7 +130,7 @@ export class FileService {
   public exportElementToPdf(elementId: string = 'content', fileName: string = 'exported-file.pdf'): Promise<void> {
     return new Promise((resolve, reject) => {
       const element = document.getElementById(elementId);
-      
+
       if (!element) {
         reject(new Error(`Element with ID '${elementId}' not found`));
         return;
@@ -134,7 +141,7 @@ export class FileService {
         const imgHeight = canvas.height * imgWidth / canvas.width;
         const contentDataURL = canvas.toDataURL('image/png');
         const pdf = new jsPDF('p', 'mm', 'a4');
-        
+
         pdf.addImage(contentDataURL, 'PNG', 0, 0, imgWidth, imgHeight);
         pdf.save(fileName);
         resolve();
@@ -159,8 +166,8 @@ export class FileService {
   /**
    * Validate BPMN file
    */
-  public validateBpmnFile(fileId: number): Observable<{valid: boolean; errors?: string[]; warnings?: string[]}> {
-    return this.http.post<{valid: boolean; errors?: string[]; warnings?: string[]}>(`${this.apiServerUrl}/${fileId}/validate`, {}, {
+  public validateBpmnFile(fileId: number): Observable<{ valid: boolean; errors?: string[]; warnings?: string[] }> {
+    return this.http.post<{ valid: boolean; errors?: string[]; warnings?: string[] }>(`${this.apiServerUrl}/${fileId}/validate`, {}, {
       headers: this.getAuthHeaders()
     }).pipe(
       catchError(this.handleError)
@@ -182,19 +189,17 @@ export class FileService {
   /**
    * Update existing file content
    */
-  public updateFileContent(fileId: number, content: string): Observable<AppFile> {
-    const blob = new Blob([content], { type: 'application/xml' });
-    const file = new File([blob], 'updated_file.bpmn', { type: 'application/xml' });
-    
+  updateFileContent(fileId: number, content: string): Observable<AppFile> {
     const formData = new FormData();
-    formData.append("file", file);
-    
-    return this.http.put<AppFile>(`${this.apiServerUrl}/${fileId}`, formData, {
+    formData.append('content', content);
+
+    return this.http.put<AppFile>(`${this.apiServerUrl}/${fileId}/content`, formData, {
       headers: this.getUploadHeaders()
     }).pipe(
       catchError(this.handleError)
     );
   }
+
 
   /**
    * Get authentication headers for JSON requests
@@ -221,8 +226,6 @@ export class FileService {
     if (token) {
       headers = headers.set('Authorization', `Bearer ${token}`);
     }
-
-    // Don't set Content-Type for multipart form data - let the browser set it
     return headers;
   }
 
@@ -231,7 +234,7 @@ export class FileService {
    */
   private handleError = (error: HttpErrorResponse): Observable<never> => {
     let errorMessage = 'An error occurred while processing the file';
-    
+
     console.error('File Service Error Details:', {
       status: error.status,
       statusText: error.statusText,
@@ -239,7 +242,7 @@ export class FileService {
       message: error.message,
       error: error.error
     });
-    
+
     if (error.error instanceof ErrorEvent) {
       // Client-side error
       errorMessage = error.error.message;
@@ -283,8 +286,51 @@ export class FileService {
           }
       }
     }
-    
+
     console.error('File Service Error:', errorMessage);
     return throwError(() => new Error(errorMessage));
   };
+
+  getFilesInFolder(folderId: number): Observable<AppFile[]> {
+    return this.http.get<AppFile[]>(`${this.apiServerUrl}/folders/${folderId}/files`, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+
+  uploadFileToFolder(
+    file: File,
+    folderId: number | null,
+    description: string = '',
+    tags: string = '',
+    customName?: string
+  ): Observable<AppFile> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    if (folderId !== null && folderId !== undefined) {
+      formData.append('folderId', folderId.toString());
+    }
+
+    if (description) {
+      formData.append('description', description);
+    }
+
+    if (tags) {
+      formData.append('tags', tags);
+    }
+
+    if (customName) {
+      formData.append('customName', customName);
+    }
+
+    return this.http.post<AppFile>(`${this.apiServerUrl}/upload`, formData, {
+      headers: this.getUploadHeaders()
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
 }

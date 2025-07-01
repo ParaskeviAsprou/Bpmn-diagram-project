@@ -71,3 +71,72 @@ mat-dialog-actions {
     font-size: 14px;
   }
 }
+   .dialog-container {
+      padding: 0;
+      min-width: 300px;
+    }
+    
+    .dialog-title-warning {
+      color: #f57f17;
+    }
+    
+    .dialog-title-error {
+      color: #d32f2f;
+    }
+    
+    .dialog-title-success {
+      color: #388e3c;
+    }
+    
+    .dialog-content {
+      padding: 16px 24px;
+    }
+    
+    .dialog-message {
+      margin: 0 0 16px 0;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    
+    .dialog-warning {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 16px 0 0 0;
+      padding: 12px;
+      background-color: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 4px;
+      color: #856404;
+      font-size: 13px;
+    }
+    
+    .dialog-warning mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+    
+    .dialog-actions {
+      padding: 16px 24px;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    
+    .cancel-button {
+      margin-right: 8px;
+    }
+    
+    mat-dialog-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      padding: 24px 24px 0 24px;
+    }
+    
+    mat-dialog-title mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }

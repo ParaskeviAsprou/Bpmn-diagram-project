@@ -5,7 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { FileService } from '../../services/file.service';
-import { AppFile } from '../../files';
+import { AppFile } from '../../models/File';
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import BpmnViewer from 'bpmn-js/lib/Viewer';
 import { AuthenticationService, User } from '../../services/authentication.service';
@@ -21,6 +21,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatButtonModule } from '@angular/material/button';
 import { CustomProperty, CustomPropertyDialogComponent, CustomPropertyDialogData } from '../custom-property-dialog/custom-property-dialog.component';
 import { CustomePropertyService } from '../../services/custom-properties.service';
+import { ColorDialogComponent, ColorDialogData, ColorDialogResult } from '../../color-dialog/color-dialog.component';
 
 
 export interface ExportFormat {
@@ -68,7 +69,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Custom Properties
   elementCustomProperties: CustomProperty[] = [];
-  
+
   // Element colors storage
   private elementColors: ElementColors = {};
   private readonly COLORS_STORAGE_KEY = 'bpmn_element_colors';
@@ -381,7 +382,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
           ...prop,
           id: this.generatePropertyId()
         }));
-        
+
         this.customPropertyService.setElementProperties(element.id, properties);
         console.log(`Applied ${templateName} template to element ${element.id}`);
       } catch (error) {
@@ -427,21 +428,55 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
   // ============= DIAGRAM LOADING AND FILE METHODS =============
 
   private loadDiagram(xml: string): void {
-    if (!this.modeler) return;
+    if (!this.modeler) {
+      console.error('Modeler not initialized');
+      return;
+    }
+
+    // Validate XML content
+    if (!xml || xml.trim().length === 0) {
+      console.warn('Empty XML content, loading default diagram');
+      xml = this.defaultXml;
+    }
+
+    // Check if it's valid XML
+    if (!xml.includes('<?xml') && !xml.includes('<bpmn:definitions')) {
+      console.warn('Invalid BPMN XML format, loading default diagram');
+      xml = this.defaultXml;
+    }
+
+    console.log('Loading diagram, XML length:', xml.length);
+    console.log('XML preview:', xml.substring(0, 200) + '...');
 
     this.modeler.importXML(xml)
       .then(() => {
         console.log('Diagram loaded successfully');
         this.zoomToFit();
         this.hasUnsavedChanges = false;
-        
+
+        // Apply stored colors after a short delay
         setTimeout(() => {
           this.applyStoredColors();
         }, 100);
+
+        // Show success message
+        if (this.currentFile) {
+          this.showMessage(`Diagram "${this.currentFile.fileName}" loaded successfully`, 'success');
+        } else {
+          this.showMessage('Diagram loaded successfully', 'success');
+        }
       })
       .catch((error: any) => {
         console.error('Error loading diagram:', error);
-        this.showMessage('Error loading diagram: ' + error.message, 'error');
+        console.error('Failed XML:', xml.substring(0, 500));
+
+        // Try to load default XML as fallback
+        if (xml !== this.defaultXml) {
+          console.log('Attempting to load default XML as fallback');
+          this.loadDiagram(this.defaultXml);
+        } else {
+          this.showMessage('Error loading diagram: ' + error.message, 'error');
+        }
       });
   }
 
@@ -451,61 +486,110 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    console.log('Loading file by ID:', fileId);
+
+    // First get the file metadata
     this.fileService.getFileById(fileId).subscribe({
       next: (file: AppFile) => {
         this.currentFile = file;
-        console.log('Loaded file:', file.fileName);
+        console.log('Loaded file metadata:', file.fileName);
 
-        if (this.modeler) {
-          this.loadDiagram(file.content || this.defaultXml);
-        }
+        // Now get the actual content
+        this.fileService.getFileContent(fileId).subscribe({
+          next: (content: string) => {
+            console.log('Loaded file content, length:', content.length);
+
+            // Update the current file with content
+            if (this.currentFile) {
+              this.currentFile.content = content;
+            }
+
+            // Load the diagram
+            if (this.modeler) {
+              this.loadDiagram(content);
+            }
+          },
+          error: (contentError: any) => {
+            console.error('Error loading file content:', contentError);
+
+            // Fallback: try to decode base64Data if available
+            if (file.base64Data) {
+              try {
+                const decodedContent = atob(file.base64Data);
+                console.log('Using base64 fallback, content length:', decodedContent.length);
+
+                if (this.currentFile) {
+                  this.currentFile.content = decodedContent;
+                }
+
+                if (this.modeler) {
+                  this.loadDiagram(decodedContent);
+                }
+              } catch (decodeError) {
+                console.error('Error decoding base64 content:', decodeError);
+                this.showMessage('Error loading file content: Could not decode file data', 'error');
+
+                // Last resort: load default XML
+                if (this.modeler) {
+                  this.loadDiagram(this.defaultXml);
+                }
+              }
+            } else {
+              this.showMessage('Error loading file content: ' + contentError.message, 'error');
+
+              // Load default XML as fallback
+              if (this.modeler) {
+                this.loadDiagram(this.defaultXml);
+              }
+            }
+          }
+        });
       },
       error: (error: any) => {
-        console.error('Error loading file:', error);
+        console.error('Error loading file metadata:', error);
         this.showMessage('Error loading file: ' + error.message, 'error');
       }
     });
   }
-
   // ============= CUSTOM PROPERTIES METHODS =============
 
- openCustomPropertiesDialog(): void {
-  if (!this.customPropertyService.canManageProperties()) {
-    this.showMessage('You do not have permission to manage custom properties.', 'error');
-    return;
-  }
-
-  if (!this.selectedElement) {
-    this.showMessage('Please select an element first.', 'warning');
-    return;
-  }
-
-  const dialogData: CustomPropertyDialogData = {
-    elementId: this.selectedElement.id,
-    elementType: this.selectedElement.type,
-    elementName: this.selectedElement.businessObject?.name || this.selectedElement.id,
-    existingProperties: this.elementCustomProperties
-  };
-
-  const dialogRef = this.popup.open(CustomPropertyDialogComponent, {
-    width: '900px',
-    maxWidth: '95vw',
-    maxHeight: '90vh',
-    data: dialogData,
-    disableClose: true,
-    panelClass: 'custom-property-dialog-panel', 
-    autoFocus: false,
-    restoreFocus: false,
-    hasBackdrop: true,
-    backdropClass: 'custom-dialog-backdrop'
-  });
-
-  dialogRef.afterClosed().subscribe((result: CustomProperty[] | undefined) => {
-    if (result) {
-      this.onCustomPropertiesSave(result);
+  openCustomPropertiesDialog(): void {
+    if (!this.customPropertyService.canManageProperties()) {
+      this.showMessage('You do not have permission to manage custom properties.', 'error');
+      return;
     }
-  });
-}
+
+    if (!this.selectedElement) {
+      this.showMessage('Please select an element first.', 'warning');
+      return;
+    }
+
+    const dialogData: CustomPropertyDialogData = {
+      elementId: this.selectedElement.id,
+      elementType: this.selectedElement.type,
+      elementName: this.selectedElement.businessObject?.name || this.selectedElement.id,
+      existingProperties: this.elementCustomProperties
+    };
+
+    const dialogRef = this.popup.open(CustomPropertyDialogComponent, {
+      width: '900px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
+      data: dialogData,
+      disableClose: true,
+      panelClass: 'custom-property-dialog-panel',
+      autoFocus: false,
+      restoreFocus: false,
+      hasBackdrop: true,
+      backdropClass: 'custom-dialog-backdrop'
+    });
+
+    dialogRef.afterClosed().subscribe((result: CustomProperty[] | undefined) => {
+      if (result) {
+        this.onCustomPropertiesSave(result);
+      }
+    });
+  }
 
   onCustomPropertiesSave(properties: CustomProperty[]): void {
     if (!this.selectedElement) {
@@ -591,8 +675,8 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
       if (result && result.length > 0) {
         try {
           this.customPropertyService.updateElementProperty(
-            this.selectedElement.id, 
-            property.id, 
+            this.selectedElement.id,
+            property.id,
             result[0]
           );
           this.loadCustomProperties();
@@ -632,29 +716,38 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    const colors = [
-      { name: 'Default', fill: null, stroke: null },
-      { name: 'Light Blue', fill: '#e3f2fd', stroke: '#1976d2' },
-      { name: 'Light Green', fill: '#e8f5e8', stroke: '#388e3c' },
-      { name: 'Light Red', fill: '#ffebee', stroke: '#d32f2f' },
-      { name: 'Light Yellow', fill: '#fffde7', stroke: '#f57c00' },
-      { name: 'Light Purple', fill: '#f3e5f5', stroke: '#7b1fa2' },
-      { name: 'Light Orange', fill: '#fff3e0', stroke: '#f57c00' },
-      { name: 'Light Pink', fill: '#fce4ec', stroke: '#c2185b' },
-      { name: 'Light Cyan', fill: '#e0f2f1', stroke: '#00796b' }
-    ];
+    // Get current element colors
+    const currentColors = this.elementColors[this.selectedElement.id] || {};
 
-    let colorOptions = 'Select a color:\n';
-    colors.forEach((color, index) => {
-      colorOptions += `${index + 1}. ${color.name}\n`;
+    const dialogData: ColorDialogData = {
+      elementId: this.selectedElement.id,
+      elementType: this.selectedElement.type,
+      elementName: this.selectedElement.businessObject?.name || this.selectedElement.id,
+      currentColors: {
+        fill: currentColors.fill,
+        stroke: currentColors.stroke
+      }
+    };
+
+    const dialogRef = this.popup.open(ColorDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      maxHeight: '80vh',
+      data: dialogData,
+      disableClose: false,
+      panelClass: 'color-dialog-panel',
+      autoFocus: false,
+      restoreFocus: true,
+      hasBackdrop: true,
+      backdropClass: 'color-dialog-backdrop'
     });
 
-    const choice = prompt(colorOptions + '\nEnter number (1-9):');
-    const colorIndex = parseInt(choice || '0') - 1;
-
-    if (colorIndex >= 0 && colorIndex < colors.length) {
-      this.updateElementColor(colors[colorIndex].fill, colors[colorIndex].stroke);
-    }
+    dialogRef.afterClosed().subscribe((result: ColorDialogResult | null) => {
+      if (result) {
+        this.updateElementColor(result.fill, result.stroke);
+        this.showMessage(`Applied ${result.colorName} color to element`, 'success');
+      }
+    });
   }
 
   private updateElementColor(fill: string | null, stroke: string | null): void {
@@ -663,23 +756,32 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    if (!this.selectedElement) {
+      this.showMessage('No element selected.', 'error');
+      return;
+    }
+
     try {
       const modeling = this.modeler.get('modeling');
       const colors: any = {};
 
+      // Set colors based on what was provided
       if (fill !== null) colors.fill = fill;
       if (stroke !== null) colors.stroke = stroke;
 
       if (fill === null && stroke === null) {
+        // Reset to default colors
         modeling.setColor(this.selectedElement, { fill: undefined, stroke: undefined });
         delete this.elementColors[this.selectedElement.id];
+        console.log('Reset element colors to default for:', this.selectedElement.id);
       } else {
+        // Apply new colors
         modeling.setColor(this.selectedElement, colors);
         this.storeElementColor(this.selectedElement.id, colors);
+        console.log('Applied colors to element:', this.selectedElement.id, colors);
       }
 
       this.hasUnsavedChanges = true;
-      this.showMessage('Element color updated successfully', 'success');
 
     } catch (error: any) {
       console.error('Error updating element color:', error);

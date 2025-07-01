@@ -5,8 +5,8 @@ import { AuthGuard } from './guards/auth.guard';
 import { RegisterComponent } from './components/register/register.component';
 import { LayoutComponent } from './components/layout/layout.component';
 import { BpmnModelerComponent } from './components/bpmn-modeler/bpmn-modeler.component';
-import { ListFilesComponent } from './components/list-files/list-files.component';
 import { SettingsComponent } from './components/settings/settings.component';
+import { FileListComponent } from './components/file-list/file-list.component';
 
 export const routes: Routes = [
       { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -16,7 +16,7 @@ export const routes: Routes = [
     // Standalone routes (outside of layout)
     { path: 'dashboard', component: DashboardComponent, },
     { path: 'modeler', component: BpmnModelerComponent,  },
-    { path: 'list', component: ListFilesComponent, },
+    { path: 'list', component: FileListComponent, },
     { path: 'settings', component: SettingsComponent,  },
 
     
@@ -29,7 +29,7 @@ export const routes: Routes = [
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' }, // Default child route
             { path: 'modeler', component: BpmnModelerComponent },
             { path: 'dashboard', component: DashboardComponent },
-            { path: 'list', component: ListFilesComponent },
+            { path: 'list', component: FileListComponent },
             { path: 'settings', component: SettingsComponent }
         ]
     },

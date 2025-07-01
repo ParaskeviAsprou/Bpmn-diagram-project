@@ -59,7 +59,7 @@ public class SecurityConfiguration {
                                 // FILE ENDPOINTS - SPECIFIC PATTERNS FIRST
                                 .requestMatchers("/api/v1/file/upload").hasAnyRole("MODELER", "ADMIN")
                                 .requestMatchers("/api/v1/file/all").hasAnyRole("VIEWER", "MODELER", "ADMIN")
-                                .requestMatchers("/api/v1/file/delete/*").hasRole("ADMIN")
+                                .requestMatchers("/api/v1/file/delete/**").hasRole("ADMIN")
                                 .requestMatchers("/api/v1/file/*/export/**").hasAnyRole("VIEWER", "MODELER", "ADMIN")
                                 .requestMatchers("/api/v1/file/*/download").hasAnyRole("VIEWER", "MODELER", "ADMIN")
                                 .requestMatchers("/api/v1/file/*/content").hasAnyRole("VIEWER", "MODELER", "ADMIN")

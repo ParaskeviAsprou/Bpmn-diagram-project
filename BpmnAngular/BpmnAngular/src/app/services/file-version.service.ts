@@ -18,4 +18,7 @@ export class FileVersionService {
 
     return this.http.post<any>(`${this.apiServerUrl}/files/${fileId}/versions`, formData);
   }
+  getFileVersions(fileId: number): Observable<any[]> {
+  return this.http.get<any[]>(`${this.apiServerUrl}/files/${fileId}/versions`);
+}
 }

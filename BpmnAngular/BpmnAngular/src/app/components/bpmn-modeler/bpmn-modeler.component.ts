@@ -5,7 +5,8 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, timer, Subscription } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
-
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 // Services
 import { FileService } from '../../services/file.service';
 import { AuthenticationService, User } from '../../services/authentication.service';
@@ -31,10 +32,10 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 // Models and Interfaces
-import { AppFile } from '../../models/File';
-import { DiagramFile, DiagramMetadata } from '../../models/DiagramFile';
+
 import { ColorDialogComponent, ColorDialogData, ColorDialogResult } from '../color-dialog/color-dialog.component';
 import { DiagramService } from '../../services/diagram-service.service';
+import { AppFile, DiagramFile, DiagramMetadata } from '../../models/File';
 
 export interface ExportFormat {
   format: 'pdf' | 'svg' | 'png' | 'xml' | 'json';
@@ -189,7 +190,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
 </bpmn:definitions>`;
 
   constructor(
-    private authService: AuthenticationService,
+    public authService: AuthenticationService,
     private fileService: FileService,
     private route: ActivatedRoute,
     private router: Router,
@@ -267,7 +268,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     // Subscribe to diagram changes
     this.diagramService.currentDiagram$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(diagram  => {
+      .subscribe(diagram => {
         this.currentDiagram = diagram;
       });
 
@@ -326,7 +327,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
   private initializeModeler(): void {
     try {
       const ModelerClass = this.isViewerOnly ? BpmnViewer : BpmnModeler;
-      
+
       this.modeler = new ModelerClass({
         container: this.modelerContainer.nativeElement,
         keyboard: this.settings.keyboardShortcuts ? { bindTo: window } : undefined,
@@ -352,7 +353,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private getAdditionalModules(): any[] {
     const modules: any[] = [];
-    
+
     // Add grid module if enabled
     if (this.settings.gridEnabled) {
       // modules.push(GridModule);
@@ -434,6 +435,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     this.showNotification('New diagram ready', 'success');
   }
 
+
   saveDiagram(): void {
     if (!this.canEdit) {
       this.showNotification('You do not have permission to save diagrams.', 'error');
@@ -451,32 +453,43 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
       .then((result: any) => {
         const xml = result.xml;
         const fileName = this.currentDiagram?.fileName || this.promptForFileName();
-        
+
         if (!fileName) {
           this.isSaving = false;
           return;
         }
 
         const diagramSettings = this.getCurrentDiagramSettings();
-        
-        this.diagramService.saveDiagram(
+
+        this.diagramService.saveDiagramWithMetadata(
           xml,
           this.elementColors,
           this.getAllCustomProperties(),
           fileName,
           diagramSettings,
-          this.currentDiagram?.id
+          this.currentDiagram?.id,
+          this.currentDiagram?.description,
+          this.currentDiagram?.tags
         ).subscribe({
-          next: (savedDiagram:DiagramFile) => {
+          next: (savedDiagram: DiagramFile) => {
             this.currentDiagram = savedDiagram;
             this.hasUnsavedChanges = false;
             this.isSaving = false;
+
+            // Show version information if available
+            const versionInfo = (savedDiagram.versionCount ?? 0) > 0
+              ? ` (Version ${savedDiagram.versionCount})`
+              : '';
+
+
             this.showNotification(
-              `Diagram saved successfully as ${savedDiagram.fileName}`, 
+              `Diagram saved successfully as ${savedDiagram.fileName}${versionInfo}`,
               'success'
             );
+
+
           },
-          error: (error:any) => {
+          error: (error: any) => {
             console.error('Error saving diagram:', error);
             this.isSaving = false;
             this.showNotification('Error saving diagram: ' + error.message, 'error');
@@ -489,7 +502,6 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
         this.showNotification('Error generating diagram data: ' + error.message, 'error');
       });
   }
-
   private loadFileById(fileId: number): void {
     if (!this.canView) {
       this.showNotification('You do not have permission to view files.', 'error');
@@ -501,11 +513,11 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     // Try to load as complete diagram first
     this.diagramService.loadDiagram(fileId, { validateMetadata: true })
       .subscribe({
-        next: (diagram:DiagramFile) => {
+        next: (diagram: DiagramFile) => {
           this.loadDiagramFromFile(diagram);
           this.isLoading = false;
         },
-        error: (error:any) => {
+        error: (error: any) => {
           console.warn('Failed to load complete diagram, trying legacy format:', error);
           this.loadLegacyFile(fileId);
         }
@@ -523,20 +535,20 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     this.modeler.importXML(diagram.content)
       .then(() => {
         console.log('Diagram loaded successfully');
-        
+
         // Apply metadata
         this.applyDiagramMetadata(diagram.metadata);
-        
+
         this.hasUnsavedChanges = false;
         this.showNotification(
-          `Diagram "${diagram.fileName}" loaded with all customizations`, 
+          `Diagram "${diagram.fileName}" loaded with all customizations`,
           'success'
         );
       })
       .catch((error: any) => {
         console.error('Error loading diagram:', error);
         this.showNotification('Error loading diagram: ' + error.message, 'error');
-        
+
         // Fallback to default diagram
         this.loadDiagram(this.defaultXml);
       });
@@ -588,7 +600,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
       })
       .catch((error: any) => {
         console.error('Error loading diagram:', error);
-        
+
         if (xml !== this.defaultXml) {
           console.log('Attempting to load default XML as fallback');
           this.loadDiagram(this.defaultXml);
@@ -610,7 +622,10 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
       if (metadata.customProperties) {
         Object.keys(metadata.customProperties).forEach(elementId => {
           const properties = metadata.customProperties[elementId];
-          this.customPropertyService.setElementProperties(elementId, properties);
+          this.customPropertyService.setElementProperties(elementId, properties.map(p => ({
+            ...p,
+            required: p.required ?? false 
+          })));
         });
       }
 
@@ -678,7 +693,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
         const canvas = this.modeler.get('canvas');
         const zoom = canvas.zoom();
         const viewbox = canvas.viewbox();
-        
+
         settings = {
           ...settings,
           zoom,
@@ -930,7 +945,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!element || !element.type) return;
 
     const templates = this.customPropertyService.getDefaultTemplates();
-    let templateName = '';
+    let templateName: any;
 
     if (element.type.includes('Task')) {
       templateName = 'Task Properties';
@@ -942,10 +957,13 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (templateName && templates[templateName]) {
       try {
-        const properties = templates[templateName].map(prop => ({
-          ...prop,
-          id: this.generatePropertyId()
-        }));
+        const template = templates[templateName];
+        const properties = Array.isArray(template)
+          ? template.map(prop => ({
+            ...prop,
+            id: this.generatePropertyId()
+          }))
+          : [];
 
         this.customPropertyService.setElementProperties(element.id, properties);
       } catch (error) {
@@ -1164,11 +1182,83 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     this.showNotification('PNG export not yet implemented', 'warning');
   }
 
-  private exportAsPdf(): void {
-    // Implementation would require jsPDF or similar
-    this.showNotification('PDF export not yet implemented', 'warning');
-  }
+ exportAsPdf(): void {
+    if (!this.canView) {
+      this.showNotification('You do not have permission to export diagrams.', 'error');
+      return;
+    }
 
+    if (!this.currentDiagram?.fileName) {
+      this.showNotification('Please save the diagram first before exporting to PDF.', 'warning');
+      return;
+    }
+
+    if (!this.modeler) {
+      this.showNotification('BPMN modeler not initialized', 'error');
+      return;
+    }
+
+    try {
+      this.modeler.saveSVG().then((result: any) => {
+        const svgString = result.svg;
+        this.convertSvgToPdf(svgString, this.currentDiagram!.fileName!);
+      }).catch((error: any) => {
+        console.error('Error getting SVG from modeler:', error);
+        this.showNotification('Error exporting diagram: ' + error.message, 'error');
+      });
+    } catch (error: any) {
+      console.error('Error in exportToPdf:', error);
+      this.showNotification('Error exporting diagram: ' + error.message, 'error');
+    }
+  }
+private convertSvgToPdf(svgString: string, fileName: string): void {
+    const tempDiv = document.createElement('div');
+    tempDiv.style.cssText = `
+      position: absolute;
+      top: -9999px;
+      left: -9999px;
+      background: white;
+      padding: 20px;
+    `;
+    tempDiv.innerHTML = svgString;
+    document.body.appendChild(tempDiv);
+
+    const svgElement = tempDiv.querySelector('svg');
+    if (!svgElement) {
+      this.showNotification('Could not extract diagram SVG', 'error');
+      document.body.removeChild(tempDiv);
+      return;
+    }
+    svgElement.style.background = 'white';
+    svgElement.style.border = '1px solid #ddd';
+
+    html2canvas(tempDiv, {
+      useCORS: true,
+      allowTaint: true
+    }).then(canvas => {
+      const imgWidth = 190;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const contentDataURL = canvas.toDataURL('image/png', 1.0);
+
+      pdf.setFontSize(16);
+      pdf.text(fileName.replace(/\.(bpmn|xml)$/, ''), 10, 15);
+
+      pdf.addImage(contentDataURL, 'PNG', 10, 25, imgWidth, imgHeight);
+
+      const pdfFileName = fileName.replace(/\.(bpmn|xml)$/, '') + '.pdf';
+      pdf.save(pdfFileName);
+
+      this.showNotification('Diagram exported to PDF successfully', 'success');
+
+      document.body.removeChild(tempDiv);
+    }).catch(error  => {
+      console.error('Error converting SVG to PDF:', error);
+      this.showNotification('Error converting diagram to PDF: ' + error.message, 'error');
+      document.body.removeChild(tempDiv);
+    });
+  }
   // =================== FILE OPERATIONS ===================
 
   openFileDialog(): void {
@@ -1200,13 +1290,13 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
       const reader = new FileReader();
       reader.onload = (e) => {
         const content = e.target?.result as string;
-        
+
         if (file.name.endsWith('.json')) {
           this.loadJsonFile(content);
         } else {
           this.loadDiagram(content);
         }
-        
+
         this.hasUnsavedChanges = true;
       };
       reader.readAsText(file);
@@ -1218,7 +1308,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
   private loadJsonFile(jsonContent: string): void {
     try {
       const diagramData: DiagramFile = JSON.parse(jsonContent);
-      
+
       if (diagramData.content && diagramData.metadata) {
         this.loadDiagramFromFile(diagramData);
         this.showNotification('JSON diagram file loaded successfully', 'success');
@@ -1254,7 +1344,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
       .then((result: any) => {
         const xml = result.xml;
         const diagramSettings = this.getCurrentDiagramSettings();
-        
+
         const autoSaveObservable = this.diagramService.autoSave(
           xml,
           this.elementColors,
@@ -1268,7 +1358,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
               this.hasUnsavedChanges = false;
               console.log('Auto-save completed');
             },
-            error: (error:any) => {
+            error: (error: any) => {
               console.error('Auto-save failed:', error);
             }
           });
@@ -1317,16 +1407,16 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
   updateSettings(newSettings: Partial<ModelerSettings>): void {
     this.settings = { ...this.settings, ...newSettings };
     this.saveSettings();
-    
+
     // Apply immediate changes
     if (newSettings.theme) {
       this.applyTheme();
     }
-    
+
     if (typeof newSettings.autoSave === 'boolean') {
       this.diagramService.setAutoSaveEnabled(newSettings.autoSave);
     }
-    
+
     if (newSettings.autoSaveInterval) {
       this.diagramService.setAutoSaveInterval(newSettings.autoSaveInterval);
     }
@@ -1403,11 +1493,11 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
 
   get metadataInfo(): string {
     if (!this.currentDiagram?.metadata) return 'No metadata';
-    
+
     const metadata = this.currentDiagram.metadata;
     const colorCount = Object.keys(metadata.elementColors || {}).length;
     const propertyCount = Object.keys(metadata.customProperties || {}).length;
-    
+
     return `${colorCount} colored elements, ${propertyCount} elements with properties`;
   }
 

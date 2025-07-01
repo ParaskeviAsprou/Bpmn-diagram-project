@@ -6,9 +6,9 @@
         <div class="user-details">
             <span class="user-name">{{ currentUserFullName }}</span>
             <span class="user-role"
-                [class.admin]="isAdmin"
-                [class.modeler]="isModeler"
-                [class.viewer]="isViewer">
+               [class.admin]="authService.isAdmin()"
+                [class.modeler]="authService.isModeler()"
+                [class.viewer]="authService.isViewer()">
                 {{ currentUserRole }}
             </span>
         </div>
@@ -253,7 +253,7 @@
                         </div>
                         
                         <div class="property-actions" *ngIf="canManageCustomProperties">
-                            <button class="property-action-btn edit-property-btn" 
+                            <!-- <button class="property-action-btn edit-property-btn" 
                                     (click)="editCustomProperty(property)"
                                     title="Edit property">
                                 <i class="bx bx-edit"></i>
@@ -262,7 +262,7 @@
                                     (click)="deleteCustomProperty(property.id)"
                                     title="Delete property">
                                 <i class="bx bx-trash"></i>
-                            </button>
+                            </button> -->
                         </div>
                     </div>
                     

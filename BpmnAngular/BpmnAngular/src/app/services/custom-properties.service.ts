@@ -44,7 +44,7 @@ export class CustomPropertyService {
   private readonly STORAGE_KEY = 'bpmn_custom_properties';
   private propertiesSubject = new BehaviorSubject<ElementCustomProperties[]>([]);
   public properties$ = this.propertiesSubject.asObservable();
-
+ private customProperties: { [elementId: string]: CustomProperty[] } = {};
   private templatesSubject = new BehaviorSubject<PropertyTemplate[]>([]);
   public templates$ = this.templatesSubject.asObservable();
 
@@ -70,31 +70,28 @@ export class CustomPropertyService {
     return elementProps ? elementProps.properties : [];
   }
 
-  setElementProperties(elementId: string, properties: CustomProperty[], elementType?: string): void {
-    if (!this.canManageProperties()) {
-      throw new Error('Insufficient permissions to manage custom properties');
-    }
+ setElementProperties(elementId: string, properties: CustomProperty[]): void {
+  const allProperties = this.customProperties[elementId] ?? [];
 
-    const allProperties = this.propertiesSubject.value;
-    const existingIndex = allProperties.findIndex(ep => ep.elementId === elementId);
-    
-    const elementProperties: ElementCustomProperties = {
-      elementId,
-      elementType,
-      properties,
-      lastModified: new Date().toISOString(),
-      modifiedBy: this.authService.getCurrentUser()?.username || 'unknown'
-    };
-
-    if (existingIndex >= 0) {
-      allProperties[existingIndex] = elementProperties;
-    } else {
-      allProperties.push(elementProperties);
-    }
-
-    this.propertiesSubject.next([...allProperties]);
-    this.saveToStorage();
+  if (!Array.isArray(allProperties)) {
+    console.warn(`Expected array for custom properties of ${elementId}, got`, allProperties);
+    this.customProperties[elementId] = properties;
+    return;
   }
+
+  // Safe to use .findIndex
+  properties.forEach((prop) => {
+    const index = allProperties.findIndex(p => p.id === prop.id);
+    if (index >= 0) {
+      allProperties[index] = prop;
+    } else {
+      allProperties.push(prop);
+    }
+  });
+
+  this.customProperties[elementId] = allProperties;
+}
+
 
   addPropertyToElement(elementId: string, property: Omit<CustomProperty, 'id'>, elementType?: string): CustomProperty {
     if (!this.canManageProperties()) {
@@ -109,7 +106,7 @@ export class CustomPropertyService {
     const existingProperties = this.getElementProperties(elementId);
     const updatedProperties = [...existingProperties, newProperty];
     
-    this.setElementProperties(elementId, updatedProperties, elementType);
+    this.setElementProperties(elementId, updatedProperties);
     return newProperty;
   }
 
@@ -128,7 +125,7 @@ export class CustomPropertyService {
       const elementPropsIndex = allProperties.findIndex(ep => ep.elementId === elementId);
       
       if (elementPropsIndex >= 0) {
-        this.setElementProperties(elementId, properties, allProperties[elementPropsIndex].elementType);
+        this.setElementProperties(elementId, properties);
       }
     } else {
       throw new Error('Property not found');
@@ -147,7 +144,7 @@ export class CustomPropertyService {
     const elementPropsIndex = allProperties.findIndex(ep => ep.elementId === elementId);
     
     if (elementPropsIndex >= 0) {
-      this.setElementProperties(elementId, filteredProperties, allProperties[elementPropsIndex].elementType);
+      this.setElementProperties(elementId, filteredProperties);
     }
   }
 
@@ -260,7 +257,7 @@ export class CustomPropertyService {
       value: this.getDefaultValueForType(prop.type)
     }));
 
-    this.setElementProperties(elementId, properties, elementType);
+    this.setElementProperties(elementId, properties);
   }
 
   getApplicableTemplates(elementType: string): PropertyTemplate[] {
@@ -479,7 +476,7 @@ export class CustomPropertyService {
         }
       } else if (data.elementId && data.properties) {
         // Single element import
-        this.setElementProperties(data.elementId, data.properties, data.elementType);
+        this.setElementProperties(data.elementId, data.properties);
       } else {
         return false;
       }
@@ -554,7 +551,7 @@ export class CustomPropertyService {
     // For now, templates are generated on load
   }
 
-  private getDefaultTemplates(): PropertyTemplate[] {
+  public getDefaultTemplates(): PropertyTemplate[] {
     return [
       {
         name: 'Task Properties',

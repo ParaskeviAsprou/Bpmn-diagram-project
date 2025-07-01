@@ -15,7 +15,6 @@ import { DialogBoxComponent } from '../dialog-box/dialog-box.component';;
 import { Folder } from '../../models/Folder';
 import { FolderService } from '../../services/folder.service';
 import { CreateFolderDialogComponent } from '../create-folder-dialog/create-folder-dialog.component';
-import { FileConflictDialogComponent } from '../file-conflict-dialog/file-conflict-dialog.component';
 import { VersionHistoryDialogComponent } from '../version-history-dialog/version-history-dialog.component';
 import { FileVersionService } from '../../services/file-version.service';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -27,6 +26,7 @@ import { MatGridListModule } from '@angular/material/grid-list';
 import { MatListModule } from '@angular/material/list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { ConflictDialogComponent } from '../file-conflict-dialog/file-conflict-dialog.component';
 interface BreadcrumbItem {
   id: number | null;
   name: string;
@@ -658,7 +658,7 @@ export class FileListComponent implements OnInit, OnDestroy {
   }
 
   private handleFileConflict(newFile: File, existingFile: AppFile): void {
-    const dialogRef = this.popup.open(FileConflictDialogComponent, {
+    const dialogRef = this.popup.open(ConflictDialogComponent, {
       width: '500px',
       data: {
         fileName: newFile.name,

@@ -6,8 +6,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import bpmnProject.akon.bpmnJavaBackend.DtoClasses.DiagramDto;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/diagrams")
@@ -21,7 +23,7 @@ public class DiagramController {
     public ResponseEntity<DiagramDto> createDiagram(
             @Valid @RequestBody DiagramDto diagramDto) {
         try {
-           DiagramDto savedDiagram = DiagramService.saveDiagram(diagramDto);
+            DiagramDto savedDiagram = DiagramService.saveDiagram(diagramDto);
             return new ResponseEntity<>(savedDiagram, HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -124,7 +126,7 @@ public class DiagramController {
             backupData.setCreatedAt(null);
             backupData.setUpdatedAt(null);
 
-         DiagramDto restoredDiagram = DiagramService.saveDiagram(backupData);
+            DiagramDto restoredDiagram = DiagramService.saveDiagram(backupData);
             return new ResponseEntity<>(restoredDiagram, HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -175,13 +177,128 @@ public class DiagramController {
         }
     }
 
-    // DTO classes for validation and statistics
+    // =================== VERSION MANAGEMENT ENDPOINTS ===================
+
+    /**
+     * Get all versions of a diagram
+     */
+    @GetMapping("/{id}/versions")
+    @PreAuthorize("hasRole('ROLE_VIEWER') or hasRole('ROLE_MODELER') or hasRole('ROLE_ADMIN')")
+    public ResponseEntity<List<DiagramVersionDto>> getDiagramVersions(@PathVariable Long id) {
+        try {
+            List<DiagramVersion> versions = DiagramService.getDiagramVersions(id);
+            List<DiagramVersionDto> versionDtos = versions.stream()
+                    .map(this::convertVersionToDto)
+                    .toList();
+            return new ResponseEntity<>(versionDtos, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Create a new version from current state
+     */
+    @PostMapping("/{id}/versions")
+    @PreAuthorize("hasRole('ROLE_MODELER') or hasRole('ROLE_ADMIN')")
+    public ResponseEntity<DiagramVersionDto> createVersion(
+            @PathVariable Long id,
+            @RequestParam(required = false) String versionNotes) {
+        try {
+            Optional<DiagramDto> diagramOpt = DiagramService.getDiagramById(id);
+            if (!diagramOpt.isPresent()) {
+                return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+            }
+
+            // Convert DTO to entity for version creation
+            Diagram diagramEntity = convertDtoToEntity(diagramOpt.get());
+            DiagramVersion version = DiagramService.createVersionFromCurrent(diagramEntity);
+
+            if (versionNotes != null && !versionNotes.trim().isEmpty()) {
+                version.setVersionNotes(versionNotes);
+            }
+
+            DiagramVersionDto versionDto = convertVersionToDto(version);
+            return new ResponseEntity<>(versionDto, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Restore a specific version
+     */
+    @PostMapping("/{id}/versions/{versionNumber}/restore")
+    @PreAuthorize("hasRole('ROLE_MODELER') or hasRole('ROLE_ADMIN')")
+    public ResponseEntity<DiagramDto> restoreVersion(
+            @PathVariable Long id,
+            @PathVariable Integer versionNumber) {
+        try {
+            DiagramDto restoredDiagram = DiagramService.restoreVersion(id, versionNumber);
+            return new ResponseEntity<>(restoredDiagram, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Get version comparison data
+     */
+    @GetMapping("/{id}/versions/compare")
+    @PreAuthorize("hasRole('ROLE_VIEWER') or hasRole('ROLE_MODELER') or hasRole('ROLE_ADMIN')")
+    public ResponseEntity<VersionComparisonResult> compareVersions(
+            @PathVariable Long id,
+            @RequestParam Integer version1,
+            @RequestParam Integer version2) {
+        try {
+            // This would require implementing version comparison logic
+            VersionComparisonResult result = new VersionComparisonResult();
+            result.setDiagramId(id);
+            result.setVersion1(version1);
+            result.setVersion2(version2);
+            result.setHasDifferences(true); // Placeholder
+            result.setDifferencesCount(0); // Placeholder
+
+            return new ResponseEntity<>(result, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // =================== HELPER METHODS ===================
+
+    private DiagramVersionDto convertVersionToDto(DiagramVersion version) {
+        DiagramVersionDto dto = new DiagramVersionDto();
+        dto.setId(version.getId());
+        dto.setVersionNumber(version.getVersionNumber());
+        dto.setFileName(version.getFileName());
+        dto.setDescription(version.getDescription());
+        dto.setCreatedTime(version.getCreatedTime());
+        dto.setCreatedBy(version.getCreatedBy());
+        dto.setVersionNotes(version.getVersionNotes());
+        dto.setHasMetadata(version.hasMetadata());
+        return dto;
+    }
+
+    private Diagram convertDtoToEntity(DiagramDto dto) {
+        Diagram entity = new Diagram();
+        entity.setId(dto.getId());
+        entity.setFileName(dto.getFileName());
+        entity.setContent(dto.getContent());
+        entity.setDescription(dto.getDescription());
+        entity.setCreatedAt(dto.getCreatedAt());
+        entity.setUpdatedAt(dto.getUpdatedAt());
+        entity.setCreatedBy(dto.getCreatedBy());
+        return entity;
+    }
+
+    // =================== DTO CLASSES ===================
+
     public static class ValidationResult {
         private boolean valid;
         private List<String> errors;
         private List<String> warnings;
 
-        // Constructors, getters, and setters
         public ValidationResult() {}
 
         public ValidationResult(boolean valid, List<String> errors, List<String> warnings) {
@@ -208,7 +325,6 @@ public class DiagramController {
         private String lastModified;
         private String diagramVersion;
 
-        // Constructors, getters, and setters
         public MetadataStatistics() {}
 
         public int getTotalElements() { return totalElements; }
@@ -228,5 +344,65 @@ public class DiagramController {
 
         public String getDiagramVersion() { return diagramVersion; }
         public void setDiagramVersion(String diagramVersion) { this.diagramVersion = diagramVersion; }
+    }
+
+    public static class DiagramVersionDto {
+        private Long id;
+        private Integer versionNumber;
+        private String fileName;
+        private String description;
+        private java.time.LocalDateTime createdTime;
+        private String createdBy;
+        private String versionNotes;
+        private boolean hasMetadata;
+
+        // Getters and Setters
+        public Long getId() { return id; }
+        public void setId(Long id) { this.id = id; }
+
+        public Integer getVersionNumber() { return versionNumber; }
+        public void setVersionNumber(Integer versionNumber) { this.versionNumber = versionNumber; }
+
+        public String getFileName() { return fileName; }
+        public void setFileName(String fileName) { this.fileName = fileName; }
+
+        public String getDescription() { return description; }
+        public void setDescription(String description) { this.description = description; }
+
+        public java.time.LocalDateTime getCreatedTime() { return createdTime; }
+        public void setCreatedTime(java.time.LocalDateTime createdTime) { this.createdTime = createdTime; }
+
+        public String getCreatedBy() { return createdBy; }
+        public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
+
+        public String getVersionNotes() { return versionNotes; }
+        public void setVersionNotes(String versionNotes) { this.versionNotes = versionNotes; }
+
+        public boolean isHasMetadata() { return hasMetadata; }
+        public void setHasMetadata(boolean hasMetadata) { this.hasMetadata = hasMetadata; }
+    }
+
+    public static class VersionComparisonResult {
+        private Long diagramId;
+        private Integer version1;
+        private Integer version2;
+        private boolean hasDifferences;
+        private int differencesCount;
+
+        // Getters and Setters
+        public Long getDiagramId() { return diagramId; }
+        public void setDiagramId(Long diagramId) { this.diagramId = diagramId; }
+
+        public Integer getVersion1() { return version1; }
+        public void setVersion1(Integer version1) { this.version1 = version1; }
+
+        public Integer getVersion2() { return version2; }
+        public void setVersion2(Integer version2) { this.version2 = version2; }
+
+        public boolean isHasDifferences() { return hasDifferences; }
+        public void setHasDifferences(boolean hasDifferences) { this.hasDifferences = hasDifferences; }
+
+        public int getDifferencesCount() { return differencesCount; }
+        public void setDifferencesCount(int differencesCount) { this.differencesCount = differencesCount; }
     }
 }

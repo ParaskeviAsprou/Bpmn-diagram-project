@@ -11,61 +11,153 @@ import java.util.Optional;
 @Repository
 public interface FileRepository extends JpaRepository<File, Long> {
 
+    // =================== BASIC QUERIES ===================
+
+    /**
+     * Find files by creator
+     */
+    List<File> findByCreatedBy(String createdBy);
+
+    /**
+     * Find files by file type
+     */
+    List<File> findByFileType(String fileType);
+
+    /**
+     * Find files by folder ID
+     */
+    List<File> findByFolderId(Long folderId);
+
+    /**
+     * Find files by name containing (search)
+     */
+    @Query("SELECT f FROM File f WHERE f.fileName LIKE %:name%")
+    List<File> findByFileNameContaining(@Param("name") String name);
+
+    // =================== FILE NAME QUERIES ===================
+
+    /**
+     * Find file by exact file name
+     */
     Optional<File> findByFileName(String fileName);
 
-    void deleteByFileName(String fileName);
+    /**
+     * Find file by name in root folder (no folder)
+     */
+    Optional<File> findByFileNameAndFolderIsNull(String fileName);
 
-    // Folder-related queries
+    /**
+     * Find file by name in specific folder
+     */
+    Optional<File> findByFileNameAndFolderId(String fileName, Long folderId);
+
+    // =================== FOLDER-BASED QUERIES ===================
+
+    /**
+     * Find files in root folder (no folder) ordered by upload time
+     */
     List<File> findByFolderIsNullOrderByUploadTimeDesc();
 
+    /**
+     * Find files in specific folder ordered by upload time
+     */
     List<File> findByFolderIdOrderByUploadTimeDesc(Long folderId);
 
-    List<File> findByFolderOrderByUploadTimeDesc(Folder folder);
+    /**
+     * Find files in root folder (no folder) ordered by name
+     */
+    List<File> findByFolderIsNullOrderByFileName();
 
-    @Query("SELECT f FROM File f WHERE f.folder.id = :folderId OR f.folder IS NULL ORDER BY f.uploadTime DESC")
-    List<File> findByFolderIdIncludingRoot(@Param("folderId") Long folderId);
+    /**
+     * Find files in specific folder ordered by name
+     */
+    List<File> findByFolderIdOrderByFileName(Long folderId);
 
-    // Search queries
-    @Query("SELECT f FROM File f WHERE f.fileName LIKE %:search% OR f.description LIKE %:search% OR f.tags LIKE %:search%")
-    List<File> searchFiles(@Param("search") String search);
+    // =================== ADVANCED QUERIES ===================
 
-    @Query("SELECT f FROM File f WHERE (f.fileName LIKE %:search% OR f.description LIKE %:search% OR f.tags LIKE %:search%) AND f.folder.id = :folderId")
-    List<File> searchFilesInFolder(@Param("search") String search, @Param("folderId") Long folderId);
+    /**
+     * Find files by multiple criteria
+     */
+    @Query("SELECT f FROM File f WHERE " +
+            "(:fileName IS NULL OR f.fileName LIKE %:fileName%) AND " +
+            "(:fileType IS NULL OR f.fileType = :fileType) AND " +
+            "(:folderId IS NULL OR f.folderId = :folderId) AND " +
+            "(:createdBy IS NULL OR f.createdBy = :createdBy)")
+    List<File> findByMultipleCriteria(
+            @Param("fileName") String fileName,
+            @Param("fileType") String fileType,
+            @Param("folderId") Long folderId,
+            @Param("createdBy") String createdBy
+    );
 
-    // Template and public files
-    @Query("SELECT f FROM File f WHERE f.isTemplate = true ORDER BY f.uploadTime DESC")
-    List<File> findTemplateFiles();
-
-    @Query("SELECT f FROM File f WHERE f.isPublic = true ORDER BY f.uploadTime DESC")
-    List<File> findPublicFiles();
-
-    // User-specific queries
-    @Query("SELECT f FROM File f WHERE f.createdBy = :createdBy ORDER BY f.uploadTime DESC")
-    List<File> findByCreatedByOrderByUploadTimeDesc(@Param("createdBy") String createdBy);
-
-    // Tag queries
-    @Query("SELECT f FROM File f WHERE f.tags LIKE %:tag%")
-    List<File> findByTag(@Param("tag") String tag);
-
-    // File type queries
-    @Query("SELECT f FROM File f WHERE f.fileType LIKE %:fileType%")
-    List<File> findByFileTypeContaining(@Param("fileType") String fileType);
-
-    // BPMN specific queries
-    @Query("SELECT f FROM File f WHERE f.fileName LIKE '%.bpmn' OR f.fileName LIKE '%.xml' OR f.fileType LIKE '%xml%'")
+    /**
+     * Find BPMN files specifically
+     */
+    @Query("SELECT f FROM File f WHERE f.fileType = 'bpmn' OR f.fileName LIKE '%.bpmn' OR f.fileName LIKE '%.xml'")
     List<File> findBpmnFiles();
 
-    // Statistics queries
-    @Query("SELECT COUNT(f) FROM File f WHERE f.folder.id = :folderId")
-    Long countByFolderId(@Param("folderId") Long folderId);
+    /**
+     * Find files by tags
+     */
+    @Query("SELECT f FROM File f WHERE f.tags LIKE %:tag%")
+    List<File> findByTagsContaining(@Param("tag") String tag);
 
-    @Query("SELECT SUM(f.fileSize) FROM File f WHERE f.folder.id = :folderId")
-    Long sumFileSizeByFolderId(@Param("folderId") Long folderId);
+    /**
+     * Count files in folder
+     */
+    @Query("SELECT COUNT(f) FROM File f WHERE f.folderId = :folderId")
+    Long countFilesByFolderId(@Param("folderId") Long folderId);
 
-    // Recent files
+    /**
+     * Count files in root folder
+     */
+    @Query("SELECT COUNT(f) FROM File f WHERE f.folderId IS NULL")
+    Long countRootFiles();
+
+    /**
+     * Find recent files (last N files)
+     */
     @Query("SELECT f FROM File f ORDER BY f.updatedTime DESC")
     List<File> findRecentFiles();
 
-    @Query("SELECT f FROM File f WHERE f.createdBy = :createdBy ORDER BY f.updatedTime DESC")
-    List<File> findRecentFilesByUser(@Param("createdBy") String createdBy);
+    /**
+     * Find files larger than specified size
+     */
+    @Query("SELECT f FROM File f WHERE f.fileSize > :size")
+    List<File> findFilesLargerThan(@Param("size") Long size);
+
+    /**
+     * Find files by date range
+     */
+    @Query("SELECT f FROM File f WHERE f.uploadTime BETWEEN :startDate AND :endDate")
+    List<File> findFilesByDateRange(
+            @Param("startDate") java.time.LocalDateTime startDate,
+            @Param("endDate") java.time.LocalDateTime endDate
+    );
+
+    /**
+     * Get total storage used by user
+     */
+    @Query("SELECT COALESCE(SUM(f.fileSize), 0) FROM File f WHERE f.createdBy = :userId")
+    Long getTotalStorageByUser(@Param("userId") String userId);
+
+    /**
+     * Find duplicate file names
+     */
+    @Query("SELECT f.fileName FROM File f GROUP BY f.fileName HAVING COUNT(f) > 1")
+    List<String> findDuplicateFileNames();
+
+    // =================== VERSION-RELATED QUERIES ===================
+
+    /**
+     * Find files with highest version numbers
+     */
+    @Query("SELECT f FROM File f ORDER BY f.currentVersion DESC")
+    List<File> findFilesByVersionDesc();
+
+    /**
+     * Find files with specific version number
+     */
+    @Query("SELECT f FROM File f WHERE f.currentVersion = :version")
+    List<File> findByCurrentVersion(@Param("version") Integer version);
 }

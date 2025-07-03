@@ -5,29 +5,101 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b0e063aa-5f23-4c09-b845-b72058de053f" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/Diagram/DiagramVersion.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/Diagram/DiagramVersionRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/DtoClasses/DiagramVersionDto.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/bpmn-modeler/bpmn-modeler.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/bpmn-modeler/bpmn-modeler.component.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/bpmn-modeler/bpmn-modeler.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/bpmn-modeler/bpmn-modeler.component.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/file-conflict-dialog/file-conflict-dialog.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/file-conflict-dialog/file-conflict-dialog.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/file-list/file-list.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/file-list/file-list.component.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/file-list/file-list.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/file-list/file-list.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/version-history-dialog/version-history-dialog.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/version-history-dialog/version-history-dialog.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/models/DiagramFile.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/save-options-dialog/save-options-dialog.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/save-options-dialog/save-options-dialog.component.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/models/File.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/models/File.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/models/Folder.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/models/Folder.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/services/bpmn.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/services/bpmn.service.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/services/custom-properties.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/services/custom-properties.service.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/services/diagram-service.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/services/diagram-service.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/services/file-version.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/services/file-version.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/services/file-managemnet.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/services/file-managemnet.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/services/file.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/services/file.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/services/folder.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/services/folder.service.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/Diagram/DiagramController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/Diagram/DiagramController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/Diagram/DiagramRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/Diagram/DiagramRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/Diagram/DiagramService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/Diagram/DiagramService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/Diagram/diagram.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/Diagram/Diagram.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/DtoClasses/CustomPropertyDto.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/DtoClasses/DiagramDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/DtoClasses/DiagramDto.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/DtoClasses/DiagramSettingsDto.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/DtoClasses/ElementColorDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/Config/SecurityConfiguration.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/Config/SecurityConfiguration.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/Diagram/Diagram.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/Diagram/DiagramController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/Diagram/DiagramRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/Diagram/DiagramService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/Diagram/DiagramVersion.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/Diagram/DiagramVersionRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/DtoClasses/DiagramDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/DtoClasses/DiagramVersionDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/BpmnPdfService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/BpmnPdfService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/DownloadService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/DownloadService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/ElementAttachment.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/ElementAttachment.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/ElementAttachmentService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/ElementAttachmentService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/File.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/File.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FileController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FileController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FileRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FileRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FileService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FileService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FileVersion.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FileVersion.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FileVersionRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FileVersionRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FileVersionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FileVersionService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/Folder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/Folder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FolderRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FolderRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FolderService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FolderService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/application.properties" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Config/SecurityConfiguration.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Config/SecurityConfiguration.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Diagram/Diagram.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Diagram/DiagramController$DiagramVersionDto.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Diagram/DiagramController$MetadataStatistics.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Diagram/DiagramController$ValidationResult.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Diagram/DiagramController$VersionComparisonResult.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Diagram/DiagramController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Diagram/DiagramRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Diagram/DiagramService.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Diagram/DiagramVersion.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/Diagram/DiagramVersionRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/DiagramDto$CustomPropertyDto.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/DiagramDto$DiagramMetadataDto.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/DiagramDto$DiagramSettingsDto.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/DiagramDto$ElementColorDto.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/DiagramDto.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/DtoClasses/DiagramVersionDto.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/BpmnPdfService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/BpmnPdfService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/DownloadService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/DownloadService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/ElementAttachment$AttachmentCategory.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/ElementAttachment$AttachmentCategory.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/ElementAttachment$ElementAttachmentBuilder.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/ElementAttachment.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/ElementAttachment.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/ElementAttachmentService$AttachmentStatistics$AttachmentStatisticsBuilder.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/ElementAttachmentService$AttachmentStatistics.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/ElementAttachmentService$AttachmentStatistics.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/ElementAttachmentService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/ElementAttachmentService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/File.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/File.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileService$FileExportData$FileExportDataBuilder.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileService$FileExportData.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileService$FileStatistics$FileStatisticsBuilder.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileService$FileStatistics.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileService$FileStats.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileService$FolderStatistics$FolderStatisticsBuilder.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileService$FolderStatistics.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileVersion$FileVersionBuilder.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileVersion.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileVersion.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileVersionRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileVersionRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileVersionService$VersionComparison$VersionComparisonBuilder.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileVersionService$VersionComparison.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileVersionService$VersionComparison.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileVersionService$VersionStatistics$VersionStatisticsBuilder.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileVersionService$VersionStatistics.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileVersionService$VersionStatistics.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileVersionService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FileVersionService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/Folder$FolderBuilder.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/Folder.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/Folder.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FolderRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FolderRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FolderService$FolderBreadcrumb$FolderBreadcrumbBuilder.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FolderService$FolderBreadcrumb.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FolderService$FolderBreadcrumb.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FolderService$FolderDeletionResult$FolderDeletionResultBuilder.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FolderService$FolderDeletionResult.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FolderService$FolderTreeNode$FolderTreeNodeBuilder.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FolderService$FolderTreeNode.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FolderService$FolderTreeNode.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FolderService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/bpmnProject/akon/bpmnJavaBackend/File/FolderService.class" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -338,6 +410,11 @@
           <properties class="org.hibernate.QueryParameterException" package="org.hibernate" />
           <option name="timeStamp" value="1" />
         </breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FileController.java</url>
+          <line>54</line>
+          <option name="timeStamp" value="7" />
+        </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>

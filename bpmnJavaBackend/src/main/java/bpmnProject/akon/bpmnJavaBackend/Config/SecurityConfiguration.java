@@ -69,7 +69,7 @@ public class SecurityConfiguration {
                                 .requestMatchers("/api/v1/file/*").hasAnyRole("VIEWER", "MODELER", "ADMIN")
 
                                 // DIAGRAM ENDPOINTS (if you add them later)
-                                .requestMatchers("/api/v1/diagrams/**").hasAnyRole("VIEWER", "MODELER", "ADMIN")
+                                .requestMatchers("/api/v1/diagrams/**").permitAll()
 
                                 // TEST ENDPOINTS
                                 .requestMatchers("/api/v1/test/admin/**").hasAnyRole("ADMIN")

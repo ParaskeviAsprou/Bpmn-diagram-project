@@ -1,12 +1,10 @@
-// bpmn-modeler.component.ts
 import { Component, ElementRef, OnInit, OnDestroy, ViewChild, AfterViewInit, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subject, timer, Subscription } from 'rxjs';
-import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+
 // Services
 import { FileService } from '../../services/file.service';
 import { AuthenticationService, User } from '../../services/authentication.service';
@@ -14,8 +12,8 @@ import { CustomProperty, CustomPropertyService } from '../../services/custom-pro
 
 // Components and Dialogs
 import { MatDialog } from '@angular/material/dialog';
-import { UnSaveDialogComponent } from '../un-save-dialog/un-save-dialog.component';
 import { CustomPropertyDialogComponent, CustomPropertyDialogData } from '../custom-property-dialog/custom-property-dialog.component';
+import { ColorDialogComponent, ColorDialogData, ColorDialogResult } from '../color-dialog/color-dialog.component';
 
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import BpmnViewer from 'bpmn-js/lib/Viewer';
@@ -30,39 +28,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-
-// Models and Interfaces
-
-import { ColorDialogComponent, ColorDialogData, ColorDialogResult } from '../color-dialog/color-dialog.component';
-import { DiagramService } from '../../services/diagram-service.service';
-import { AppFile, DiagramFile, DiagramMetadata } from '../../models/File';
+import { AppFile } from '../../models/File';
 
 export interface ExportFormat {
-  format: 'pdf' | 'svg' | 'png' | 'xml' | 'json';
+  format: 'pdf' | 'svg' | 'png' | 'xml';
   label: string;
   icon: string;
   description: string;
-}
-
-export interface ModelerTheme {
-  name: string;
-  label: string;
-  colors: {
-    background: string;
-    canvas: string;
-    grid: string;
-    selection: string;
-  };
-}
-
-export interface ModelerSettings {
-  theme: string;
-  gridEnabled: boolean;
-  snapToGrid: boolean;
-  autoSave: boolean;
-  autoSaveInterval: number;
-  showMinimap: boolean;
-  keyboardShortcuts: boolean;
 }
 
 @Component({
@@ -89,11 +61,9 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
   // =================== CORE PROPERTIES ===================
   private modeler!: BpmnModeler | BpmnViewer;
   private destroy$ = new Subject<void>();
-  private autoSaveSubscription?: Subscription;
-  private changeDetectionSubscription?: Subscription;
 
   // State Management
-  currentDiagram: DiagramFile | null = null;
+  currentFile: AppFile | null = null;
   selectedElement: any = null;
   isEditMode: boolean = false;
   isViewerOnly: boolean = false;
@@ -102,34 +72,12 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
   isSaving: boolean = false;
   showExportDropdown: boolean = false;
 
-  // Settings and Configuration
-  settings: ModelerSettings = {
-    theme: 'default',
-    gridEnabled: true,
-    snapToGrid: false,
-    autoSave: true,
-    autoSaveInterval: 30000,
-    showMinimap: false,
-    keyboardShortcuts: true
+  // Current folder context
+  private currentFolderContext = {
+    folderId: undefined as number | undefined,
+    folderName: 'Root',
+    path: '/'
   };
-
-  themes: ModelerTheme[] = [
-    {
-      name: 'default',
-      label: 'Default',
-      colors: { background: '#ffffff', canvas: '#ffffff', grid: '#e0e0e0', selection: '#1976d2' }
-    },
-    {
-      name: 'dark',
-      label: 'Dark',
-      colors: { background: '#1e1e1e', canvas: '#2d2d2d', grid: '#404040', selection: '#64b5f6' }
-    },
-    {
-      name: 'blue',
-      label: 'Blue Theme',
-      colors: { background: '#f3f8ff', canvas: '#ffffff', grid: '#e3f2fd', selection: '#1976d2' }
-    }
-  ];
 
   // Custom Properties
   elementCustomProperties: CustomProperty[] = [];
@@ -142,8 +90,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     { format: 'pdf', label: 'Export as PDF', icon: 'picture_as_pdf', description: 'Portable Document Format' },
     { format: 'svg', label: 'Export as SVG', icon: 'image', description: 'Scalable Vector Graphics' },
     { format: 'png', label: 'Export as PNG', icon: 'image', description: 'Portable Network Graphics' },
-    { format: 'xml', label: 'Export as XML', icon: 'code', description: 'BPMN XML Source' },
-    { format: 'json', label: 'Export as JSON', icon: 'data_object', description: 'Complete diagram with metadata' }
+    { format: 'xml', label: 'Export as XML', icon: 'code', description: 'BPMN XML Source' }
   ];
 
   // User and Permissions
@@ -157,14 +104,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
   editableProperties: any = {
     name: '',
     id: '',
-    documentation: '',
-    assignee: '',
-    candidateUsers: '',
-    candidateGroups: '',
-    formKey: '',
-    priority: '',
-    dueDate: '',
-    followUpDate: ''
+    documentation: ''
   };
 
   readonly popup = inject(MatDialog);
@@ -194,8 +134,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     private fileService: FileService,
     private route: ActivatedRoute,
     private router: Router,
-    private customPropertyService: CustomPropertyService,
-    private diagramService: DiagramService
+    private customPropertyService: CustomPropertyService
   ) { }
 
   // =================== LIFECYCLE HOOKS ===================
@@ -219,9 +158,6 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @HostListener('document:keydown', ['$event'])
   onKeydown(event: KeyboardEvent): void {
-    if (!this.settings.keyboardShortcuts) return;
-
-    // Handle keyboard shortcuts
     if (event.ctrlKey || event.metaKey) {
       switch (event.key) {
         case 's':
@@ -236,25 +172,12 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
           event.preventDefault();
           this.createNewDiagram();
           break;
-        case 'z':
-          if (event.shiftKey) {
-            this.redo();
-          } else {
-            this.undo();
-          }
-          event.preventDefault();
-          break;
-        case 'y':
-          event.preventDefault();
-          this.redo();
-          break;
       }
     }
   }
 
   ngOnInit(): void {
     this.initializePermissions();
-    this.loadSettings();
     this.customPropertyService.initialize();
 
     // Subscribe to authentication changes
@@ -265,23 +188,16 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
         this.initializePermissions();
       });
 
-    // Subscribe to diagram changes
-    this.diagramService.currentDiagram$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(diagram => {
-        this.currentDiagram = diagram;
-      });
-
     // Handle route parameters
     this.route.queryParams.subscribe(params => {
+      this.loadFolderContext(params);
+      
       if (params['fileId']) {
         this.loadFileById(parseInt(params['fileId']));
       } else if (params['new']) {
         this.createNewDiagram();
       }
     });
-
-    this.setupChangeDetection();
   }
 
   ngAfterViewInit(): void {
@@ -293,8 +209,6 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-    this.cleanupSubscriptions();
-    this.saveSettings();
 
     if (this.modeler) {
       this.modeler.destroy();
@@ -314,14 +228,6 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     this.isViewerOnly = this.authService.isViewer() &&
       !this.authService.isModeler() &&
       !this.authService.isAdmin();
-
-    console.log('BPMN Modeler permissions:', {
-      canView: this.canView,
-      canEdit: this.canEdit,
-      canCreate: this.canCreate,
-      canDelete: this.canDelete,
-      isViewerOnly: this.isViewerOnly
-    });
   }
 
   private initializeModeler(): void {
@@ -330,47 +236,28 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
 
       this.modeler = new ModelerClass({
         container: this.modelerContainer.nativeElement,
-        keyboard: this.settings.keyboardShortcuts ? { bindTo: window } : undefined,
-        additionalModules: this.getAdditionalModules()
+        keyboard: { bindTo: window }
       });
 
-      this.applyTheme();
       this.setupEventListeners();
 
       // Load initial diagram
-      if (this.currentDiagram) {
-        this.loadDiagramFromFile(this.currentDiagram);
+      if (this.currentFile) {
+        this.loadDiagramFromFile(this.currentFile);
       } else {
         this.loadDiagram(this.defaultXml);
       }
 
-      console.log(`Initialized BPMN ${this.isViewerOnly ? 'Viewer' : 'Modeler'}`);
     } catch (error) {
       console.error('Error initializing BPMN modeler:', error);
       this.showNotification('Failed to initialize diagram editor', 'error');
     }
   }
 
-  private getAdditionalModules(): any[] {
-    const modules: any[] = [];
-
-    // Add grid module if enabled
-    if (this.settings.gridEnabled) {
-      // modules.push(GridModule);
-    }
-
-    // Add minimap if enabled
-    if (this.settings.showMinimap) {
-      // modules.push(MinimapModule);
-    }
-
-    return modules;
-  }
-
   private setupEventListeners(): void {
     if (!this.modeler) return;
 
-    // Selection changed
+    // Selection management
     this.modeler.on('selection.changed', (e: any) => {
       const element = e.newSelection[0];
       this.selectedElement = element || null;
@@ -383,19 +270,13 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     if (!this.isViewerOnly) {
-      // Element changed
-      this.modeler.on('element.changed', (e: any) => {
+      // Change detection
+      this.modeler.on('element.changed', () => {
         this.markAsChanged();
       });
 
-      // Command stack changed
-      this.modeler.on('commandStack.changed', (e: any) => {
+      this.modeler.on('commandStack.changed', () => {
         this.markAsChanged();
-      });
-
-      // Shape added
-      this.modeler.on('shape.added', (e: any) => {
-        this.applyDefaultPropertiesForNewElement(e.element);
       });
     }
   }
@@ -409,32 +290,23 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     if (this.hasUnsavedChanges) {
-      const dialogRef = this.popup.open(UnSaveDialogComponent, {
-        width: '400px',
-        disableClose: true
-      });
-
-      dialogRef.afterClosed().subscribe(result => {
-        if (result === true) {
-          this.resetToNewDiagram();
-        }
-      });
-    } else {
-      this.resetToNewDiagram();
+      if (!confirm('You have unsaved changes. Are you sure you want to create a new diagram?')) {
+        return;
+      }
     }
+
+    this.resetToNewDiagram();
   }
 
   private resetToNewDiagram(): void {
-    this.currentDiagram = null;
+    this.currentFile = null;
     this.elementColors = {};
     this.loadDiagram(this.defaultXml);
     this.selectedElement = null;
     this.isEditMode = false;
     this.hasUnsavedChanges = false;
-    this.diagramService.setCurrentDiagram(null);
     this.showNotification('New diagram ready', 'success');
   }
-
 
   saveDiagram(): void {
     if (!this.canEdit) {
@@ -452,56 +324,143 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     this.modeler.saveXML({ format: true })
       .then((result: any) => {
         const xml = result.xml;
-        const fileName = this.currentDiagram?.fileName || this.promptForFileName();
 
-        if (!fileName) {
-          this.isSaving = false;
-          return;
+        if (this.currentFile) {
+          this.updateExistingFile(xml);
+        } else {
+          this.saveAsNewFile(xml);
         }
-
-        const diagramSettings = this.getCurrentDiagramSettings();
-
-        this.diagramService.saveDiagramWithMetadata(
-          xml,
-          this.elementColors,
-          this.getAllCustomProperties(),
-          fileName,
-          diagramSettings,
-          this.currentDiagram?.id,
-          this.currentDiagram?.description,
-          this.currentDiagram?.tags
-        ).subscribe({
-          next: (savedDiagram: DiagramFile) => {
-            this.currentDiagram = savedDiagram;
-            this.hasUnsavedChanges = false;
-            this.isSaving = false;
-
-            // Show version information if available
-            const versionInfo = (savedDiagram.versionCount ?? 0) > 0
-              ? ` (Version ${savedDiagram.versionCount})`
-              : '';
-
-
-            this.showNotification(
-              `Diagram saved successfully as ${savedDiagram.fileName}${versionInfo}`,
-              'success'
-            );
-
-
-          },
-          error: (error: any) => {
-            console.error('Error saving diagram:', error);
-            this.isSaving = false;
-            this.showNotification('Error saving diagram: ' + error.message, 'error');
-          }
-        });
       })
       .catch((error: any) => {
-        console.error('Error generating XML:', error);
+        console.error('Error saving diagram:', error);
+        this.showNotification('Error saving diagram: ' + error.message, 'error');
         this.isSaving = false;
-        this.showNotification('Error generating diagram data: ' + error.message, 'error');
       });
   }
+
+  private saveAsNewFile(xml: string): void {
+    const fileName = prompt('Enter filename:', 'new_diagram.bpmn');
+    if (!fileName) {
+      this.isSaving = false;
+      return;
+    }
+
+    const finalFileName = fileName.endsWith('.bpmn') || fileName.endsWith('.xml')
+      ? fileName
+      : fileName + '.bpmn';
+
+    // Get current custom properties and element colors
+    const customProperties = this.getAllCustomProperties();
+    const elementColors = this.elementColors;
+
+    // Use the SAVE endpoint, not upload
+    this.fileService.saveBpmnDiagramWithOverwrite(
+      finalFileName,
+      xml,
+      customProperties,
+      elementColors,
+      this.currentFolderContext.folderId || undefined, // Convert null to undefined
+      false // Don't overwrite initially
+    ).subscribe({
+      next: (savedFile: AppFile) => {
+        this.currentFile = savedFile;
+        this.hasUnsavedChanges = false;
+        this.isSaving = false;
+        this.showNotification('Diagram saved successfully as ' + finalFileName, 'success');
+        
+        // Navigate to the saved file
+        if (savedFile.id) {
+          this.router.navigate(['/bpmn-modeler'], {
+            queryParams: { 
+              fileId: savedFile.id,
+              folderId: this.currentFolderContext.folderId,
+              folderName: this.currentFolderContext.folderName
+            }
+          });
+        }
+      },
+      error: (error: any) => {
+        console.error('Error saving file:', error);
+        this.isSaving = false;
+        
+        if (error.message.includes('already exists')) {
+          const overwrite = confirm(`File "${finalFileName}" already exists. Do you want to overwrite it?`);
+          if (overwrite) {
+            this.saveAsNewFileWithOverwrite(finalFileName, xml, customProperties, elementColors);
+          }
+        } else {
+          this.showNotification('Error saving file: ' + error.message, 'error');
+        }
+      }
+    });
+  }
+
+  private saveAsNewFileWithOverwrite(fileName: string, xml: string, customProperties: any, elementColors: any): void {
+    this.fileService.saveBpmnDiagramWithOverwrite(
+      fileName,
+      xml,
+      customProperties,
+      elementColors,
+      this.currentFolderContext.folderId || undefined, // Convert null to undefined
+      true
+    ).subscribe({
+      next: (savedFile: AppFile) => {
+        this.currentFile = savedFile;
+        this.hasUnsavedChanges = false;
+        this.isSaving = false;
+        this.showNotification('Diagram saved successfully as ' + fileName, 'success');
+      },
+      error: (error: any) => {
+        console.error('Error saving file with overwrite:', error);
+        this.isSaving = false;
+        this.showNotification('Error saving file: ' + error.message, 'error');
+      }
+    });
+  }
+
+  private updateExistingFile(xml: string): void {
+    if (!this.currentFile?.id) {
+      this.isSaving = false;
+      return;
+    }
+
+    // Get current custom properties and element colors
+    const customProperties = this.getAllCustomProperties();
+    const elementColors = this.elementColors;
+
+    this.fileService.updateFileContent(
+      this.currentFile.id,
+      xml,
+      JSON.stringify(customProperties),
+      JSON.stringify(elementColors)
+    ).subscribe({
+      next: (updatedFile: AppFile) => {
+        this.currentFile = updatedFile;
+        this.hasUnsavedChanges = false;
+        this.isSaving = false;
+        this.showNotification('Diagram updated successfully', 'success');
+      },
+      error: (error: any) => {
+        console.error('Error updating file:', error);
+        this.isSaving = false;
+        this.showNotification('Error updating file: ' + error.message, 'error');
+      }
+    });
+  }
+
+  private loadFolderContext(params: any): void {
+    const folderId = params['folderId'];
+    const folderName = params['folderName'] || 'Root';
+
+    this.currentFolderContext = {
+      folderId: folderId ? parseInt(folderId) : undefined, // Use undefined instead of null
+      folderName: folderName,
+      path: folderId ? `/${folderName}` : '/'
+    };
+
+    console.log('Loaded folder context:', this.currentFolderContext);
+  }
+
   private loadFileById(fileId: number): void {
     if (!this.canView) {
       this.showNotification('You do not have permission to view files.', 'error');
@@ -510,73 +469,60 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.isLoading = true;
 
-    // Try to load as complete diagram first
-    this.diagramService.loadDiagram(fileId, { validateMetadata: true })
-      .subscribe({
-        next: (diagram: DiagramFile) => {
-          this.loadDiagramFromFile(diagram);
-          this.isLoading = false;
-        },
-        error: (error: any) => {
-          console.warn('Failed to load complete diagram, trying legacy format:', error);
-          this.loadLegacyFile(fileId);
-        }
-      });
+    this.fileService.getFileById(fileId).subscribe({
+      next: (file: AppFile) => {
+        this.currentFile = file;
+        this.loadDiagramFromFile(file);
+        this.isLoading = false;
+      },
+      error: (error: any) => {
+        console.error('Error loading file:', error);
+        this.isLoading = false;
+        this.showNotification('Error loading file: ' + error.message, 'error');
+      }
+    });
   }
 
-  private loadDiagramFromFile(diagram: DiagramFile): void {
+  private loadDiagramFromFile(file: AppFile): void {
     if (!this.modeler) {
       console.error('Modeler not initialized');
       return;
     }
 
-    console.log('Loading complete diagram with metadata...');
+    // Load XML content
+    const xmlContent = file.xml || (file.base64Data ? atob(file.base64Data) : '');
 
-    this.modeler.importXML(diagram.content)
+    this.modeler.importXML(xmlContent)
       .then(() => {
-        console.log('Diagram loaded successfully');
+        // Apply custom properties and colors if available
+        if (file.customProperties) {
+          try {
+            const customProps = JSON.parse(file.customProperties);
+            Object.keys(customProps).forEach(elementId => {
+              this.customPropertyService.setElementProperties(elementId, customProps[elementId]);
+            });
+          } catch (e) {
+            console.warn('Could not parse custom properties:', e);
+          }
+        }
 
-        // Apply metadata
-        this.applyDiagramMetadata(diagram.metadata);
+        if (file.elementColors) {
+          try {
+            this.elementColors = JSON.parse(file.elementColors);
+            this.applyStoredColors();
+          } catch (e) {
+            console.warn('Could not parse element colors:', e);
+          }
+        }
 
         this.hasUnsavedChanges = false;
-        this.showNotification(
-          `Diagram "${diagram.fileName}" loaded with all customizations`,
-          'success'
-        );
+        this.showNotification(`Diagram "${file.fileName}" loaded successfully`, 'success');
       })
       .catch((error: any) => {
         console.error('Error loading diagram:', error);
         this.showNotification('Error loading diagram: ' + error.message, 'error');
-
-        // Fallback to default diagram
         this.loadDiagram(this.defaultXml);
       });
-  }
-
-  private loadLegacyFile(fileId: number): void {
-    // Fallback to legacy file loading
-    this.fileService.getFileById(fileId).subscribe({
-      next: (file: AppFile) => {
-        this.fileService.getFileContent(fileId).subscribe({
-          next: (content: string) => {
-            this.loadDiagram(content);
-            this.isLoading = false;
-            this.showNotification('Legacy file loaded', 'warning');
-          },
-          error: (error) => {
-            console.error('Error loading legacy file content:', error);
-            this.isLoading = false;
-            this.showNotification('Error loading file: ' + error.message, 'error');
-          }
-        });
-      },
-      error: (error) => {
-        console.error('Error loading legacy file:', error);
-        this.isLoading = false;
-        this.showNotification('Error loading file: ' + error.message, 'error');
-      }
-    });
   }
 
   private loadDiagram(xml: string): void {
@@ -585,130 +531,24 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    // Validate XML content
     if (!xml || xml.trim().length === 0) {
-      console.warn('Empty XML content, loading default diagram');
       xml = this.defaultXml;
     }
 
     this.modeler.importXML(xml)
       .then(() => {
-        console.log('Diagram loaded successfully');
         this.zoomToFit();
         this.hasUnsavedChanges = false;
         this.applyStoredColors();
       })
       .catch((error: any) => {
         console.error('Error loading diagram:', error);
-
         if (xml !== this.defaultXml) {
-          console.log('Attempting to load default XML as fallback');
           this.loadDiagram(this.defaultXml);
         } else {
           this.showNotification('Error loading diagram: ' + error.message, 'error');
         }
       });
-  }
-
-  // =================== METADATA MANAGEMENT ===================
-
-  private applyDiagramMetadata(metadata: DiagramMetadata): void {
-    try {
-      // Apply element colors
-      this.elementColors = metadata.elementColors || {};
-      this.applyStoredColors();
-
-      // Apply custom properties
-      if (metadata.customProperties) {
-        Object.keys(metadata.customProperties).forEach(elementId => {
-          const properties = metadata.customProperties[elementId];
-          this.customPropertyService.setElementProperties(elementId, properties.map(p => ({
-            ...p,
-            required: p.required ?? false 
-          })));
-        });
-      }
-
-      // Apply diagram settings
-      if (metadata.diagramSettings) {
-        this.applyDiagramSettings(metadata.diagramSettings);
-      }
-
-    } catch (error) {
-      console.error('Error applying diagram metadata:', error);
-      this.showNotification('Some customizations could not be applied', 'warning');
-    }
-  }
-
-  private applyDiagramSettings(settings: any): void {
-    if (!this.modeler || !('get' in this.modeler)) return;
-
-    try {
-      const canvas = this.modeler.get('canvas');
-
-      // Apply zoom if available
-      if (settings.zoom && settings.zoom !== 1) {
-        setTimeout(() => canvas.zoom(settings.zoom), 100);
-      }
-
-      // Apply view box if available
-      if (settings.viewBox) {
-        const [x, y, width, height] = settings.viewBox.split(' ').map(Number);
-        if (!isNaN(x) && !isNaN(y) && !isNaN(width) && !isNaN(height)) {
-          setTimeout(() => canvas.viewbox({ x, y, width, height }), 100);
-        }
-      }
-
-      // Apply theme if different from current
-      if (settings.theme && settings.theme !== this.settings.theme) {
-        this.settings.theme = settings.theme;
-        this.applyTheme();
-      }
-
-      // Apply grid settings
-      if (typeof settings.gridEnabled === 'boolean') {
-        this.settings.gridEnabled = settings.gridEnabled;
-      }
-
-      if (typeof settings.snapToGrid === 'boolean') {
-        this.settings.snapToGrid = settings.snapToGrid;
-      }
-
-    } catch (error) {
-      console.error('Error applying diagram settings:', error);
-    }
-  }
-
-  private getCurrentDiagramSettings(): any {
-    let settings: any = {
-      theme: this.settings.theme,
-      gridEnabled: this.settings.gridEnabled,
-      snapToGrid: this.settings.snapToGrid,
-      lastModified: new Date().toISOString(),
-      version: '2.0'
-    };
-
-    if (this.modeler && 'get' in this.modeler) {
-      try {
-        const canvas = this.modeler.get('canvas');
-        const zoom = canvas.zoom();
-        const viewbox = canvas.viewbox();
-
-        settings = {
-          ...settings,
-          zoom,
-          viewBox: `${viewbox.x} ${viewbox.y} ${viewbox.width} ${viewbox.height}`
-        };
-      } catch (error) {
-        console.warn('Could not extract modeler settings:', error);
-      }
-    }
-
-    return settings;
-  }
-
-  private getAllCustomProperties(): { [elementId: string]: CustomProperty[] } {
-    return this.customPropertyService.getAllProperties();
   }
 
   // =================== ELEMENT COLORS ===================
@@ -733,10 +573,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const dialogRef = this.popup.open(ColorDialogComponent, {
       width: '600px',
-      maxWidth: '90vw',
-      maxHeight: '80vh',
-      data: dialogData,
-      disableClose: false
+      data: dialogData
     });
 
     dialogRef.afterClosed().subscribe((result: ColorDialogResult | null) => {
@@ -760,11 +597,9 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
       if (stroke !== null) colors.stroke = stroke;
 
       if (fill === null && stroke === null) {
-        // Reset to default colors
         modeling.setColor(this.selectedElement, { fill: undefined, stroke: undefined });
         delete this.elementColors[this.selectedElement.id];
       } else {
-        // Apply new colors
         modeling.setColor(this.selectedElement, colors);
         this.elementColors[this.selectedElement.id] = colors;
       }
@@ -817,8 +652,6 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const dialogRef = this.popup.open(CustomPropertyDialogComponent, {
       width: '900px',
-      maxWidth: '95vw',
-      maxHeight: '90vh',
       data: dialogData,
       disableClose: true
     });
@@ -930,80 +763,8 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     this.editableProperties = {
       name: bo.name || '',
       id: bo.id || '',
-      documentation: bo.documentation?.[0]?.text || '',
-      assignee: bo.assignee || '',
-      candidateUsers: bo.candidateUsers?.join(', ') || '',
-      candidateGroups: bo.candidateGroups?.join(', ') || '',
-      formKey: bo.formKey || '',
-      priority: bo.priority || '',
-      dueDate: bo.dueDate || '',
-      followUpDate: bo.followUpDate || ''
+      documentation: bo.documentation?.[0]?.text || ''
     };
-  }
-
-  private applyDefaultPropertiesForNewElement(element: any): void {
-    if (!element || !element.type) return;
-
-    const templates = this.customPropertyService.getDefaultTemplates();
-    let templateName: any;
-
-    if (element.type.includes('Task')) {
-      templateName = 'Task Properties';
-    } else if (element.type.includes('Event')) {
-      templateName = 'Event Properties';
-    } else if (element.type.includes('Gateway')) {
-      templateName = 'Gateway Properties';
-    }
-
-    if (templateName && templates[templateName]) {
-      try {
-        const template = templates[templateName];
-        const properties = Array.isArray(template)
-          ? template.map(prop => ({
-            ...prop,
-            id: this.generatePropertyId()
-          }))
-          : [];
-
-        this.customPropertyService.setElementProperties(element.id, properties);
-      } catch (error) {
-        console.warn('Could not apply default properties:', error);
-      }
-    }
-  }
-
-  // =================== THEME AND SETTINGS ===================
-
-  applyTheme(): void {
-    const theme = this.themes.find(t => t.name === this.settings.theme);
-    if (!theme || !this.modelerContainer) return;
-
-    const container = this.modelerContainer.nativeElement;
-    container.style.backgroundColor = theme.colors.background;
-
-    // Apply CSS custom properties for theme
-    document.documentElement.style.setProperty('--bpmn-canvas-bg', theme.colors.canvas);
-    document.documentElement.style.setProperty('--bpmn-grid-color', theme.colors.grid);
-    document.documentElement.style.setProperty('--bpmn-selection-color', theme.colors.selection);
-  }
-
-  changeTheme(themeName: string): void {
-    this.settings.theme = themeName;
-    this.applyTheme();
-    this.markAsChanged();
-    this.showNotification(`Applied ${themeName} theme`, 'success');
-  }
-
-  toggleGrid(): void {
-    this.settings.gridEnabled = !this.settings.gridEnabled;
-    // Implementation would depend on available grid module
-    this.markAsChanged();
-  }
-
-  toggleSnapToGrid(): void {
-    this.settings.snapToGrid = !this.settings.snapToGrid;
-    // Implementation would depend on available snap module
-    this.markAsChanged();
   }
 
   // =================== ZOOM AND NAVIGATION ===================
@@ -1038,58 +799,6 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  // =================== UNDO/REDO ===================
-
-  undo(): void {
-    if (this.modeler && 'get' in this.modeler) {
-      try {
-        const commandStack = this.modeler.get('commandStack');
-        if (commandStack.canUndo()) {
-          commandStack.undo();
-        }
-      } catch (error) {
-        console.error('Error during undo:', error);
-      }
-    }
-  }
-
-  redo(): void {
-    if (this.modeler && 'get' in this.modeler) {
-      try {
-        const commandStack = this.modeler.get('commandStack');
-        if (commandStack.canRedo()) {
-          commandStack.redo();
-        }
-      } catch (error) {
-        console.error('Error during redo:', error);
-      }
-    }
-  }
-
-  canUndo(): boolean {
-    if (this.modeler && 'get' in this.modeler) {
-      try {
-        const commandStack = this.modeler.get('commandStack');
-        return commandStack.canUndo();
-      } catch {
-        return false;
-      }
-    }
-    return false;
-  }
-
-  canRedo(): boolean {
-    if (this.modeler && 'get' in this.modeler) {
-      try {
-        const commandStack = this.modeler.get('commandStack');
-        return commandStack.canRedo();
-      } catch {
-        return false;
-      }
-    }
-    return false;
-  }
-
   // =================== EXPORT FUNCTIONALITY ===================
 
   toggleExportDropdown(): void {
@@ -1104,10 +813,12 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.showExportDropdown = false;
 
+    if (!this.currentFile?.id) {
+      this.showNotification('Please save the diagram first before exporting.', 'warning');
+      return;
+    }
+
     switch (format) {
-      case 'json':
-        this.exportAsJson();
-        break;
       case 'xml':
         this.exportAsXml();
         break;
@@ -1123,149 +834,68 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  private exportAsJson(): void {
-    if (!this.currentDiagram) {
-      this.showNotification('Please save the diagram first.', 'warning');
-      return;
-    }
-
-    const jsonData = JSON.stringify(this.currentDiagram, null, 2);
-    this.downloadBlob(
-      new Blob([jsonData], { type: 'application/json' }),
-      this.generateFileName('json')
-    );
-    this.showNotification('Diagram exported as JSON', 'success');
-  }
-
   private exportAsXml(): void {
-    if (!this.modeler || !('saveXML' in this.modeler)) {
-      this.showNotification('Cannot export in viewer mode.', 'error');
-      return;
-    }
+    if (!this.currentFile?.id) return;
 
-    this.modeler.saveXML({ format: true })
-      .then((result: any) => {
-        this.downloadBlob(
-          new Blob([result.xml], { type: 'application/xml' }),
-          this.generateFileName('xml')
-        );
+    this.fileService.exportFile(this.currentFile.id, 'xml').subscribe({
+      next: (blob: Blob) => {
+        this.downloadBlob(blob, this.generateFileName('xml'));
         this.showNotification('Diagram exported as XML', 'success');
-      })
-      .catch((error: any) => {
-        console.error('Error exporting XML:', error);
+      },
+      error: (error: any) => {
         this.showNotification('Error exporting XML: ' + error.message, 'error');
-      });
+      }
+    });
   }
 
   private exportAsSvg(): void {
-    if (!this.modeler || !('saveSVG' in this.modeler)) {
-      this.showNotification('Cannot export SVG in viewer mode.', 'error');
-      return;
-    }
+    if (!this.currentFile?.id) return;
 
-    this.modeler.saveSVG()
-      .then((result: any) => {
-        this.downloadBlob(
-          new Blob([result.svg], { type: 'image/svg+xml' }),
-          this.generateFileName('svg')
-        );
+    this.fileService.exportFile(this.currentFile.id, 'svg').subscribe({
+      next: (blob: Blob) => {
+        this.downloadBlob(blob, this.generateFileName('svg'));
         this.showNotification('Diagram exported as SVG', 'success');
-      })
-      .catch((error: any) => {
-        console.error('Error exporting SVG:', error);
+      },
+      error: (error: any) => {
         this.showNotification('Error exporting SVG: ' + error.message, 'error');
-      });
+      }
+    });
   }
 
   private exportAsPng(): void {
-    // Implementation would require html2canvas or similar
-    this.showNotification('PNG export not yet implemented', 'warning');
-  }
+    if (!this.currentFile?.id) return;
 
- exportAsPdf(): void {
-    if (!this.canView) {
-      this.showNotification('You do not have permission to export diagrams.', 'error');
-      return;
-    }
-
-    if (!this.currentDiagram?.fileName) {
-      this.showNotification('Please save the diagram first before exporting to PDF.', 'warning');
-      return;
-    }
-
-    if (!this.modeler) {
-      this.showNotification('BPMN modeler not initialized', 'error');
-      return;
-    }
-
-    try {
-      this.modeler.saveSVG().then((result: any) => {
-        const svgString = result.svg;
-        this.convertSvgToPdf(svgString, this.currentDiagram!.fileName!);
-      }).catch((error: any) => {
-        console.error('Error getting SVG from modeler:', error);
-        this.showNotification('Error exporting diagram: ' + error.message, 'error');
-      });
-    } catch (error: any) {
-      console.error('Error in exportToPdf:', error);
-      this.showNotification('Error exporting diagram: ' + error.message, 'error');
-    }
-  }
-private convertSvgToPdf(svgString: string, fileName: string): void {
-    const tempDiv = document.createElement('div');
-    tempDiv.style.cssText = `
-      position: absolute;
-      top: -9999px;
-      left: -9999px;
-      background: white;
-      padding: 20px;
-    `;
-    tempDiv.innerHTML = svgString;
-    document.body.appendChild(tempDiv);
-
-    const svgElement = tempDiv.querySelector('svg');
-    if (!svgElement) {
-      this.showNotification('Could not extract diagram SVG', 'error');
-      document.body.removeChild(tempDiv);
-      return;
-    }
-    svgElement.style.background = 'white';
-    svgElement.style.border = '1px solid #ddd';
-
-    html2canvas(tempDiv, {
-      useCORS: true,
-      allowTaint: true
-    }).then(canvas => {
-      const imgWidth = 190;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const contentDataURL = canvas.toDataURL('image/png', 1.0);
-
-      pdf.setFontSize(16);
-      pdf.text(fileName.replace(/\.(bpmn|xml)$/, ''), 10, 15);
-
-      pdf.addImage(contentDataURL, 'PNG', 10, 25, imgWidth, imgHeight);
-
-      const pdfFileName = fileName.replace(/\.(bpmn|xml)$/, '') + '.pdf';
-      pdf.save(pdfFileName);
-
-      this.showNotification('Diagram exported to PDF successfully', 'success');
-
-      document.body.removeChild(tempDiv);
-    }).catch(error  => {
-      console.error('Error converting SVG to PDF:', error);
-      this.showNotification('Error converting diagram to PDF: ' + error.message, 'error');
-      document.body.removeChild(tempDiv);
+    this.fileService.exportFile(this.currentFile.id, 'png').subscribe({
+      next: (blob: Blob) => {
+        this.downloadBlob(blob, this.generateFileName('png'));
+        this.showNotification('Diagram exported as PNG', 'success');
+      },
+      error: (error: any) => {
+        this.showNotification('Error exporting PNG: ' + error.message, 'error');
+      }
     });
   }
+
+  private exportAsPdf(): void {
+    if (!this.currentFile?.id) return;
+
+    this.fileService.exportFile(this.currentFile.id, 'pdf').subscribe({
+      next: (blob: Blob) => {
+        this.downloadBlob(blob, this.generateFileName('pdf'));
+        this.showNotification('Diagram exported as PDF', 'success');
+      },
+      error: (error: any) => {
+        this.showNotification('Error exporting PDF: ' + error.message, 'error');
+      }
+    });
+  }
+
   // =================== FILE OPERATIONS ===================
 
   openFileDialog(): void {
-    // Trigger file input click
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = '.bpmn,.xml,.json';
+    input.accept = '.bpmn,.xml';
     input.onchange = (e: any) => this.onFileChange(e);
     input.click();
   }
@@ -1290,13 +920,7 @@ private convertSvgToPdf(svgString: string, fileName: string): void {
       const reader = new FileReader();
       reader.onload = (e) => {
         const content = e.target?.result as string;
-
-        if (file.name.endsWith('.json')) {
-          this.loadJsonFile(content);
-        } else {
-          this.loadDiagram(content);
-        }
-
+        this.loadDiagram(content);
         this.hasUnsavedChanges = true;
       };
       reader.readAsText(file);
@@ -1305,131 +929,14 @@ private convertSvgToPdf(svgString: string, fileName: string): void {
     }
   }
 
-  private loadJsonFile(jsonContent: string): void {
-    try {
-      const diagramData: DiagramFile = JSON.parse(jsonContent);
-
-      if (diagramData.content && diagramData.metadata) {
-        this.loadDiagramFromFile(diagramData);
-        this.showNotification('JSON diagram file loaded successfully', 'success');
-      } else {
-        throw new Error('Invalid JSON diagram format');
-      }
-    } catch (error: any) {
-      console.error('Error loading JSON file:', error);
-      this.showNotification('Error loading JSON file: ' + error.message, 'error');
-    }
-  }
-
-  // =================== AUTO-SAVE AND CHANGE DETECTION ===================
-
-  private setupChangeDetection(): void {
-    this.changeDetectionSubscription = timer(0, 1000)
-      .pipe(
-        takeUntil(this.destroy$),
-        debounceTime(1000),
-        distinctUntilChanged()
-      )
-      .subscribe(() => {
-        if (this.settings.autoSave && this.hasUnsavedChanges && this.currentDiagram?.id) {
-          this.performAutoSave();
-        }
-      });
-  }
-
-  private performAutoSave(): void {
-    if (!this.modeler || !('saveXML' in this.modeler)) return;
-
-    this.modeler.saveXML({ format: true })
-      .then((result: any) => {
-        const xml = result.xml;
-        const diagramSettings = this.getCurrentDiagramSettings();
-
-        const autoSaveObservable = this.diagramService.autoSave(
-          xml,
-          this.elementColors,
-          this.getAllCustomProperties(),
-          diagramSettings
-        );
-
-        if (autoSaveObservable) {
-          autoSaveObservable.subscribe({
-            next: () => {
-              this.hasUnsavedChanges = false;
-              console.log('Auto-save completed');
-            },
-            error: (error: any) => {
-              console.error('Auto-save failed:', error);
-            }
-          });
-        }
-      })
-      .catch((error: any) => {
-        console.error('Auto-save XML generation failed:', error);
-      });
-  }
+  // =================== UTILITY METHODS ===================
 
   private markAsChanged(): void {
     this.hasUnsavedChanges = true;
   }
 
-  private cleanupSubscriptions(): void {
-    if (this.autoSaveSubscription) {
-      this.autoSaveSubscription.unsubscribe();
-    }
-    if (this.changeDetectionSubscription) {
-      this.changeDetectionSubscription.unsubscribe();
-    }
-  }
-
-  // =================== SETTINGS MANAGEMENT ===================
-
-  private loadSettings(): void {
-    try {
-      const stored = localStorage.getItem('bpmn_modeler_settings');
-      if (stored) {
-        const settings = JSON.parse(stored);
-        this.settings = { ...this.settings, ...settings };
-      }
-    } catch (error) {
-      console.warn('Failed to load settings:', error);
-    }
-  }
-
-  private saveSettings(): void {
-    try {
-      localStorage.setItem('bpmn_modeler_settings', JSON.stringify(this.settings));
-    } catch (error) {
-      console.warn('Failed to save settings:', error);
-    }
-  }
-
-  updateSettings(newSettings: Partial<ModelerSettings>): void {
-    this.settings = { ...this.settings, ...newSettings };
-    this.saveSettings();
-
-    // Apply immediate changes
-    if (newSettings.theme) {
-      this.applyTheme();
-    }
-
-    if (typeof newSettings.autoSave === 'boolean') {
-      this.diagramService.setAutoSaveEnabled(newSettings.autoSave);
-    }
-
-    if (newSettings.autoSaveInterval) {
-      this.diagramService.setAutoSaveInterval(newSettings.autoSaveInterval);
-    }
-  }
-
-  // =================== UTILITY METHODS ===================
-
-  private promptForFileName(): string | null {
-    return prompt('Enter filename:', 'new_diagram.bpmn');
-  }
-
   private generateFileName(extension: string): string {
-    const baseName = this.currentDiagram?.fileName?.replace(/\.(bpmn|xml)$/, '') || 'diagram';
+    const baseName = this.currentFile?.fileName?.replace(/\.(bpmn|xml)$/, '') || 'diagram';
     return `${baseName}.${extension}`;
   }
 
@@ -1442,8 +949,16 @@ private convertSvgToPdf(svgString: string, fileName: string): void {
     window.URL.revokeObjectURL(url);
   }
 
-  private generatePropertyId(): string {
-    return 'prop_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  private getAllCustomProperties(): { [elementId: string]: CustomProperty[] } {
+    const map = this.customPropertyService.getAllProperties();
+    if (map instanceof Map) {
+      const obj: { [elementId: string]: CustomProperty[] } = {};
+      map.forEach((value, key) => {
+        obj[key] = value;
+      });
+      return obj;
+    }
+    return map;
   }
 
   private showNotification(message: string, type: 'success' | 'error' | 'warning' = 'success'): void {
@@ -1458,7 +973,7 @@ private convertSvgToPdf(svgString: string, fileName: string): void {
   // =================== GETTERS ===================
 
   get currentDiagramName(): string {
-    return this.currentDiagram?.fileName || 'New Diagram';
+    return this.currentFile?.fileName || 'New Diagram';
   }
 
   get currentUserRole(): string {
@@ -1487,28 +1002,11 @@ private convertSvgToPdf(svgString: string, fileName: string): void {
     return this.canEdit && this.selectedElement && !this.isViewerOnly;
   }
 
-  get hasMetadata(): boolean {
-    return this.currentDiagram?.metadata !== undefined;
+  get currentFolderName(): string {
+    return this.currentFolderContext.folderName;
   }
 
-  get metadataInfo(): string {
-    if (!this.currentDiagram?.metadata) return 'No metadata';
-
-    const metadata = this.currentDiagram.metadata;
-    const colorCount = Object.keys(metadata.elementColors || {}).length;
-    const propertyCount = Object.keys(metadata.customProperties || {}).length;
-
-    return `${colorCount} colored elements, ${propertyCount} elements with properties`;
-  }
-
-  get lastSaveTime(): string {
-    const lastSave = this.diagramService.getLastSaveTime();
-    return lastSave ? lastSave.toLocaleString() : 'Never';
-  }
-
-  get autoSaveStatus(): string {
-    if (!this.diagramService.isAutoSaveEnabled()) return 'Disabled';
-    if (this.hasUnsavedChanges) return 'Pending';
-    return 'Up to date';
+  get isInFolder(): boolean {
+    return this.currentFolderContext.folderId !== undefined && this.currentFolderContext.folderId !== null;
   }
 }

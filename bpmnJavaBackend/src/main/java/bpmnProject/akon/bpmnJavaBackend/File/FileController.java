@@ -1,6 +1,5 @@
 package bpmnProject.akon.bpmnJavaBackend.File;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -16,82 +15,235 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import static org.springframework.http.ResponseEntity.*;
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/api/v1/file")
 public class FileController {
 
-
     private final FileService fileService;
-    private final FileVersionService fileVersionService;
     private final FolderService folderService;
-    private final ElementAttachmentService elementAttachmentService;
     private final BpmnPdfService bpmnPdfService;
+    private final FileRepository fileRepository;
 
     @Autowired
-    public FileController(FileService fileService, FileVersionService fileVersionService, FolderService folderService, ElementAttachmentService elementAttachmentService, BpmnPdfService bpmnPdfService) {
+    private FileVersionRepository fileVersionRepository;
+
+    @Autowired
+    private FileVersionService fileVersionService;
+
+    @Autowired
+    public FileController(FileService fileService, FolderService folderService,
+                          BpmnPdfService bpmnPdfService, FileRepository fileRepository) {
         this.fileService = fileService;
-        this.fileVersionService = fileVersionService;
         this.folderService = folderService;
-        this.elementAttachmentService = elementAttachmentService;
         this.bpmnPdfService = bpmnPdfService;
+        this.fileRepository = fileRepository;
     }
 
+    // =================== BPMN DIAGRAM SAVE ===================
 
-    @GetMapping("/file/{filename}")
-    @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<File> getFileByFilename(@PathVariable("filename") String filename) {
+    @PostMapping("/save")
+    @PreAuthorize("hasRole('MODELER') or hasRole('ADMIN')")
+    public ResponseEntity<?> saveBpmnDiagram(@RequestBody Map<String, Object> payload) {
         try {
-            File file = fileService.findFileByFilename(filename);
-            if (file.getData() != null) {
-                file.setBase64Data(java.util.Base64.getEncoder().encodeToString(file.getData()));
+            System.out.println("=== SAVE BPMN DIAGRAM DEBUG ===");
+            System.out.println("Payload received: " + payload);
+
+            // Extract values from payload
+            String name = extractStringValue(payload, "name");
+            String xml = extractStringValue(payload, "xml");
+            String customProperties = extractStringValue(payload, "customProperties", "{}");
+            String elementColors = extractStringValue(payload, "elementColors", "{}");
+            Long folderId = extractLongValue(payload, "folderId");
+            boolean overwrite = extractBooleanValue(payload, "overwrite", false);
+
+            System.out.println("Extracted values:");
+            System.out.println("- name: " + name);
+            System.out.println("- xml length: " + (xml != null ? xml.length() : "null"));
+            System.out.println("- folderId: " + folderId);
+            System.out.println("- overwrite: " + overwrite);
+
+            // Validation
+            if (name == null || name.trim().isEmpty()) {
+                return badRequest().body(Map.of("error", "File name is required"));
             }
-            return new ResponseEntity<>(file, HttpStatus.OK);
+
+            if (xml == null || xml.trim().isEmpty()) {
+                return badRequest().body(Map.of("error", "XML content is required"));
+            }
+
+            // Validate JSON format for optional fields
+            if (!isValidJson(customProperties)) {
+                customProperties = "{}";
+            }
+            if (!isValidJson(elementColors)) {
+                elementColors = "{}";
+            }
+
+            String currentUser = getCurrentUsername();
+            System.out.println("Current user: " + currentUser);
+
+            // Check if file exists and handle overwrite
+            if (fileService.fileExistsInFolder(name.trim(), folderId) && !overwrite) {
+                System.out.println("File exists and overwrite=false, returning conflict");
+                return status(HttpStatus.CONFLICT)
+                        .body(Map.of("error", "File already exists", "exists", true));
+            }
+
+            System.out.println("Calling fileService.saveBpmnDiagram...");
+
+            // Save the BPMN diagram
+            File savedFile = fileService.saveBpmnDiagram(
+                    name.trim(),
+                    xml,
+                    customProperties,
+                    elementColors,
+                    folderId,
+                    currentUser,
+                    overwrite
+            );
+
+            if (savedFile == null) {
+                return status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(Map.of("error", "Failed to save file - service returned null"));
+            }
+
+            System.out.println("File saved successfully with ID: " + savedFile.getId());
+
+            // Return the file in the format expected by Angular
+            prepareFileForResponse(savedFile);
+            return ok(savedFile);
+
+        } catch (IllegalStateException e) {
+            System.err.println("=== FILE EXISTS ERROR ===");
+            System.err.println("Error: " + e.getMessage());
+            return status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", e.getMessage(), "exists", true));
+
+        } catch (IllegalArgumentException e) {
+            System.err.println("=== VALIDATION ERROR ===");
+            System.err.println("Error: " + e.getMessage());
+            return badRequest().body(Map.of("error", e.getMessage()));
+
         } catch (Exception e) {
+            System.err.println("=== SAVE DIAGRAM ERROR ===");
+            System.err.println("Error type: " + e.getClass().getSimpleName());
+            System.err.println("Error message: " + e.getMessage());
             e.printStackTrace();
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+
+            return status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to save diagram: " + e.getMessage()));
         }
     }
 
-    @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> deleteFile(@PathVariable("id") Long id) {
-        System.out.println("Attempting to delete file with id: " + id);
+    // =================== UPDATE EXISTING FILE ===================
+
+    @PutMapping("/{id}/content")
+    @PreAuthorize("hasRole('MODELER') or hasRole('ADMIN')")
+    public ResponseEntity<?> updateFileContent(@PathVariable Long id, @RequestBody Map<String, Object> payload) {
         try {
-            // Check if file exists
-            File file = fileService.findFileById(id);
-            if (file == null) {
-                return new ResponseEntity<>(
-                        Map.of("error", "File not found with id: " + id),
-                        HttpStatus.NOT_FOUND
-                );
+            System.out.println("=== UPDATE FILE CONTENT DEBUG ===");
+            System.out.println("File ID: " + id);
+            System.out.println("Payload: " + payload);
+
+            String xml = extractStringValue(payload, "xml");
+            String customProperties = extractStringValue(payload, "customProperties", "{}");
+            String elementColors = extractStringValue(payload, "elementColors", "{}");
+
+            if (xml == null || xml.trim().isEmpty()) {
+                return badRequest().body(Map.of("error", "XML content is required"));
             }
 
-            String fileName = file.getFileName();
+            String currentUser = getCurrentUsername();
 
-            // Delete the file
-            fileService.deleteByFile(id);
+            // Validate JSON format
+            if (!isValidJson(customProperties)) {
+                customProperties = "{}";
+            }
+            if (!isValidJson(elementColors)) {
+                elementColors = "{}";
+            }
 
-            return new ResponseEntity<>(
-                    Map.of(
-                            "message", "File deleted successfully",
-                            "fileName", fileName,
-                            "fileId", id
-                    ),
-                    HttpStatus.OK
-            );
+            // Update the file
+            File updatedFile = fileService.updateBpmnFileContent(id, xml, customProperties, elementColors, currentUser);
+
+            prepareFileForResponse(updatedFile);
+            return ok(updatedFile);
+
         } catch (Exception e) {
-            System.err.println("Error deleting file with id " + id + ": " + e.getMessage());
+            System.err.println("=== UPDATE FILE ERROR ===");
+            System.err.println("Error: " + e.getMessage());
             e.printStackTrace();
-            return new ResponseEntity<>(
-                    Map.of("error", "Failed to delete file: " + e.getMessage()),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
+
+            return status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to update file: " + e.getMessage()));
+        }
+    }
+
+    // =================== HELPER METHODS ===================
+
+    private String extractStringValue(Map<String, Object> payload, String key) {
+        return extractStringValue(payload, key, null);
+    }
+
+    private String extractStringValue(Map<String, Object> payload, String key, String defaultValue) {
+        Object value = payload.get(key);
+        return value != null ? value.toString() : defaultValue;
+    }
+
+    private Long extractLongValue(Map<String, Object> payload, String key) {
+        Object value = payload.get(key);
+        if (value != null) {
+            try {
+                if (value instanceof Number) {
+                    return ((Number) value).longValue();
+                } else if (value instanceof String) {
+                    return Long.valueOf((String) value);
+                }
+            } catch (NumberFormatException e) {
+                System.err.println("Invalid number format for key " + key + ": " + value);
+            }
+        }
+        return null;
+    }
+
+    private boolean extractBooleanValue(Map<String, Object> payload, String key, boolean defaultValue) {
+        Object value = payload.get(key);
+        if (value instanceof Boolean) {
+            return (Boolean) value;
+        }
+        return defaultValue;
+    }
+
+    private boolean isValidJson(String jsonString) {
+        if (jsonString == null || jsonString.trim().isEmpty()) {
+            return true;
+        }
+        try {
+            new com.fasterxml.jackson.databind.ObjectMapper().readTree(jsonString);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // =================== FILE OPERATIONS ===================
+
+    @GetMapping("/all")
+    @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
+    public ResponseEntity<List<File>> getAllFiles() {
+        try {
+            List<File> files = fileService.getAllFiles();
+            files.forEach(this::prepareFileForResponse);
+            return ok(files);
+        } catch (Exception e) {
+            return status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -99,76 +251,107 @@ public class FileController {
     @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
     public ResponseEntity<List<File>> getRootFiles() {
         try {
-            List<File> files = fileService.getFilesInFolder(null); // null means root folder
-            files.forEach(file -> {
-                if (file.getData() != null) {
-                    file.setBase64Data(java.util.Base64.getEncoder().encodeToString(file.getData()));
-                    file.setData(null); // Don't send raw data in response
-                }
-            });
-            return new ResponseEntity<>(files, HttpStatus.OK);
+            List<File> files = fileService.getFilesInFolder(null);
+            files.forEach(this::prepareFileForResponse);
+            return ok(files);
         } catch (Exception e) {
-            System.err.println("Error fetching root files: " + e.getMessage());
-            e.printStackTrace();
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-    @GetMapping("/{id}/export/pdf")
+
+    @GetMapping("/{id}")
     @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<byte[]> exportFileToPdf(@PathVariable Long id) {
+    public ResponseEntity<?> getFileById(@PathVariable("id") Long id) {
+        try {
+            Optional<File> fileOpt = fileService.getFileById(id);
+            if (!fileOpt.isPresent()) {
+                return notFound().build();
+            }
+
+            File file = fileOpt.get();
+            prepareFileForResponse(file);
+            return ok(file);
+        } catch (Exception e) {
+            return status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to retrieve file: " + e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> deleteFile(@PathVariable("id") Long id) {
         try {
             File file = fileService.findFileById(id);
             if (file == null) {
-                return ResponseEntity.notFound().build();
+                return status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "File not found with id: " + id));
             }
 
-            byte[] pdfBytes = bpmnPdfService.convertBpmnToPdf(file);
+            String fileName = file.getFileName();
+            fileService.deleteByFile(id);
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_PDF);
-            headers.setContentDispositionFormData("attachment",
-                    (file.getFileName() != null ? file.getFileName().replace(".bpmn", "").replace(".xml", "") : "diagram") + ".pdf");
-            headers.setContentLength(pdfBytes.length);
-
-            return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
-
+            return ok(Map.of(
+                    "message", "File deleted successfully",
+                    "fileName", fileName,
+                    "fileId", id
+            ));
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(("Error exporting to PDF: " + e.getMessage()).getBytes());
+            return status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to delete file: " + e.getMessage()));
         }
     }
 
-    @PostMapping("/{id}/export/pdf")
-    @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<byte[]> exportFileToPdfWithMetadata(
-            @PathVariable Long id,
-            @RequestBody Map<String, Object> metadata) {
+    // =================== FILE UPLOAD ===================
+
+    @PostMapping("/upload")
+    @PreAuthorize("hasRole('MODELER') or hasRole('ADMIN')")
+    public ResponseEntity<?> uploadFile(
+            @RequestParam("file") MultipartFile multipartFile,
+            @RequestParam(value = "folderId", required = false) Long folderId,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "tags", required = false) String tags,
+            @RequestParam(value = "customName", required = false) String customName,
+            @RequestParam(value = "overwrite", defaultValue = "false") boolean allowOverwrite) {
         try {
-            File file = fileService.findFileById(id);
-            if (file == null) {
-                return ResponseEntity.notFound().build();
+            if (multipartFile.isEmpty()) {
+                return badRequest().body(Map.of("error", "File is empty"));
             }
 
-            byte[] pdfBytes = bpmnPdfService.convertBpmnToPdfWithMetadata(file, metadata);
+            String fileName = customName != null && !customName.trim().isEmpty()
+                    ? customName : multipartFile.getOriginalFilename();
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_PDF);
-            headers.setContentDispositionFormData("attachment",
-                    (file.getFileName() != null ? file.getFileName().replace(".bpmn", "").replace(".xml", "") : "diagram") + ".pdf");
-            headers.setContentLength(pdfBytes.length);
+            if (!allowOverwrite && fileService.fileExistsInFolder(fileName, folderId)) {
+                return status(HttpStatus.CONFLICT).body(Map.of(
+                        "error", "File already exists",
+                        "fileName", fileName,
+                        "exists", true,
+                        "folderId", folderId != null ? folderId : "root"
+                ));
+            }
 
-            return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+            String currentUser = getCurrentUsername();
+            File file = fileService.uploadFileToFolder(
+                    multipartFile, folderId, description, tags, currentUser
+            );
 
+            if (customName != null && !customName.trim().isEmpty()) {
+                file.setFileName(customName);
+                file = fileService.updateFile(file);
+            }
+
+            prepareFileForResponse(file);
+            return status(HttpStatus.CREATED).body(file);
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(("Error exporting to PDF: " + e.getMessage()).getBytes());
+            return status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to upload file: " + e.getMessage()));
         }
     }
+
+    // =================== EXPORT OPERATIONS ===================
 
     @GetMapping("/{id}/export/{format}")
-    public ResponseEntity<byte[]> exportFile(@PathVariable Long id, @PathVariable String format){
+    @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
+    public ResponseEntity<byte[]> exportFile(@PathVariable Long id, @PathVariable String format) {
         try {
             File file = fileService.findFileById(id);
             if (file == null) {
@@ -197,7 +380,8 @@ public class FileController {
                     break;
                 case "xml":
                 default:
-                    exportedData = file.getData();
+                    String xmlContent = file.getXml() != null ? file.getXml() : file.getFileData();
+                    exportedData = xmlContent != null ? xmlContent.getBytes() : new byte[0];
                     mediaType = MediaType.APPLICATION_XML;
                     fileExtension = ".xml";
                     break;
@@ -214,307 +398,12 @@ public class FileController {
             return new ResponseEntity<>(exportedData, headers, HttpStatus.OK);
 
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(("Error exporting file: " + e.getMessage()).getBytes());
         }
     }
 
-    @PostMapping("/{id}/validate")
-    @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<Map<String, Object>> validateBpmnFile(@PathVariable Long id) {
-        try {
-            File file = fileService.findFileById(id);
-            if (file == null) {
-                return ResponseEntity.notFound().build();
-            }
-
-            Map<String, Object> validationResult = bpmnPdfService.validateBpmnFile(file);
-            return new ResponseEntity<>(validationResult, HttpStatus.OK);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Validation failed: " + e.getMessage()));
-        }
-    }
-
-    @GetMapping("/{id}/preview")
-    @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<byte[]> getFilePreview(@PathVariable Long id) {
-        try {
-            File file = fileService.findFileById(id);
-            if (file == null) {
-                return ResponseEntity.notFound().build();
-            }
-
-            byte[] previewData = bpmnPdfService.generatePreview(file);
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.IMAGE_PNG);
-            headers.setContentLength(previewData.length);
-
-            return new ResponseEntity<>(previewData, headers, HttpStatus.OK);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @GetMapping("/{id}/download")
-    @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<Resource> downloadFile(@PathVariable Long id) {
-        try {
-            File file = fileService.findFileById(id);
-            if (file == null) {
-                return ResponseEntity.notFound().build();
-            }
-
-            ByteArrayResource resource = new ByteArrayResource(file.getData());
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.add(HttpHeaders.CONTENT_DISPOSITION,
-                    "attachment; filename=\"" + file.getFileName() + "\"");
-            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-            headers.setContentLength(file.getData().length);
-
-            return ResponseEntity.ok()
-                    .headers(headers)
-                    .body(resource);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @GetMapping("/{id}/content")
-    @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<String> getFileContent(@PathVariable Long id) {
-        try {
-            File file = fileService.findFileById(id);
-            if (file == null) {
-                return ResponseEntity.notFound().build();
-            }
-
-            String content = new String(file.getData());
-            return ResponseEntity.ok()
-                    .contentType(MediaType.TEXT_PLAIN)
-                    .body(content);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error reading file content: " + e.getMessage());
-        }
-    }
-
-    @PutMapping("/{id}")
-    @PreAuthorize("hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<File> updateFile(@PathVariable Long id, @RequestParam("file") MultipartFile multipartFile) {
-        try {
-            File existingFile = fileService.findFileById(id);
-            if (existingFile == null) {
-                return ResponseEntity.notFound().build();
-            }
-
-            existingFile.setFileName(multipartFile.getOriginalFilename());
-            existingFile.setFileType(multipartFile.getContentType());
-            existingFile.setFileSize(multipartFile.getSize());
-            existingFile.setData(multipartFile.getBytes());
-            existingFile.setUploadTime(LocalDateTime.now());
-
-            File updatedFile = fileService.updateFile(existingFile);
-            return new ResponseEntity<>(updatedFile, HttpStatus.OK);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @PostMapping("/upload")
-    @PreAuthorize("hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<?> uploadFile(
-            @RequestParam("file") MultipartFile multipartFile,
-            @RequestParam(value = "folderId", required = false) Long folderId,
-            @RequestParam(value = "description", required = false) String description,
-            @RequestParam(value = "tags", required = false) String tags,
-            @RequestParam(value = "customName", required = false) String customName) {
-        try {
-            // Validate file
-            if (multipartFile.isEmpty()) {
-                return new ResponseEntity<>(
-                        Map.of("error", "File is empty"),
-                        HttpStatus.BAD_REQUEST
-                );
-            }
-
-            // Validate file size (e.g., max 50MB)
-            long maxFileSize = 50 * 1024 * 1024; // 50MB
-            if (multipartFile.getSize() > maxFileSize) {
-                return new ResponseEntity<>(
-                        Map.of("error", "File size exceeds maximum limit of 50MB"),
-                        HttpStatus.PAYLOAD_TOO_LARGE
-                );
-            }
-
-            // Validate file type
-            String contentType = multipartFile.getContentType();
-            if (contentType != null && !isAllowedFileType(contentType)) {
-                return new ResponseEntity<>(
-                        Map.of("error", "File type not supported: " + contentType),
-                        HttpStatus.UNSUPPORTED_MEDIA_TYPE
-                );
-            }
-
-            String currentUser = getCurrentUsername();
-            String fileName = customName != null && !customName.trim().isEmpty()
-                    ? customName
-                    : multipartFile.getOriginalFilename();
-
-            File file = fileService.uploadFileToFolder(
-                    multipartFile,
-                    folderId,
-                    description,
-                    tags,
-                    currentUser
-            );
-
-            // If custom name was provided, update the file name
-            if (customName != null && !customName.trim().isEmpty()) {
-                file.setFileName(customName);
-                file = fileService.updateFile(file);
-            }
-
-            return new ResponseEntity<>(file, HttpStatus.CREATED);
-        } catch (Exception e) {
-            System.err.println("Error uploading file: " + e.getMessage());
-            e.printStackTrace();
-            return new ResponseEntity<>(
-                    Map.of("error", "Failed to upload file: " + e.getMessage()),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
-    }
-
-    @PutMapping("/{id}/content")
-    @PreAuthorize("hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<?> updateFileContent(
-            @PathVariable Long id,
-            @RequestParam("content") String content) {
-        try {
-            File existingFile = fileService.findFileById(id);
-            if (existingFile == null) {
-                return new ResponseEntity<>(
-                        Map.of("error", "File not found with id: " + id),
-                        HttpStatus.NOT_FOUND
-                );
-            }
-
-            // Update file content
-            existingFile.setData(content.getBytes());
-            existingFile.setUpdatedTime(LocalDateTime.now());
-            existingFile.setUpdatedBy(getCurrentUsername());
-
-            File updatedFile = fileService.updateFile(existingFile);
-
-            // Convert to base64 for response
-            if (updatedFile.getData() != null) {
-                updatedFile.setBase64Data(java.util.Base64.getEncoder().encodeToString(updatedFile.getData()));
-                updatedFile.setData(null);
-            }
-
-            return new ResponseEntity<>(updatedFile, HttpStatus.OK);
-        } catch (Exception e) {
-            System.err.println("Error updating file content: " + e.getMessage());
-            e.printStackTrace();
-            return new ResponseEntity<>(
-                    Map.of("error", "Failed to update file content: " + e.getMessage()),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
-    }
-    @PostMapping("/{id}/save-version")
-    @PreAuthorize("hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<FileVersion> saveNewVersion(
-            @PathVariable Long id,
-            @RequestParam("file") MultipartFile newContent,
-            @RequestParam(value = "versionNotes", required = false) String versionNotes) throws IOException {
-        try {
-            String currentUser = getCurrentUsername();
-            FileVersion version = fileVersionService.createNewVersion(id, newContent.getBytes(), versionNotes, currentUser);
-            return ResponseEntity.ok(version);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @PostMapping("/{id}/save-as-new")
-    @PreAuthorize("hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<File> saveAsNewFile(
-            @PathVariable Long id,
-            @RequestParam("file") MultipartFile newContent,
-            @RequestParam("newFileName") String newFileName,
-            @RequestParam(value = "versionNotes", required = false) String versionNotes) throws IOException {
-        try {
-            String currentUser = getCurrentUsername();
-            File newFile = fileVersionService.createNewFileFromVersion(id, newContent.getBytes(), newFileName, versionNotes, currentUser);
-            return ResponseEntity.ok(newFile);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @GetMapping("/{id}/versions")
-    @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<List<FileVersion>> getFileVersions(@PathVariable Long id) {
-        try {
-            List<FileVersion> versions = fileVersionService.getFileVersions(id);
-            // Convert binary data to base64 for JSON response
-            versions.forEach(version -> {
-                if (version.getData() != null) {
-                    version.setBase64Data(java.util.Base64.getEncoder().encodeToString(version.getData()));
-                    version.setData(null); // Don't send raw data
-                }
-            });
-            return ResponseEntity.ok(versions);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-    }
-
-    @GetMapping("/{id}/versions/{versionNumber}")
-    @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<FileVersion> getFileVersion(@PathVariable Long id, @PathVariable Integer versionNumber) {
-        try {
-            FileVersion version = fileVersionService.getFileVersion(id, versionNumber)
-                    .orElseThrow(() -> new RuntimeException("Version not found"));
-
-            if (version.getData() != null) {
-                version.setBase64Data(java.util.Base64.getEncoder().encodeToString(version.getData()));
-                version.setData(null);
-            }
-            return ResponseEntity.ok(version);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-    }
-
-    @PostMapping("/{id}/restore-version/{versionNumber}")
-    @PreAuthorize("hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<File> restoreVersion(@PathVariable Long id, @PathVariable Integer versionNumber) {
-        try {
-            String currentUser = getCurrentUsername();
-            File restoredFile = fileVersionService.restoreVersion(id, versionNumber, currentUser);
-            return ResponseEntity.ok(restoredFile);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    // =================== FOLDER MANAGEMENT ===================
+    // =================== FOLDER OPERATIONS ===================
 
     @PostMapping("/folders")
     @PreAuthorize("hasRole('MODELER') or hasRole('ADMIN')")
@@ -532,9 +421,9 @@ public class FileController {
                 folder = folderService.createRootFolder(folderName, description, currentUser);
             }
 
-            return ResponseEntity.ok(folder);
+            return ok(folder);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            return badRequest().build();
         }
     }
 
@@ -542,96 +431,41 @@ public class FileController {
     @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
     public ResponseEntity<List<Folder>> getRootFolders() {
         List<Folder> folders = folderService.getRootFolders();
-        return ResponseEntity.ok(folders);
+        return ok(folders);
     }
 
     @GetMapping("/folders/{folderId}")
     @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
     public ResponseEntity<Folder> getFolder(@PathVariable Long folderId) {
         return folderService.getFolderWithStats(folderId)
-                .map(folder -> ResponseEntity.ok(folder))
-                .orElse(ResponseEntity.notFound().build());
+                .map(folder -> ok(folder))
+                .orElse(notFound().build());
     }
 
     @GetMapping("/folders/{folderId}/subfolders")
     @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
     public ResponseEntity<List<Folder>> getSubFolders(@PathVariable Long folderId) {
         List<Folder> subFolders = folderService.getSubFolders(folderId);
-        return ResponseEntity.ok(subFolders);
+        return ok(subFolders);
     }
 
     @GetMapping("/folders/{folderId}/files")
     @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
     public ResponseEntity<?> getFolderFiles(@PathVariable Long folderId) {
         try {
-            // Check if folder exists
             Optional<Folder> folderOpt = folderService.getFolderWithStats(folderId);
             if (!folderOpt.isPresent()) {
-                return new ResponseEntity<>(
-                        Map.of("error", "Folder not found with id: " + folderId),
-                        HttpStatus.NOT_FOUND
-                );
+                return badRequest()
+                        .body(Map.of("error", "Folder not found with id: " + folderId));
             }
 
             List<File> files = fileService.getFilesInFolder(folderId);
-            files.forEach(file -> {
-                if (file.getData() != null) {
-                    file.setBase64Data(java.util.Base64.getEncoder().encodeToString(file.getData()));
-                    file.setData(null);
-                }
-            });
+            files.forEach(this::prepareFileForResponse);
 
-            return new ResponseEntity<>(files, HttpStatus.OK);
+            return ok(files);
         } catch (Exception e) {
-            System.err.println("Error fetching files for folder " + folderId + ": " + e.getMessage());
-            e.printStackTrace();
-            return new ResponseEntity<>(
-                    Map.of("error", "Failed to retrieve files: " + e.getMessage()),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
-    }
-
-    private boolean isAllowedFileType(String contentType) {
-        List<String> allowedTypes = Arrays.asList(
-                "application/xml",
-                "text/xml",
-                "application/json",
-                "text/plain",
-                "application/octet-stream", // For .bpmn files
-                "text/bpmn+xml"
-        );
-
-        return allowedTypes.stream().anyMatch(contentType::startsWith)
-                || contentType.contains("xml")
-                || contentType.contains("bpmn");
-    }
-
-    @PostMapping("/folders/{folderId}/move")
-    @PreAuthorize("hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<Folder> moveFolder(
-            @PathVariable Long folderId,
-            @RequestParam(value = "newParentFolderId", required = false) Long newParentFolderId) {
-        try {
-            String currentUser = getCurrentUsername();
-            Folder movedFolder = folderService.moveFolder(folderId, newParentFolderId, currentUser);
-            return ResponseEntity.ok(movedFolder);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-
-    @PutMapping("/folders/{folderId}")
-    @PreAuthorize("hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<Folder> renameFolder(
-            @PathVariable Long folderId,
-            @RequestParam("newName") String newName) {
-        try {
-            String currentUser = getCurrentUsername();
-            Folder renamedFolder = folderService.renameFolder(folderId, newName, currentUser);
-            return ResponseEntity.ok(renamedFolder);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            return status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to retrieve files: " + e.getMessage()));
         }
     }
 
@@ -640,195 +474,54 @@ public class FileController {
     public ResponseEntity<Map<String, String>> deleteFolder(@PathVariable Long folderId) {
         try {
             folderService.deleteFolder(folderId);
-            return ResponseEntity.ok(Map.of("message", "Folder deleted successfully"));
+            return ok(Map.of("message", "Folder deleted successfully"));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
-    @GetMapping("/folders/tree")
+    // =================== FILE EXISTENCE CHECK ===================
+
+    @PostMapping("/folders/{folderId}/files/check-exists")
     @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<List<FolderService.FolderTreeNode>> getFolderTree() {
-        List<FolderService.FolderTreeNode> tree = folderService.getFolderTree();
-        return ResponseEntity.ok(tree);
-    }
-
-    // =================== ELEMENT ATTACHMENTS ===================
-
-    @PostMapping("/{fileId}/elements/{elementId}/attachments")
-    @PreAuthorize("hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<ElementAttachment> addElementAttachment(
-            @PathVariable Long fileId,
-            @PathVariable String elementId,
-            @RequestParam("attachment") MultipartFile attachment,
-            @RequestParam(value = "elementType", required = false) String elementType,
-            @RequestParam(value = "description", required = false) String description) throws IOException {
+    public ResponseEntity<Map<String, Boolean>> checkFileExistsInFolder(
+            @PathVariable Long folderId,
+            @RequestBody Map<String, String> request) {
         try {
-            String currentUser = getCurrentUsername();
-            ElementAttachment savedAttachment = elementAttachmentService.addElementAttachment(
-                    fileId, elementId, elementType, attachment, description, currentUser);
-            return ResponseEntity.ok(savedAttachment);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @GetMapping("/{fileId}/elements/{elementId}/attachments")
-    @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<List<ElementAttachment>> getElementAttachments(
-            @PathVariable Long fileId,
-            @PathVariable String elementId) {
-        List<ElementAttachment> attachments = elementAttachmentService.getElementAttachments(fileId, elementId);
-        return ResponseEntity.ok(attachments);
-    }
-
-    @GetMapping("/attachments/{attachmentId}")
-    @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<ElementAttachment> getAttachment(@PathVariable Long attachmentId) {
-        return elementAttachmentService.getAttachment(attachmentId)
-                .map(attachment -> {
-                    if (attachment.getAttachmentData() != null) {
-                        attachment.setBase64Data(java.util.Base64.getEncoder().encodeToString(attachment.getAttachmentData()));
-                        attachment.setAttachmentData(null);
-                    }
-                    return ResponseEntity.ok(attachment);
-                })
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    @GetMapping("/attachments/{attachmentId}/download")
-    @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<Resource> downloadAttachment(@PathVariable Long attachmentId) {
-        try {
-            ElementAttachment attachment = elementAttachmentService.getAttachment(attachmentId)
-                    .orElseThrow(() -> new RuntimeException("Attachment not found"));
-
-            if (!attachment.getIsDownloadable()) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            String fileName = request.get("fileName");
+            if (fileName == null || fileName.trim().isEmpty()) {
+                return badRequest().body(Map.of("exists", false));
             }
 
-            ByteArrayResource resource = new ByteArrayResource(attachment.getAttachmentData());
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.add(HttpHeaders.CONTENT_DISPOSITION,
-                    "attachment; filename=\"" + attachment.getOriginalFilename() + "\"");
-            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-            headers.setContentLength(attachment.getAttachmentData().length);
-
-            return ResponseEntity.ok()
-                    .headers(headers)
-                    .body(resource);
-
+            boolean exists = fileService.fileExistsInFolder(fileName, folderId);
+            return ok(Map.of("exists", exists));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ok(Map.of("exists", false));
         }
     }
 
-    @DeleteMapping("/attachments/{attachmentId}")
-    @PreAuthorize("hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<Map<String, String>> deleteAttachment(@PathVariable Long attachmentId) {
-        try {
-            elementAttachmentService.deleteAttachment(attachmentId);
-            return ResponseEntity.ok(Map.of("message", "Attachment deleted successfully"));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", e.getMessage()));
-        }
-    }
-
-    // =================== SEARCH ===================
-
-    @GetMapping("/search")
+    @PostMapping("/root-files/check-exists")
     @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<Map<String, Object>> searchFiles(
-            @RequestParam("query") String query,
-            @RequestParam(value = "folderId", required = false) Long folderId) {
+    public ResponseEntity<Map<String, Boolean>> checkFileExistsInRoot(
+            @RequestBody Map<String, String> request) {
         try {
-            List<File> files = fileService.searchFiles(query, folderId);
-            List<Folder> folders = folderService.searchFolders(query);
-            List<ElementAttachment> attachments = elementAttachmentService.searchAttachments(query);
-
-            // Clean data for JSON response
-            files.forEach(file -> {
-                if (file.getData() != null) {
-                    file.setData(null);
-                }
-            });
-
-            Map<String, Object> results = Map.of(
-                    "files", files,
-                    "folders", folders,
-                    "attachments", attachments,
-                    "totalResults", files.size() + folders.size() + attachments.size()
-            );
-
-            return ResponseEntity.ok(results);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    // =================== EXISTING METHODS (Updated) ===================
-
-    @GetMapping("/all")
-    @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<List<File>> getAllFiles() {
-        try {
-            List<File> files = fileService.getAllFiles();
-            files.forEach(file -> {
-                if (file.getData() != null) {
-                    file.setBase64Data(java.util.Base64.getEncoder().encodeToString(file.getData()));
-                    file.setData(null);
-                }
-            });
-            return new ResponseEntity<>(files, HttpStatus.OK);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @GetMapping("/{id}")
-    @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<?> getFileById(@PathVariable("id") Long id) {
-        try {
-            File file = fileService.findFileById(id);
-            if (file == null) {
-                return new ResponseEntity<>(
-                        Map.of("error", "File not found with id: " + id),
-                        HttpStatus.NOT_FOUND
-                );
+            String fileName = request.get("fileName");
+            if (fileName == null || fileName.trim().isEmpty()) {
+                return badRequest().body(Map.of("exists", false));
             }
 
-            // Convert binary data to base64 for JSON response
-            if (file.getData() != null) {
-                file.setBase64Data(java.util.Base64.getEncoder().encodeToString(file.getData()));
-                // Don't send raw data in JSON response for performance
-                file.setData(null);
-            }
-
-            return new ResponseEntity<>(file, HttpStatus.OK);
+            boolean exists = fileService.fileExistsInFolder(fileName, null);
+            return ok(Map.of("exists", exists));
         } catch (Exception e) {
-            System.err.println("Error fetching file with id " + id + ": " + e.getMessage());
-            e.printStackTrace();
-            return new ResponseEntity<>(
-                    Map.of("error", "Failed to retrieve file: " + e.getMessage()),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
+            return ok(Map.of("exists", false));
         }
     }
 
+    // =================== UTILITY METHODS ===================
 
-    @PostMapping("/{fileId}/move-to-folder")
-    @PreAuthorize("hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<File> moveFileToFolder(
-            @PathVariable Long fileId,
-            @RequestParam(value = "folderId", required = false) Long folderId) {
-        try {
-            File movedFile = folderService.moveFileToFolder(fileId, folderId);
-            return ResponseEntity.ok(movedFile);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+    private void prepareFileForResponse(File file) {
+        if (file.getFileData() != null) {
+            file.setBase64Data(java.util.Base64.getEncoder().encodeToString(file.getFileData().getBytes()));
         }
     }
 

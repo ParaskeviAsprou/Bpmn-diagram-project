@@ -1,13 +1,11 @@
-
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError, BehaviorSubject } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
+import { catchError, tap } from 'rxjs/operators';
 import { AuthenticationService } from './authentication.service';
 import { Folder } from '../models/Folder';
 import { FolderTreeNode } from '../models/FolderTreeNode';
 import { FolderBreadcrumb } from '../models/FolderBreadcrumb';
-import { FolderStatistics } from '../models/FolderStatistics';
 
 @Injectable({
   providedIn: 'root'
@@ -33,6 +31,8 @@ export class FolderService {
   ) {
     this.loadFolderTree();
   }
+
+  // =================== FOLDER CREATION ===================
 
   /**
    * Create root folder
@@ -70,6 +70,19 @@ export class FolderService {
       catchError(this.handleError)
     );
   }
+
+  /**
+   * Create folder (generic method)
+   */
+  createFolder(name: string, description: string, parentFolderId?: number): Observable<Folder> {
+    if (parentFolderId !== undefined && parentFolderId !== null) {
+      return this.createSubFolder(parentFolderId, name, description);
+    } else {
+      return this.createRootFolder(name, description);
+    }
+  }
+
+  // =================== FOLDER QUERIES ===================
 
   /**
    * Get root folders
@@ -116,6 +129,8 @@ export class FolderService {
     );
   }
 
+  // =================== FOLDER MANAGEMENT ===================
+
   /**
    * Move folder
    */
@@ -154,8 +169,13 @@ export class FolderService {
   deleteFolder(folderId: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/folders/delete/${folderId}`, {
       headers: this.getAuthHeaders()
-    });
+    }).pipe(
+      tap(() => this.loadFolderTree()),
+      catchError(this.handleError)
+    );
   }
+
+  // =================== FOLDER TREE AND NAVIGATION ===================
 
   /**
    * Get folder tree
@@ -195,16 +215,7 @@ export class FolderService {
     );
   }
 
-  /**
-   * Search folders
-   */
-  searchFolders(searchTerm: string): Observable<Folder[]> {
-    return this.http.get<Folder[]>(`${this.apiUrl}/folders/search?query=${encodeURIComponent(searchTerm)}`, {
-      headers: this.getAuthHeaders()
-    }).pipe(
-      catchError(this.handleError)
-    );
-  }
+  // =================== FILE MANAGEMENT ===================
 
   /**
    * Move file to folder
@@ -222,20 +233,7 @@ export class FolderService {
     );
   }
 
-  /**
-   * Get folder statistics
-   */
-  getFolderStatistics(folderId?: number): Observable<FolderStatistics> {
-    const url = folderId ? 
-      `${this.apiUrl}/folders/${folderId}/statistics` : 
-      `${this.apiUrl}/folders/root/statistics`;
-    
-    return this.http.get<FolderStatistics>(url, {
-      headers: this.getAuthHeaders()
-    }).pipe(
-      catchError(this.handleError)
-    );
-  }
+  // =================== STATE MANAGEMENT ===================
 
   /**
    * Set current folder
@@ -271,47 +269,6 @@ export class FolderService {
   }
 
   /**
-   * Expand/collapse folder tree node
-   */
-  toggleFolderTreeNode(nodeId: number): void {
-    const tree = this.folderTreeSubject.value;
-    this.toggleNodeInTree(tree, nodeId);
-    this.folderTreeSubject.next([...tree]);
-  }
-
-  private toggleNodeInTree(nodes: FolderTreeNode[], nodeId: number): boolean {
-    for (const node of nodes) {
-      if (node.id === nodeId) {
-        node.expanded = !node.expanded;
-        return true;
-      }
-      if (node.children && this.toggleNodeInTree(node.children, nodeId)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /**
-   * Select folder tree node
-   */
-  selectFolderTreeNode(nodeId: number): void {
-    const tree = this.folderTreeSubject.value;
-    this.selectNodeInTree(tree, nodeId);
-    this.folderTreeSubject.next([...tree]);
-  }
-
-  private selectNodeInTree(nodes: FolderTreeNode[], nodeId: number): boolean {
-    for (const node of nodes) {
-      node.selected = (node.id === nodeId);
-      if (node.children) {
-        this.selectNodeInTree(node.children, nodeId);
-      }
-    }
-    return false;
-  }
-
-  /**
    * Get current folder
    */
   getCurrentFolder(): Folder | null {
@@ -324,6 +281,8 @@ export class FolderService {
   getCurrentBreadcrumb(): FolderBreadcrumb[] {
     return this.breadcrumbSubject.value;
   }
+
+  // =================== UTILITY METHODS ===================
 
   /**
    * Format file size
@@ -349,6 +308,8 @@ export class FolderService {
       minute: '2-digit'
     });
   }
+
+  // =================== PRIVATE METHODS ===================
 
   private getAuthHeaders(): HttpHeaders {
     const token = this.authService.getToken();
@@ -400,12 +361,4 @@ export class FolderService {
     
     return throwError(() => new Error(errorMessage));
   };
-
-  createFolder(name: string, description: string, parentFolderId?: number): Observable<Folder> {
-    if (parentFolderId !== undefined && parentFolderId !== null) {
-      return this.createSubFolder(parentFolderId, name, description);
-    } else {
-      return this.createRootFolder(name, description);
-    }
-  }
 }

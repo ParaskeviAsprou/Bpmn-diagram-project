@@ -1,6 +1,6 @@
 package bpmnProject.akon.bpmnJavaBackend.File;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -9,30 +9,33 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 public class FolderService {
 
     private final FolderRepository folderRepository;
     private final FileRepository fileRepository;
+
+    @Autowired
+    public FolderService(FolderRepository folderRepository, FileRepository fileRepository) {
+        this.folderRepository = folderRepository;
+        this.fileRepository = fileRepository;
+    }
 
     /**
      * Create root folder
      */
     @Transactional
     public Folder createRootFolder(String folderName, String description, String createdBy) {
-        // Check if root folder with same name exists
         if (folderRepository.existsByFolderNameAndParentFolderIsNull(folderName)) {
             throw new RuntimeException("Root folder with name '" + folderName + "' already exists");
         }
 
-        Folder rootFolder = Folder.builder()
-                .folderName(folderName)
-                .description(description)
-                .createdBy(createdBy)
-                .createdTime(LocalDateTime.now())
-                .isRoot(true)
-                .parentFolder(null)
-                .build();
+        Folder rootFolder = new Folder();
+        rootFolder.setFolderName(folderName);
+        rootFolder.setDescription(description);
+        rootFolder.setCreatedBy(createdBy);
+        rootFolder.setCreatedTime(LocalDateTime.now());
+        rootFolder.setIsRoot(true);
+        rootFolder.setParentFolder(null);
 
         return folderRepository.save(rootFolder);
     }
@@ -45,19 +48,17 @@ public class FolderService {
         Folder parentFolder = folderRepository.findById(parentFolderId)
                 .orElseThrow(() -> new RuntimeException("Parent folder not found with id: " + parentFolderId));
 
-        // Check if subfolder with same name exists in parent
         if (folderRepository.existsByFolderNameAndParentFolder(folderName, parentFolder)) {
             throw new RuntimeException("Folder with name '" + folderName + "' already exists in this location");
         }
 
-        Folder subFolder = Folder.builder()
-                .folderName(folderName)
-                .description(description)
-                .createdBy(createdBy)
-                .createdTime(LocalDateTime.now())
-                .isRoot(false)
-                .parentFolder(parentFolder)
-                .build();
+        Folder subFolder = new Folder();
+        subFolder.setFolderName(folderName);
+        subFolder.setDescription(description);
+        subFolder.setCreatedBy(createdBy);
+        subFolder.setCreatedTime(LocalDateTime.now());
+        subFolder.setIsRoot(false);
+        subFolder.setParentFolder(parentFolder);
 
         Folder savedFolder = folderRepository.save(subFolder);
 
@@ -89,15 +90,7 @@ public class FolderService {
      */
     @Transactional(readOnly = true)
     public Optional<Folder> getFolderWithStats(Long folderId) {
-        Optional<Folder> folderOpt = folderRepository.findById(folderId);
-
-        if (folderOpt.isPresent()) {
-            Folder folder = folderOpt.get();
-            // The statistics are computed in the entity getters
-            return Optional.of(folder);
-        }
-
-        return Optional.empty();
+        return folderRepository.findById(folderId);
     }
 
     /**
@@ -186,47 +179,6 @@ public class FolderService {
     }
 
     /**
-     * Delete folder recursively (with all contents)
-     */
-    @Transactional
-    public FolderDeletionResult deleteFolderRecursively(Long folderId) {
-        Folder folder = folderRepository.findById(folderId)
-                .orElseThrow(() -> new RuntimeException("Folder not found with id: " + folderId));
-
-        FolderDeletionResult result = new FolderDeletionResult();
-        deleteFolderRecursivelyInternal(folder, result);
-
-        return result;
-    }
-
-    private void deleteFolderRecursivelyInternal(Folder folder, FolderDeletionResult result) {
-        // Delete all files in folder
-        List<File> files = fileRepository.findByFolderOrderByUploadTimeDesc(folder);
-        for (File file : files) {
-            fileRepository.delete(file);
-            result.deletedFiles++;
-        }
-
-        // Recursively delete subfolders
-        List<Folder> subFolders = folderRepository.findByParentFolderOrderByFolderNameAsc(folder);
-        for (Folder subFolder : subFolders) {
-            deleteFolderRecursivelyInternal(subFolder, result);
-        }
-
-        // Delete the folder itself
-        folderRepository.delete(folder);
-        result.deletedFolders++;
-    }
-
-    /**
-     * Search folders
-     */
-    @Transactional(readOnly = true)
-    public List<Folder> searchFolders(String searchTerm) {
-        return folderRepository.searchByNameOrDescription(searchTerm);
-    }
-
-    /**
      * Get folder breadcrumb path
      */
     @Transactional(readOnly = true)
@@ -238,11 +190,12 @@ public class FolderService {
         Folder current = folder;
 
         while (current != null) {
-            breadcrumbs.add(0, FolderBreadcrumb.builder()
-                    .id(current.getId())
-                    .name(current.getFolderName())
-                    .path(current.getFolderPath())
-                    .build());
+            FolderBreadcrumb breadcrumb = new FolderBreadcrumb();
+            breadcrumb.setId(current.getId());
+            breadcrumb.setName(current.getFolderName());
+            breadcrumb.setPath(current.getFolderPath());
+
+            breadcrumbs.add(0, breadcrumb);
             current = current.getParentFolder();
         }
 
@@ -266,14 +219,15 @@ public class FolderService {
                 .map(this::buildFolderTreeNode)
                 .toList();
 
-        return FolderTreeNode.builder()
-                .id(folder.getId())
-                .name(folder.getFolderName())
-                .path(folder.getFolderPath())
-                .fileCount(folder.getFileCount())
-                .subFolderCount(folder.getSubFolderCount())
-                .children(children)
-                .build();
+        FolderTreeNode node = new FolderTreeNode();
+        node.setId(folder.getId());
+        node.setName(folder.getFolderName());
+        node.setPath(folder.getFolderPath());
+        node.setFileCount(folder.getFileCount());
+        node.setSubFolderCount(folder.getSubFolderCount());
+        node.setChildren(children);
+
+        return node;
     }
 
     /**
@@ -296,26 +250,37 @@ public class FolderService {
         return fileRepository.save(file);
     }
 
-    // Response classes
-    @lombok.Data
-    @lombok.Builder
-    @lombok.NoArgsConstructor
-    @lombok.AllArgsConstructor
-    public static class FolderDeletionResult {
-        private int deletedFolders = 0;
-        private int deletedFiles = 0;
+    /**
+     * Create folder (generic method)
+     */
+    @Transactional
+    public Folder createFolder(String name, String description, Long parentFolderId) {
+        if (parentFolderId != null) {
+            return createSubFolder(parentFolderId, name, description, "system");
+        } else {
+            return createRootFolder(name, description, "system");
+        }
     }
 
-    @lombok.Data
-    @lombok.Builder
+    // =================== RESPONSE CLASSES ===================
+
     public static class FolderBreadcrumb {
         private Long id;
         private String name;
         private String path;
+
+        public FolderBreadcrumb() {}
+
+        public Long getId() { return id; }
+        public void setId(Long id) { this.id = id; }
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+
+        public String getPath() { return path; }
+        public void setPath(String path) { this.path = path; }
     }
 
-    @lombok.Data
-    @lombok.Builder
     public static class FolderTreeNode {
         private Long id;
         private String name;
@@ -323,5 +288,25 @@ public class FolderService {
         private Integer fileCount;
         private Integer subFolderCount;
         private List<FolderTreeNode> children;
+
+        public FolderTreeNode() {}
+
+        public Long getId() { return id; }
+        public void setId(Long id) { this.id = id; }
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+
+        public String getPath() { return path; }
+        public void setPath(String path) { this.path = path; }
+
+        public Integer getFileCount() { return fileCount; }
+        public void setFileCount(Integer fileCount) { this.fileCount = fileCount; }
+
+        public Integer getSubFolderCount() { return subFolderCount; }
+        public void setSubFolderCount(Integer subFolderCount) { this.subFolderCount = subFolderCount; }
+
+        public List<FolderTreeNode> getChildren() { return children; }
+        public void setChildren(List<FolderTreeNode> children) { this.children = children; }
     }
 }

@@ -1,10 +1,13 @@
 package bpmnProject.akon.bpmnJavaBackend.File;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import java.nio.charset.StandardCharsets;
 
 @Service
 public class DownloadService {
@@ -28,7 +31,7 @@ public class DownloadService {
                 return ResponseEntity.notFound().build();
             }
 
-            byte[] pdfData = bpmnPdfService.convertBpmnToSvg(file);
+            byte[] pdfData = bpmnPdfService.convertBpmnToPdf(file);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);
@@ -54,12 +57,14 @@ public class DownloadService {
                 return ResponseEntity.notFound().build();
             }
 
+            byte[] data = getFileBytes(file);
+
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(determineMediaType(file.getFileType()));
             headers.setContentDispositionFormData("attachment", file.getFileName());
-            headers.setContentLength(file.getData().length);
+            headers.setContentLength(data.length);
 
-            return new ResponseEntity<>(file.getData(), headers, HttpStatus.OK);
+            return new ResponseEntity<>(data, headers, HttpStatus.OK);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -83,7 +88,7 @@ public class DownloadService {
 
             switch (format.toLowerCase()) {
                 case "pdf":
-                    data = bpmnPdfService.convertBpmnToSvg(file);
+                    data = bpmnPdfService.convertBpmnToPdf(file);
                     mediaType = MediaType.APPLICATION_PDF;
                     fileName = generatePdfFileName(file.getFileName());
                     break;
@@ -92,9 +97,14 @@ public class DownloadService {
                     mediaType = MediaType.valueOf("image/svg+xml");
                     fileName = generateFileName(file.getFileName(), ".svg");
                     break;
+                case "png":
+                    data = bpmnPdfService.convertBpmnToPng(file);
+                    mediaType = MediaType.IMAGE_PNG;
+                    fileName = generateFileName(file.getFileName(), ".png");
+                    break;
                 case "xml":
                 default:
-                    data = file.getData();
+                    data = getFileBytes(file);
                     mediaType = MediaType.APPLICATION_XML;
                     fileName = file.getFileName();
                     break;
@@ -111,6 +121,30 @@ public class DownloadService {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    /**
+     * Helper method to get file bytes consistently
+     */
+    private byte[] getFileBytes(File file) {
+        // Try to get content from XML field first
+        if (file.getXml() != null && !file.getXml().trim().isEmpty()) {
+            return file.getXml().getBytes(StandardCharsets.UTF_8);
+        }
+
+        // Try fileData field
+        if (file.getFileData() != null && !file.getFileData().trim().isEmpty()) {
+            return file.getFileData().getBytes(StandardCharsets.UTF_8);
+        }
+
+        // Fallback to getData() method for compatibility
+        byte[] data = file.getData();
+        if (data != null && data.length > 0) {
+            return data;
+        }
+
+        // Last resort - empty content
+        return "No content available".getBytes(StandardCharsets.UTF_8);
     }
 
     /**
@@ -148,6 +182,7 @@ public class DownloadService {
         switch (fileType.toLowerCase()) {
             case "application/xml":
             case "text/xml":
+            case "bpmn":
                 return MediaType.APPLICATION_XML;
             case "application/pdf":
                 return MediaType.APPLICATION_PDF;
@@ -155,6 +190,10 @@ public class DownloadService {
                 return MediaType.valueOf("image/svg+xml");
             case "text/plain":
                 return MediaType.TEXT_PLAIN;
+            case "image/png":
+                return MediaType.IMAGE_PNG;
+            case "image/jpeg":
+                return MediaType.IMAGE_JPEG;
             default:
                 return MediaType.APPLICATION_OCTET_STREAM;
         }

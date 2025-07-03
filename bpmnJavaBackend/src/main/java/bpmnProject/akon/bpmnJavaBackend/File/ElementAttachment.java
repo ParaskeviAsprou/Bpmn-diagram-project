@@ -2,18 +2,10 @@ package bpmnProject.akon.bpmnJavaBackend.File;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "element_attachments")
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@EqualsAndHashCode(exclude = "parentFile")
-@ToString(exclude = "parentFile")
 public class ElementAttachment {
 
     @Id
@@ -71,16 +63,13 @@ public class ElementAttachment {
     // For categorizing attachments
     @Column(name = "attachment_category")
     @Enumerated(EnumType.STRING)
-    @Builder.Default
     private AttachmentCategory category = AttachmentCategory.DOCUMENT;
 
     // Visibility settings
     @Column(name = "is_public", nullable = false)
-    @Builder.Default
     private Boolean isPublic = false;
 
     @Column(name = "is_downloadable", nullable = false)
-    @Builder.Default
     private Boolean isDownloadable = true;
 
     // Transient fields
@@ -90,19 +79,186 @@ public class ElementAttachment {
     @Transient
     private String downloadUrl;
 
-    // Helper methods
+    // Constructors
+    public ElementAttachment() {
+        this.category = AttachmentCategory.DOCUMENT;
+        this.isPublic = false;
+        this.isDownloadable = true;
+    }
+
+    public ElementAttachment(File parentFile, String elementId, String attachmentName, String originalFilename) {
+        this();
+        this.parentFile = parentFile;
+        this.elementId = elementId;
+        this.attachmentName = attachmentName;
+        this.originalFilename = originalFilename;
+        this.createdTime = LocalDateTime.now();
+    }
+
+    // =================== GETTERS AND SETTERS ===================
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public File getParentFile() {
+        return parentFile;
+    }
+
+    public void setParentFile(File parentFile) {
+        this.parentFile = parentFile;
+    }
+
+    public String getElementId() {
+        return elementId;
+    }
+
+    public void setElementId(String elementId) {
+        this.elementId = elementId;
+    }
+
+    public String getElementType() {
+        return elementType;
+    }
+
+    public void setElementType(String elementType) {
+        this.elementType = elementType;
+    }
+
+    public String getAttachmentName() {
+        return attachmentName;
+    }
+
+    public void setAttachmentName(String attachmentName) {
+        this.attachmentName = attachmentName;
+    }
+
+    public String getOriginalFilename() {
+        return originalFilename;
+    }
+
+    public void setOriginalFilename(String originalFilename) {
+        this.originalFilename = originalFilename;
+    }
+
+    public String getFileType() {
+        return fileType;
+    }
+
+    public void setFileType(String fileType) {
+        this.fileType = fileType;
+    }
+
+    public Long getFileSize() {
+        return fileSize;
+    }
+
+    public void setFileSize(Long fileSize) {
+        this.fileSize = fileSize;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public LocalDateTime getCreatedTime() {
+        return createdTime;
+    }
+
+    public void setCreatedTime(LocalDateTime createdTime) {
+        this.createdTime = createdTime;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public LocalDateTime getUpdatedTime() {
+        return updatedTime;
+    }
+
+    public void setUpdatedTime(LocalDateTime updatedTime) {
+        this.updatedTime = updatedTime;
+    }
+
+    public String getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(String updatedBy) {
+        this.updatedBy = updatedBy;
+    }
+
+    public byte[] getAttachmentData() {
+        return attachmentData;
+    }
+
+    public void setAttachmentData(byte[] attachmentData) {
+        this.attachmentData = attachmentData;
+        if (attachmentData != null) {
+            this.fileSize = (long) attachmentData.length;
+        }
+    }
+
+    public AttachmentCategory getCategory() {
+        return category;
+    }
+
+    public void setCategory(AttachmentCategory category) {
+        this.category = category;
+    }
+
+    public Boolean getIsPublic() {
+        return isPublic;
+    }
+
+    public void setIsPublic(Boolean isPublic) {
+        this.isPublic = isPublic;
+    }
+
+    public Boolean getIsDownloadable() {
+        return isDownloadable;
+    }
+
+    public void setIsDownloadable(Boolean isDownloadable) {
+        this.isDownloadable = isDownloadable;
+    }
+
+    public String getBase64Data() {
+        return base64Data;
+    }
+
+    public void setBase64Data(String base64Data) {
+        this.base64Data = base64Data;
+    }
+
+    public String getDownloadUrl() {
+        return downloadUrl;
+    }
+
+    public void setDownloadUrl(String downloadUrl) {
+        this.downloadUrl = downloadUrl;
+    }
+
+    // =================== HELPER METHODS ===================
+
     public String getFormattedFileSize() {
         if (fileSize == null || fileSize == 0) return "0 Bytes";
         String[] sizes = {"Bytes", "KB", "MB", "GB"};
         int i = (int) Math.floor(Math.log(fileSize) / Math.log(1024));
         return Math.round(fileSize / Math.pow(1024, i) * 100.0) / 100.0 + " " + sizes[i];
-    }
-
-    public void setAttachmentData(byte[] data) {
-        this.attachmentData = data;
-        if (data != null) {
-            this.fileSize = (long) data.length;
-        }
     }
 
     public String getFileExtension() {
@@ -132,6 +288,15 @@ public class ElementAttachment {
             createdTime = LocalDateTime.now();
         }
         updatedTime = createdTime;
+        if (category == null) {
+            category = AttachmentCategory.DOCUMENT;
+        }
+        if (isPublic == null) {
+            isPublic = false;
+        }
+        if (isDownloadable == null) {
+            isDownloadable = true;
+        }
     }
 
     @PreUpdate
@@ -157,5 +322,29 @@ public class ElementAttachment {
         public String getDisplayName() {
             return displayName;
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ElementAttachment that = (ElementAttachment) o;
+        return id != null ? id.equals(that.id) : that.id == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
+    }
+
+    @Override
+    public String toString() {
+        return "ElementAttachment{" +
+                "id=" + id +
+                ", elementId='" + elementId + '\'' +
+                ", attachmentName='" + attachmentName + '\'' +
+                ", fileSize=" + fileSize +
+                ", category=" + category +
+                '}';
     }
 }

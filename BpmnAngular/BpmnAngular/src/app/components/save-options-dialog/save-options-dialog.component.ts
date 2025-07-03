@@ -9,7 +9,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { MatRadioModule } from '@angular/material/radio';
 import { CommonModule } from '@angular/common';
-import { FileManagementService } from '../../services/file-managemnet.service';
+//import { FileManagementService } from '../../services/file-managemnet.service';
 
 
 export interface SaveOptionsDialogData {
@@ -53,7 +53,7 @@ export class SaveOptionsDialogComponent implements OnInit {
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<SaveOptionsDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: SaveOptionsDialogData,
-    private fileService: FileManagementService
+    //rivate fileService: FileManagementService
   ) {
     this.saveForm = this.fb.group({
       saveType: ['', Validators.required],

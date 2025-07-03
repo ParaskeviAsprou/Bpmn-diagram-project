@@ -1,8 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, BehaviorSubject, throwError, EMPTY, timer } from 'rxjs';
-import { catchError, map, tap, retryWhen, scan, delayWhen, take } from 'rxjs/operators';
+import { Observable, BehaviorSubject, throwError, EMPTY, from } from 'rxjs';
+import { catchError, map, tap, switchMap } from 'rxjs/operators';
 import { AuthenticationService } from './authentication.service';
+import { FileService } from './file.service';
+import { AppFile } from '../models/File';
 
 export interface BpmnDiagram {
   id: number;
@@ -18,6 +20,9 @@ export interface BpmnDiagram {
   tags?: string[];
   category?: string;
   permissions?: DiagramPermissions;
+  folderId?: number;
+  customProperties?: string;
+  elementColors?: string;
 }
 
 export interface DiagramPermissions {
@@ -35,6 +40,9 @@ export interface DiagramCreateRequest {
   isPublic?: boolean;
   tags?: string[];
   category?: string;
+  folderId?: number;
+  customProperties?: string;
+  elementColors?: string;
 }
 
 export interface DiagramUpdateRequest extends DiagramCreateRequest {
@@ -42,30 +50,19 @@ export interface DiagramUpdateRequest extends DiagramCreateRequest {
   version: number;
 }
 
-export interface DiagramListResponse {
-  diagrams: BpmnDiagram[];
-  totalCount: number;
-  pageSize: number;
-  currentPage: number;
-}
-
-export interface DiagramSearchParams {
-  query?: string;
-  tags?: string[];
-  category?: string;
-  createdBy?: string;
-  isPublic?: boolean;
-  page?: number;
-  size?: number;
-  sortBy?: 'name' | 'createdAt' | 'updatedAt';
-  sortDirection?: 'asc' | 'desc';
+export interface BpmnSavePayload {
+  name: string;
+  xml: string;
+  customProperties?: string;
+  elementColors?: string;
+  folderId?: number | undefined; // Allow undefined
+  overwrite?: boolean;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class BpmnService {
-  private apiUrl = 'http://localhost:8080/api/v1/diagrams';
   private currentDiagramSubject = new BehaviorSubject<BpmnDiagram | null>(null);
   private diagramsListSubject = new BehaviorSubject<BpmnDiagram[]>([]);
   
@@ -74,9 +71,10 @@ export class BpmnService {
 
   constructor(
     private http: HttpClient,
-    private authService: AuthenticationService
+    private authService: AuthenticationService,
+    private fileService: FileService
   ) {
-    // Only load user diagrams if logged in and has proper permissions
+    // Initialize with user diagrams if logged in
     if (this.authService.isLoggedIn() && this.canAccessDiagrams()) {
       this.loadUserDiagramsSafely();
     }
@@ -90,88 +88,131 @@ export class BpmnService {
   }
 
   /**
-   * Get all diagrams accessible to the current user based on their role
+   * Save BPMN diagram using FileService
    */
-  getAllDiagrams(params?: DiagramSearchParams): Observable<DiagramListResponse> {
-    if (!this.authService.canView()) {
-      return throwError(() => new Error('Insufficient permissions to view diagrams'));
+  saveBpmnDiagram(payload: BpmnSavePayload): Observable<AppFile> {
+    if (!this.authService.canEdit()) {
+      return throwError(() => new Error('Insufficient permissions to save diagrams'));
     }
 
-    const queryParams = this.buildQueryParams(params);
-    
-    return this.http.get<DiagramListResponse>(`${this.apiUrl}`, {
-      params: queryParams,
-      headers: this.authService.getAuthHeaders()
+    console.log('BpmnService.saveBpmnDiagram called with:', payload);
+
+    return this.fileService.saveBpmnDiagram({
+      name: payload.name,
+      xml: payload.xml,
+      customProperties: payload.customProperties || '{}',
+      elementColors: payload.elementColors || '{}',
+      folderId: payload.folderId,
+      overwrite: payload.overwrite || false
     }).pipe(
-      tap(response => {
-        // Update local diagrams list
-        this.diagramsListSubject.next(response.diagrams);
+      tap(savedFile => {
+        console.log('BPMN diagram saved successfully:', savedFile);
+        // Convert AppFile to BpmnDiagram if needed for compatibility
+        const diagram = this.convertFileToDiagram(savedFile);
+        this.setCurrentDiagram(diagram);
+        this.addDiagramToList(diagram);
       }),
       catchError(this.handleError)
     );
   }
 
   /**
-   * Get diagram by ID with permission checking
+   * Update existing BPMN diagram
+   */
+  updateBpmnDiagram(fileId: number, xml: string, customProperties?: string, elementColors?: string): Observable<AppFile> {
+    if (!this.authService.canEdit()) {
+      return throwError(() => new Error('Insufficient permissions to update diagrams'));
+    }
+
+    return this.fileService.updateFileContent(
+      fileId,
+      xml,
+      customProperties || '{}',
+      elementColors || '{}'
+    ).pipe(
+      tap(updatedFile => {
+        console.log('BPMN diagram updated successfully:', updatedFile);
+        const diagram = this.convertFileToDiagram(updatedFile);
+        this.setCurrentDiagram(diagram);
+        this.updateDiagramInList(diagram);
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Get diagram by ID
    */
   getDiagram(id: number): Observable<BpmnDiagram> {
     if (!this.authService.canView()) {
       return throwError(() => new Error('Insufficient permissions to view diagrams'));
     }
 
-    return this.http.get<BpmnDiagram>(`${this.apiUrl}/${id}`, {
-      headers: this.authService.getAuthHeaders()
-    }).pipe(
-      map(diagram => this.enrichDiagramWithPermissions(diagram)),
+    return this.fileService.getFileById(id).pipe(
+      map(file => this.convertFileToDiagram(file)),
       tap(diagram => this.setCurrentDiagram(diagram)),
       catchError(this.handleError)
     );
   }
 
   /**
-   * Create new diagram (MODELER, ADMIN only)
+   * Get all user diagrams
    */
-  createDiagram(diagram: DiagramCreateRequest): Observable<BpmnDiagram> {
-    if (!this.authService.canEdit()) {
-      return throwError(() => new Error('Insufficient permissions to create diagrams'));
+  getUserDiagrams(): Observable<BpmnDiagram[]> {
+    if (!this.authService.canView()) {
+      console.warn('User lacks permission to view diagrams');
+      return EMPTY;
     }
 
-    return this.http.post<BpmnDiagram>(`${this.apiUrl}`, diagram, {
-      headers: this.authService.getAuthHeaders()
-    }).pipe(
-      map(newDiagram => this.enrichDiagramWithPermissions(newDiagram)),
-      tap(newDiagram => {
-        // Add to local list and set as current
-        this.addDiagramToList(newDiagram);
-        this.setCurrentDiagram(newDiagram);
-      }),
+    return this.fileService.getFiles().pipe(
+      map(files => files
+        .filter(file => this.isBpmnFile(file))
+        .map(file => this.convertFileToDiagram(file))
+      ),
+      tap(diagrams => this.diagramsListSubject.next(diagrams)),
+      catchError((error) => {
+        console.warn('Failed to load user diagrams:', error.message);
+        return EMPTY;
+      })
+    );
+  }
+
+  /**
+   * Get diagrams in specific folder
+   */
+  getDiagramsInFolder(folderId: number): Observable<BpmnDiagram[]> {
+    if (!this.authService.canView()) {
+      return throwError(() => new Error('Insufficient permissions to view diagrams'));
+    }
+
+    return this.fileService.getFilesInFolder(folderId).pipe(
+      map(files => files
+        .filter(file => this.isBpmnFile(file))
+        .map(file => this.convertFileToDiagram(file))
+      ),
       catchError(this.handleError)
     );
   }
 
   /**
-   * Update existing diagram (MODELER, ADMIN only)
+   * Get root diagrams (not in any folder)
    */
-  updateDiagram(diagram: DiagramUpdateRequest): Observable<BpmnDiagram> {
-    if (!this.authService.canEdit()) {
-      return throwError(() => new Error('Insufficient permissions to update diagrams'));
+  getRootDiagrams(): Observable<BpmnDiagram[]> {
+    if (!this.authService.canView()) {
+      return throwError(() => new Error('Insufficient permissions to view diagrams'));
     }
 
-    return this.http.put<BpmnDiagram>(`${this.apiUrl}/${diagram.id}`, diagram, {
-      headers: this.authService.getAuthHeaders()
-    }).pipe(
-      map(updatedDiagram => this.enrichDiagramWithPermissions(updatedDiagram)),
-      tap(updatedDiagram => {
-        // Update local list and current diagram
-        this.updateDiagramInList(updatedDiagram);
-        this.setCurrentDiagram(updatedDiagram);
-      }),
+    return this.fileService.getRootFiles().pipe(
+      map(files => files
+        .filter(file => this.isBpmnFile(file))
+        .map(file => this.convertFileToDiagram(file))
+      ),
       catchError(this.handleError)
     );
   }
 
   /**
-   * Delete diagram (ADMIN only, or owner if MODELER)
+   * Delete diagram
    */
   deleteDiagram(id: number): Observable<void> {
     const currentUser = this.authService.getCurrentUser();
@@ -179,23 +220,13 @@ export class BpmnService {
       return throwError(() => new Error('User not authenticated'));
     }
 
-    // Check permissions
-    const currentDiagram = this.currentDiagramSubject.value;
-    const canDelete = this.authService.isAdmin() || 
-                     (this.authService.isModeler() && 
-                      currentDiagram?.createdBy === currentUser.username);
-
-    if (!canDelete) {
+    if (!this.authService.isAdmin()) {
       return throwError(() => new Error('Insufficient permissions to delete diagrams'));
     }
 
-    return this.http.delete<void>(`${this.apiUrl}/${id}`, {
-      headers: this.authService.getAuthHeaders()
-    }).pipe(
+    return this.fileService.deleteFile(id).pipe(
       tap(() => {
-        // Remove from local list
         this.removeDiagramFromList(id);
-        // Clear current if it was the deleted one
         if (this.currentDiagramSubject.value?.id === id) {
           this.setCurrentDiagram(null);
         }
@@ -205,140 +236,55 @@ export class BpmnService {
   }
 
   /**
-   * Get user's own diagrams - with better error handling
-   */
-  getUserDiagrams(): Observable<BpmnDiagram[]> {
-    // Check if user has required permissions
-    if (!this.authService.canView()) {
-      console.warn('User lacks permission to view diagrams');
-      return EMPTY; // Return empty observable instead of error
-    }
-
-    return this.http.get<BpmnDiagram[]>(`${this.apiUrl}/my-diagrams`, {
-      headers: this.authService.getAuthHeaders()
-    }).pipe(
-      map(diagrams => diagrams.map(d => this.enrichDiagramWithPermissions(d))),
-      tap(diagrams => this.diagramsListSubject.next(diagrams)),
-      catchError((error) => {
-        console.warn('Failed to load user diagrams, falling back to empty list:', error.message);
-        return EMPTY; // Return empty instead of propagating error
-      })
-    );
-  }
-
-  /**
-   * Get public diagrams (accessible to all authenticated users)
-   */
-  getPublicDiagrams(): Observable<BpmnDiagram[]> {
-    return this.http.get<BpmnDiagram[]>(`${this.apiUrl}/public`, {
-      headers: this.authService.getAuthHeaders()
-    }).pipe(
-      map(diagrams => diagrams.map(d => this.enrichDiagramWithPermissions(d))),
-      catchError(this.handleError)
-    );
-  }
-
-  /**
-   * Search diagrams with advanced filters
-   */
-  searchDiagrams(params: DiagramSearchParams): Observable<DiagramListResponse> {
-    const queryParams = this.buildQueryParams(params);
-    
-    return this.http.get<DiagramListResponse>(`${this.apiUrl}/search`, {
-      params: queryParams,
-      headers: this.authService.getAuthHeaders()
-    }).pipe(
-      tap(response => {
-        response.diagrams = response.diagrams.map(d => this.enrichDiagramWithPermissions(d));
-      }),
-      catchError(this.handleError)
-    );
-  }
-
-  /**
-   * Export diagram in various formats
+   * Export diagram
    */
   exportDiagram(id: number, format: 'xml' | 'svg' | 'png' | 'pdf'): Observable<Blob> {
     if (!this.authService.canView()) {
       return throwError(() => new Error('Insufficient permissions to export diagrams'));
     }
 
-    return this.http.get(`${this.apiUrl}/${id}/export/${format}`, {
-      responseType: 'blob',
-      headers: this.authService.getAuthHeaders()
-    }).pipe(
+    return this.fileService.exportFile(id, format).pipe(
       catchError(this.handleError)
     );
   }
 
   /**
-   * Import diagram from file
+   * Create new diagram from template
    */
-  importDiagram(file: File, metadata?: Partial<DiagramCreateRequest>): Observable<BpmnDiagram> {
-    if (!this.authService.canEdit()) {
-      return throwError(() => new Error('Insufficient permissions to import diagrams'));
-    }
+  createFromTemplate(name: string, templateXml: string, folderId?: number | undefined): Observable<AppFile> {
+    return this.saveBpmnDiagram({
+      name: name,
+      xml: templateXml,
+      customProperties: '{}',
+      elementColors: '{}',
+      folderId: folderId,
+      overwrite: false
+    });
+  }
 
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    if (metadata) {
-      Object.keys(metadata).forEach(key => {
-        const value = (metadata as any)[key];
-        if (value !== undefined) {
-          formData.append(key, value.toString());
-        }
-      });
-    }
-
-    return this.http.post<BpmnDiagram>(`${this.apiUrl}/import`, formData, {
-      headers: this.authService.getAuthHeaders()
-    }).pipe(
-      map(diagram => this.enrichDiagramWithPermissions(diagram)),
-      tap(diagram => {
-        this.addDiagramToList(diagram);
-        this.setCurrentDiagram(diagram);
-      }),
-      catchError(this.handleError)
+  /**
+   * Duplicate existing diagram
+   */
+  duplicateDiagram(sourceId: number, newName: string, folderId?: number | undefined): Observable<AppFile> {
+    return this.getDiagram(sourceId).pipe(
+      switchMap(sourceDiagram => {
+        return this.saveBpmnDiagram({
+          name: newName,
+          xml: sourceDiagram.xml,
+          customProperties: sourceDiagram.customProperties || '{}',
+          elementColors: sourceDiagram.elementColors || '{}',
+          folderId: folderId,
+          overwrite: false
+        });
+      })
     );
   }
 
   /**
-   * Validate diagram XML
+   * Check if file name exists in folder
    */
-  validateDiagram(xml: string): Observable<{ valid: boolean; errors?: string[]; warnings?: string[] }> {
-    return this.http.post<{ valid: boolean; errors?: string[]; warnings?: string[] }>(`${this.apiUrl}/validate`, { xml }, {
-      headers: this.authService.getAuthHeaders()
-    }).pipe(
-      catchError(this.handleError)
-    );
-  }
-
-  /**
-   * Share diagram with specific users
-   */
-  shareDiagram(id: number, userIds: number[]): Observable<void> {
-    if (!this.authService.canEdit()) {
-      return throwError(() => new Error('Insufficient permissions to share diagrams'));
-    }
-
-    return this.http.post<void>(`${this.apiUrl}/${id}/share`, { userIds }, {
-      headers: this.authService.getAuthHeaders()
-    }).pipe(
-      catchError(this.handleError)
-    );
-  }
-
-  /**
-   * Get diagram history/versions
-   */
-  getDiagramHistory(id: number): Observable<BpmnDiagram[]> {
-    return this.http.get<BpmnDiagram[]>(`${this.apiUrl}/${id}/history`, {
-      headers: this.authService.getAuthHeaders()
-    }).pipe(
-      map(diagrams => diagrams.map(d => this.enrichDiagramWithPermissions(d))),
-      catchError(this.handleError)
-    );
+  checkFileExists(fileName: string, folderId?: number | undefined): Observable<boolean> {
+    return from(this.fileService.fileExistsInFolder(fileName, folderId));
   }
 
   // ============= STATE MANAGEMENT =============
@@ -367,81 +313,66 @@ export class BpmnService {
       },
       error: (error) => {
         console.warn('Failed to load user diagrams:', error.message);
-        // Don't throw error, just log it
       }
     });
-  }
-
-  // ============= PERMISSION HELPERS =============
-
-  /**
-   * Enrich diagram with permission information based on current user
-   */
-  private enrichDiagramWithPermissions(diagram: BpmnDiagram): BpmnDiagram {
-    const currentUser = this.authService.getCurrentUser();
-    
-    if (!currentUser) {
-      return { ...diagram, permissions: { canView: false, canEdit: false, canDelete: false, canShare: false } };
-    }
-
-    const isOwner = diagram.createdBy === currentUser.username;
-    const isAdmin = this.authService.isAdmin();
-    const isModeler = this.authService.isModeler();
-    const canView = this.authService.canView();
-
-    const permissions: DiagramPermissions = {
-      canView: canView && (diagram.isPublic || isOwner || isAdmin),
-      canEdit: isModeler && (isOwner || isAdmin),
-      canDelete: isAdmin || (isModeler && isOwner),
-      canShare: isModeler && (isOwner || isAdmin)
-    };
-
-    return { ...diagram, permissions };
-  }
-
-  /**
-   * Check if current user can edit specific diagram
-   */
-  canEditDiagram(diagram: BpmnDiagram): boolean {
-    return diagram.permissions?.canEdit ?? false;
-  }
-
-  /**
-   * Check if current user can view specific diagram
-   */
-  canViewDiagram(diagram: BpmnDiagram): boolean {
-    return diagram.permissions?.canView ?? false;
-  }
-
-  /**
-   * Check if current user can delete specific diagram
-   */
-  canDeleteDiagram(diagram: BpmnDiagram): boolean {
-    return diagram.permissions?.canDelete ?? false;
   }
 
   // ============= UTILITY METHODS =============
 
   /**
-   * Build query parameters for API calls
+   * Convert AppFile to BpmnDiagram for compatibility
    */
-  private buildQueryParams(params?: DiagramSearchParams): any {
-    if (!params) return {};
+  private convertFileToDiagram(file: AppFile): BpmnDiagram {
+    return {
+      id: file.id!,
+      name: file.fileName,
+      description: file.description,
+      xml: file.xml || file.fileData || '',
+      createdBy: file.createdBy || 'unknown',
+      createdAt: new Date(file.uploadTime || Date.now()),
+      updatedAt: new Date(file.updatedTime || Date.now()),
+      version: file.currentVersion || 1,
+      isPublic: false,
+      tags: file.tags ? file.tags.split(',') : [],
+      folderId: file.folderId,
+      customProperties: file.customProperties,
+      elementColors: file.elementColors,
+      permissions: this.calculatePermissions(file)
+    };
+  }
 
-    const queryParams: any = {};
+  /**
+   * Calculate permissions for a diagram based on current user
+   */
+  private calculatePermissions(file: AppFile): DiagramPermissions {
+    const currentUser = this.authService.getCurrentUser();
     
-    Object.keys(params).forEach(key => {
-      const value = (params as any)[key];
-      if (value !== undefined && value !== null) {
-        if (Array.isArray(value)) {
-          queryParams[key] = value.join(',');
-        } else {
-          queryParams[key] = value.toString();
-        }
-      }
-    });
+    if (!currentUser) {
+      return { canView: false, canEdit: false, canDelete: false, canShare: false };
+    }
 
-    return queryParams;
+    const isOwner = file.createdBy === currentUser.username;
+    const isAdmin = this.authService.isAdmin();
+    const isModeler = this.authService.isModeler();
+    const canView = this.authService.canView();
+
+    return {
+      canView: canView,
+      canEdit: isModeler && (isOwner || isAdmin),
+      canDelete: isAdmin,
+      canShare: isModeler && (isOwner || isAdmin)
+    };
+  }
+
+  /**
+   * Check if file is a BPMN file
+   */
+  private isBpmnFile(file: AppFile): boolean {
+    if (!file.fileName) return false;
+    const lowerName = file.fileName.toLowerCase();
+    return lowerName.endsWith('.bpmn') || 
+           lowerName.endsWith('.xml') || 
+           (typeof file.fileType === 'string' && file.fileType.includes('xml'));
   }
 
   /**
@@ -449,7 +380,17 @@ export class BpmnService {
    */
   private addDiagramToList(diagram: BpmnDiagram): void {
     const currentList = this.diagramsListSubject.value;
-    this.diagramsListSubject.next([diagram, ...currentList]);
+    const existingIndex = currentList.findIndex(d => d.id === diagram.id);
+    
+    if (existingIndex !== -1) {
+      // Update existing
+      const newList = [...currentList];
+      newList[existingIndex] = diagram;
+      this.diagramsListSubject.next(newList);
+    } else {
+      // Add new
+      this.diagramsListSubject.next([diagram, ...currentList]);
+    }
   }
 
   /**
@@ -476,7 +417,7 @@ export class BpmnService {
   }
 
   /**
-   * Handle HTTP errors with improved error messages and logging
+   * Handle HTTP errors with improved error messages
    */
   private handleError = (error: HttpErrorResponse): Observable<never> => {
     let errorMessage = 'An error occurred';
@@ -490,27 +431,20 @@ export class BpmnService {
     });
 
     if (error.error instanceof ErrorEvent) {
-      // Client-side error
       errorMessage = error.error.message;
     } else {
-      // Server-side error
       switch (error.status) {
         case 401:
           errorMessage = 'Unauthorized - please log in again';
-          console.warn('Authentication failed, user may need to re-login');
-          // Don't auto-logout here as it might be called during initialization
           break;
         case 403:
           errorMessage = 'Forbidden - insufficient permissions';
-          console.warn('User lacks required permissions for this operation');
-          // Log current user roles for debugging
-          console.debug('User roles:', this.authService.getUserRoles());
           break;
         case 404:
           errorMessage = 'Diagram not found';
           break;
         case 409:
-          errorMessage = 'Conflict - diagram may have been modified by another user';
+          errorMessage = 'Conflict - diagram may already exist';
           break;
         case 422:
           errorMessage = 'Invalid diagram data';
@@ -536,26 +470,38 @@ export class BpmnService {
   }
 
   /**
-   * Retry failed operations with exponential backoff
+   * Validate BPMN XML
    */
-  retryOperation<T>(operation: () => Observable<T>, maxRetries: number = 3): Observable<T> {
-    return operation().pipe(
-      retryWhen(errors =>
-        errors.pipe(
-          scan((retryCount, error) => {
-            if (retryCount >= maxRetries || error.status < 500) {
-              throw error;
-            }
-            return retryCount + 1;
-          }, 0),
-          delayWhen(retryCount => {
-            const delayMs = Math.pow(2, retryCount) * 1000;
-            console.log(`Retrying operation in ${delayMs}ms (attempt ${retryCount + 1})`);
-            return timer(delayMs);
-          }),
-          take(maxRetries)
-        )
-      )
-    );
+  validateBpmnXml(xml: string): boolean {
+    if (!xml || xml.trim().length === 0) return false;
+    
+    try {
+      return xml.includes('bpmn:definitions') && 
+             (xml.includes('bpmn:process') || xml.includes('bpmn:collaboration'));
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /**
+   * Generate unique file name
+   */
+  generateUniqueFileName(baseName: string, existingNames: string[]): string {
+    if (!existingNames.includes(baseName)) {
+      return baseName;
+    }
+
+    const nameWithoutExt = baseName.replace(/\.(bpmn|xml)$/, '');
+    const extension = baseName.includes('.') ? baseName.substring(baseName.lastIndexOf('.')) : '.bpmn';
+    
+    let counter = 1;
+    let uniqueName = `${nameWithoutExt}_${counter}${extension}`;
+    
+    while (existingNames.includes(uniqueName)) {
+      counter++;
+      uniqueName = `${nameWithoutExt}_${counter}${extension}`;
+    }
+    
+    return uniqueName;
   }
 }

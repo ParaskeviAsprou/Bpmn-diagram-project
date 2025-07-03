@@ -1,6 +1,6 @@
 package bpmnProject.akon.bpmnJavaBackend.File;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -11,11 +11,17 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 public class ElementAttachmentService {
 
     private final ElementAttachmentRepository elementAttachmentRepository;
     private final FileRepository fileRepository;
+
+    @Autowired
+    public ElementAttachmentService(ElementAttachmentRepository elementAttachmentRepository,
+                                    FileRepository fileRepository) {
+        this.elementAttachmentRepository = elementAttachmentRepository;
+        this.fileRepository = fileRepository;
+    }
 
     /**
      * Add attachment to BPMN element
@@ -33,22 +39,21 @@ public class ElementAttachmentService {
         }
 
         // Create attachment
-        ElementAttachment attachment = ElementAttachment.builder()
-                .parentFile(parentFile)
-                .elementId(elementId)
-                .elementType(elementType)
-                .attachmentName(generateAttachmentName(file.getOriginalFilename(), elementId))
-                .originalFilename(file.getOriginalFilename())
-                .fileType(file.getContentType())
-                .fileSize(file.getSize())
-                .description(description)
-                .createdBy(createdBy)
-                .createdTime(LocalDateTime.now())
-                .attachmentData(file.getBytes())
-                .category(determineCategory(file))
-                .isPublic(false)
-                .isDownloadable(true)
-                .build();
+        ElementAttachment attachment = new ElementAttachment();
+        attachment.setParentFile(parentFile);
+        attachment.setElementId(elementId);
+        attachment.setElementType(elementType);
+        attachment.setAttachmentName(generateAttachmentName(file.getOriginalFilename(), elementId));
+        attachment.setOriginalFilename(file.getOriginalFilename());
+        attachment.setFileType(file.getContentType());
+        attachment.setFileSize(file.getSize());
+        attachment.setDescription(description);
+        attachment.setCreatedBy(createdBy);
+        attachment.setCreatedTime(LocalDateTime.now());
+        attachment.setAttachmentData(file.getBytes());
+        attachment.setCategory(determineCategory(file));
+        attachment.setIsPublic(false);
+        attachment.setIsDownloadable(true);
 
         ElementAttachment savedAttachment = elementAttachmentRepository.save(attachment);
 
@@ -197,14 +202,15 @@ public class ElementAttachmentService {
                 .filter(ElementAttachment::isPdfFile)
                 .count();
 
-        return AttachmentStatistics.builder()
-                .totalAttachments(attachments.size())
-                .totalSize(totalSize)
-                .imageCount(imageCount)
-                .documentCount(documentCount)
-                .pdfCount(pdfCount)
-                .averageSize(attachments.isEmpty() ? 0 : totalSize / attachments.size())
-                .build();
+        AttachmentStatistics stats = new AttachmentStatistics();
+        stats.setTotalAttachments(attachments.size());
+        stats.setTotalSize(totalSize);
+        stats.setImageCount(imageCount);
+        stats.setDocumentCount(documentCount);
+        stats.setPdfCount(pdfCount);
+        stats.setAverageSize(attachments.isEmpty() ? 0 : totalSize / attachments.size());
+
+        return stats;
     }
 
     /**
@@ -221,22 +227,21 @@ public class ElementAttachmentService {
         List<ElementAttachment> copiedAttachments = new java.util.ArrayList<>();
 
         for (ElementAttachment source : sourceAttachments) {
-            ElementAttachment copy = ElementAttachment.builder()
-                    .parentFile(targetFile)
-                    .elementId(targetElementId)
-                    .elementType(source.getElementType())
-                    .attachmentName("Copy of " + source.getAttachmentName())
-                    .originalFilename(source.getOriginalFilename())
-                    .fileType(source.getFileType())
-                    .fileSize(source.getFileSize())
-                    .description("Copied from element " + sourceElementId + ": " + source.getDescription())
-                    .createdBy(copiedBy)
-                    .createdTime(LocalDateTime.now())
-                    .attachmentData(source.getAttachmentData())
-                    .category(source.getCategory())
-                    .isPublic(source.getIsPublic())
-                    .isDownloadable(source.getIsDownloadable())
-                    .build();
+            ElementAttachment copy = new ElementAttachment();
+            copy.setParentFile(targetFile);
+            copy.setElementId(targetElementId);
+            copy.setElementType(source.getElementType());
+            copy.setAttachmentName("Copy of " + source.getAttachmentName());
+            copy.setOriginalFilename(source.getOriginalFilename());
+            copy.setFileType(source.getFileType());
+            copy.setFileSize(source.getFileSize());
+            copy.setDescription("Copied from element " + sourceElementId + ": " + source.getDescription());
+            copy.setCreatedBy(copiedBy);
+            copy.setCreatedTime(LocalDateTime.now());
+            copy.setAttachmentData(source.getAttachmentData());
+            copy.setCategory(source.getCategory());
+            copy.setIsPublic(source.getIsPublic());
+            copy.setIsDownloadable(source.getIsDownloadable());
 
             copiedAttachments.add(elementAttachmentRepository.save(copy));
         }
@@ -302,9 +307,8 @@ public class ElementAttachmentService {
         return ElementAttachment.AttachmentCategory.OTHER;
     }
 
-    // Response classes
-    @lombok.Data
-    @lombok.Builder
+    // =================== RESPONSE CLASSES ===================
+
     public static class AttachmentStatistics {
         private Integer totalAttachments;
         private Long totalSize;
@@ -312,5 +316,25 @@ public class ElementAttachmentService {
         private Long documentCount;
         private Long pdfCount;
         private Long averageSize;
+
+        public AttachmentStatistics() {}
+
+        public Integer getTotalAttachments() { return totalAttachments; }
+        public void setTotalAttachments(Integer totalAttachments) { this.totalAttachments = totalAttachments; }
+
+        public Long getTotalSize() { return totalSize; }
+        public void setTotalSize(Long totalSize) { this.totalSize = totalSize; }
+
+        public Long getImageCount() { return imageCount; }
+        public void setImageCount(Long imageCount) { this.imageCount = imageCount; }
+
+        public Long getDocumentCount() { return documentCount; }
+        public void setDocumentCount(Long documentCount) { this.documentCount = documentCount; }
+
+        public Long getPdfCount() { return pdfCount; }
+        public void setPdfCount(Long pdfCount) { this.pdfCount = pdfCount; }
+
+        public Long getAverageSize() { return averageSize; }
+        public void setAverageSize(Long averageSize) { this.averageSize = averageSize; }
     }
 }

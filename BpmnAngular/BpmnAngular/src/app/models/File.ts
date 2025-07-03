@@ -1,265 +1,256 @@
 export interface AppFile {
-    id?: number;
-    fileName?: string;
-    fileType?: string;
-    fileSize?: number;
-    uploadTime?: string;
-    content?: string;
-    shortLink?: string;
-    base64Data?: string;
-    newFile?:string;
-}
-export interface DiagramFile {
   id?: number;
   fileName: string;
-  content: string;
-  metadata: DiagramMetadata;
+  fileType: string;
+  fileSize?: number;
+  fileData?: string;
+  xml?: string;
   description?: string;
-  tags?: string[];
-  createdAt?: Date;
-  updatedAt?: Date;
+  folderId?: number;
+  tags?: string;
   createdBy?: string;
   updatedBy?: string;
-  versionCount?: number;
-  hasVersions?: boolean;
+  uploadTime?: Date | string;
+  updatedTime?: Date | string;
+  currentVersion?: number;
+  customProperties?: string;
+  elementColors?: string;
+  
+  // Transient fields
+  base64Data?: string;
+  
+  // Navigation property
+  folder?: Folder;
 }
 
-export interface DiagramMetadata {
-  elementColors: { [elementId: string]: ElementColor };
-  customProperties: { [elementId: string]: CustomPropertyData[] };
-  diagramSettings: DiagramSettings;
-}
-
-export interface ElementColor {
-  fill?: string;
-  stroke?: string;
-}
-
-export interface CustomPropertyData {
-  id: string;
-  title: string;
-  type: 'text' | 'textarea' | 'number' | 'boolean' | 'date' | 'select';
-  value: any;
-  required?: boolean;
+export interface Folder {
+  id?: number;
+  folderName: string;
   description?: string;
-  options?: string[];
-  category?: string;
-  order?: number;
+  createdTime?: Date | string;
+  updatedTime?: Date | string;
+  createdBy?: string;
+  folderPath?: string;
+  isRoot?: boolean;
+  parentFolder?: Folder;
+  subFolders?: Folder[];
+  files?: AppFile[];
+  fileCount?: number;
+  subFolderCount?: number;
+  totalSize?: number;
 }
 
-export interface DiagramSettings {
-  zoom?: number;
-  viewBox?: string;
-  theme?: string;
-  gridEnabled?: boolean;
-  snapToGrid?: boolean;
-  lastModified?: string;
-  version?: string;
-  [key: string]: any; // Allow additional settings
-}
-
-export interface DiagramVersion {
-  id: number;
+export interface FileVersion {
+  id?: number;
+  originalFileId: number;
   versionNumber: number;
   fileName: string;
-  description?: string;
-  createdTime: Date;
-  createdBy: string;
+  fileType: string;
+  fileSize?: number;
+  fileData?: string;
+  xml?: string;
   versionNotes?: string;
-  hasMetadata: boolean;
+  isCurrent?: boolean;
+  createdBy?: string;
+  updatedBy?: string;
+  createdTime?: Date | string;
+  customProperties?: string;
+  elementColors?: string;
 }
 
-export interface DiagramValidationResult {
-  valid: boolean;
-  errors: string[];
-  warnings: string[];
+export interface BpmnDiagramData {
+  xml: string;
+  customProperties?: { [elementId: string]: any };
+  elementColors?: { [elementId: string]: { fill?: string; stroke?: string } };
 }
 
-export interface DiagramStatistics {
-  totalElements: number;
-  coloredElements: number;
-  elementsWithProperties: number;
-  totalCustomProperties: number;
-  lastModified: string;
-  diagramVersion: string;
-}
-
-export interface DiagramChangeTracker {
-  hasUnsavedChanges: boolean;
-  lastSaveTime: Date | null;
-  changeCount: number;
-  lastModificationTime: Date;
+export interface SaveDiagramOptions {
+  fileName: string;
+  folderId?: number;
+  overwrite?: boolean;
+  description?: string;
+  tags?: string;
 }
 
 export interface DiagramExportOptions {
-  format: 'xml' | 'svg' | 'png' | 'pdf' | 'json';
+  format: 'xml' | 'svg' | 'png' | 'pdf';
+  fileName?: string;
   includeMetadata?: boolean;
-  includeVersionHistory?: boolean;
 }
 
-export interface DiagramImportResult {
-  success: boolean;
-  diagram?: DiagramFile;
-  errors?: string[];
-  warnings?: string[];
-}
-
-export interface VersionComparisonResult {
-  diagramId: number;
-  version1: number;
-  version2: number;
-  hasDifferences: boolean;
-  differencesCount: number;
-  differences?: {
-    type: 'content' | 'metadata' | 'properties';
-    description: string;
-    elementId?: string;
-  }[];
-}
-
-// Helper type for creating new diagrams
-export type CreateDiagramRequest = Omit<DiagramFile, 'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy' | 'versionCount' | 'hasVersions'>;
-
-// Helper type for updating diagrams
-export type UpdateDiagramRequest = Partial<DiagramFile> & { id: number };
-
-// Utility functions
-export class DiagramFileUtils {
+// Utility functions for working with files
+export class FileUtils {
   
-  /**
-   * Create a default metadata object
-   */
-  static createDefaultMetadata(): DiagramMetadata {
-    return {
-      elementColors: {},
-      customProperties: {},
-      diagramSettings: {
-        zoom: 1,
-        viewBox: '',
-        theme: 'default',
-        gridEnabled: false,
-        snapToGrid: false,
-        lastModified: new Date().toISOString(),
-        version: '2.0'
-      }
-    };
+  static isBpmnFile(file: AppFile): boolean {
+    if (!file.fileName) return false;
+    const lowerName = file.fileName.toLowerCase();
+    return lowerName.endsWith('.bpmn') || 
+           lowerName.endsWith('.xml') || 
+           (typeof file.fileType === 'string' && file.fileType.includes('xml'));
   }
 
-  /**
-   * Validate diagram file structure
-   */
-  static validateDiagramFile(diagram: any): { valid: boolean; errors: string[] } {
-    const errors: string[] = [];
-
-    if (!diagram.fileName) {
-      errors.push('File name is required');
-    }
-
-    if (!diagram.content) {
-      errors.push('Content is required');
-    }
-
-    if (!diagram.metadata) {
-      errors.push('Metadata is required');
-    } else {
-      if (!diagram.metadata.elementColors) {
-        errors.push('Element colors metadata is required');
-      }
-      if (!diagram.metadata.customProperties) {
-        errors.push('Custom properties metadata is required');
-      }
-      if (!diagram.metadata.diagramSettings) {
-        errors.push('Diagram settings metadata is required');
-      }
-    }
-
-    return { valid: errors.length === 0, errors };
-  }
-
-  /**
-   * Merge metadata objects
-   */
-  static mergeMetadata(base: DiagramMetadata, overlay: Partial<DiagramMetadata>): DiagramMetadata {
-    return {
-      elementColors: { ...base.elementColors, ...overlay.elementColors },
-      customProperties: { ...base.customProperties, ...overlay.customProperties },
-      diagramSettings: { ...base.diagramSettings, ...overlay.diagramSettings }
-    };
-  }
-
-  /**
-   * Calculate diagram statistics from metadata
-   */
-  static calculateStatistics(diagram: DiagramFile): DiagramStatistics {
-    const metadata = diagram.metadata;
-    
-    const coloredElements = Object.keys(metadata.elementColors || {}).length;
-    
-    let elementsWithProperties = 0;
-    let totalCustomProperties = 0;
-    
-    if (metadata.customProperties) {
-      elementsWithProperties = Object.keys(metadata.customProperties).length;
-      totalCustomProperties = Object.values(metadata.customProperties)
-        .reduce((total, props) => total + props.length, 0);
-    }
-
-    // Estimate total elements from content (simplified)
-    const totalElements = diagram.content ? 
-      (diagram.content.match(/<bpmn:/g) || []).length : 0;
-
-    return {
-      totalElements,
-      coloredElements,
-      elementsWithProperties,
-      totalCustomProperties,
-      lastModified: diagram.updatedAt?.toString() || 'Unknown',
-      diagramVersion: metadata.diagramSettings?.version || '1.0'
-    };
-  }
-
-  /**
-   * Generate file name with timestamp
-   */
-  static generateTimestampedFileName(baseName: string): string {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const nameWithoutExt = baseName.replace(/\.(bpmn|xml)$/, '');
-    return `${nameWithoutExt}_${timestamp}.bpmn`;
-  }
-
-  /**
-   * Check if diagram has specific feature
-   */
-  static hasFeature(diagram: DiagramFile, feature: 'colors' | 'properties' | 'versions'): boolean {
-    switch (feature) {
-      case 'colors':
-        return Object.keys(diagram.metadata?.elementColors || {}).length > 0;
-      case 'properties':
-        return Object.keys(diagram.metadata?.customProperties || {}).length > 0;
-      case 'versions':
-        return (diagram.versionCount || 0) > 0;
-      default:
-        return false;
-    }
-  }
-
-  /**
-   * Create backup filename
-   */
-  static createBackupFileName(originalName: string): string {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const nameWithoutExt = originalName.replace(/\.(bpmn|xml)$/, '');
-    return `${nameWithoutExt}_backup_${timestamp}.json`;
-  }
-
-  /**
-   * Format file size in human readable format
-   */
   static formatFileSize(bytes: number): string {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  static getFileExtension(fileName: string): string {
+    if (!fileName) return '';
+    const lastDotIndex = fileName.lastIndexOf('.');
+    return lastDotIndex > 0 ? fileName.substring(lastDotIndex + 1).toLowerCase() : '';
+  }
+
+  static getFileNameWithoutExtension(fileName: string): string {
+    if (!fileName) return '';
+    const lastDotIndex = fileName.lastIndexOf('.');
+    return lastDotIndex > 0 ? fileName.substring(0, lastDotIndex) : fileName;
+  }
+
+  static generateUniqueFileName(baseName: string, extension: string, existingFiles: AppFile[]): string {
+    const nameWithoutExt = this.getFileNameWithoutExtension(baseName);
+    const ext = extension.startsWith('.') ? extension : '.' + extension;
+    
+    let counter = 1;
+    let uniqueName = nameWithoutExt + ext;
+    
+    while (existingFiles.some(f => f.fileName === uniqueName)) {
+      uniqueName = `${nameWithoutExt}_${counter}${ext}`;
+      counter++;
+    }
+    
+    return uniqueName;
+  }
+
+  static extractBpmnData(file: AppFile): BpmnDiagramData {
+    const xml = file.xml || (file.base64Data ? atob(file.base64Data) : file.fileData || '');
+    
+    let customProperties = {};
+    let elementColors = {};
+    
+    try {
+      if (file.customProperties) {
+        customProperties = JSON.parse(file.customProperties);
+      }
+    } catch (e) {
+      console.warn('Failed to parse custom properties:', e);
+    }
+    
+    try {
+      if (file.elementColors) {
+        elementColors = JSON.parse(file.elementColors);
+      }
+    } catch (e) {
+      console.warn('Failed to parse element colors:', e);
+    }
+    
+    return {
+      xml,
+      customProperties,
+      elementColors
+    };
+  }
+
+  static createBpmnFileFromData(
+    fileName: string, 
+    data: BpmnDiagramData, 
+    options?: Partial<AppFile>
+  ): AppFile {
+    return {
+      fileName,
+      fileType: 'bpmn',
+      xml: data.xml,
+      fileData: data.xml,
+      fileSize: data.xml ? data.xml.length : 0,
+      customProperties: JSON.stringify(data.customProperties || {}),
+      elementColors: JSON.stringify(data.elementColors || {}),
+      currentVersion: 1,
+      uploadTime: new Date(),
+      updatedTime: new Date(),
+      ...options
+    };
+  }
+
+  static isValidBpmnXml(xml: string): boolean {
+    if (!xml || xml.trim().length === 0) return false;
+    
+    try {
+      // Basic validation - check for required BPMN elements
+      return xml.includes('bpmn:definitions') && 
+             (xml.includes('bpmn:process') || xml.includes('bpmn:collaboration'));
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static sanitizeFileName(fileName: string): string {
+    if (!fileName) return 'untitled';
+    
+    // Remove or replace invalid characters
+    return fileName
+      .replace(/[<>:"/\\|?*]/g, '_')  // Replace invalid characters with underscore
+      .replace(/\s+/g, '_')          // Replace spaces with underscore
+      .replace(/_+/g, '_')           // Replace multiple underscores with single
+      .replace(/^_|_$/g, '')         // Remove leading/trailing underscores
+      .substring(0, 255);            // Limit length
+  }
+
+  static getFolderPath(folder: Folder): string {
+    if (!folder) return '/';
+    
+    const path: string[] = [];
+    let current: Folder | undefined = folder;
+    
+    while (current) {
+      path.unshift(current.folderName);
+      current = current.parentFolder;
+    }
+    
+    return '/' + path.join('/');
+  }
+
+  static sortFilesByName(files: AppFile[], ascending: boolean = true): AppFile[] {
+    return [...files].sort((a, b) => {
+      const nameA = (a.fileName || '').toLowerCase();
+      const nameB = (b.fileName || '').toLowerCase();
+      return ascending ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+    });
+  }
+
+  static sortFilesByDate(files: AppFile[], ascending: boolean = false): AppFile[] {
+    return [...files].sort((a, b) => {
+      const dateA = new Date(a.updatedTime || a.uploadTime || 0);
+      const dateB = new Date(b.updatedTime || b.uploadTime || 0);
+      return ascending ? dateA.getTime() - dateB.getTime() : dateB.getTime() - dateA.getTime();
+    });
+  }
+
+  static sortFilesBySize(files: AppFile[], ascending: boolean = false): AppFile[] {
+    return [...files].sort((a, b) => {
+      const sizeA = a.fileSize || 0;
+      const sizeB = b.fileSize || 0;
+      return ascending ? sizeA - sizeB : sizeB - sizeA;
+    });
+  }
+
+  static filterBpmnFiles(files: AppFile[]): AppFile[] {
+    return files.filter(file => this.isBpmnFile(file));
+  }
+
+  static searchFiles(files: AppFile[], searchTerm: string): AppFile[] {
+    if (!searchTerm || searchTerm.trim().length === 0) {
+      return files;
+    }
+    
+    const term = searchTerm.toLowerCase().trim();
+    
+    return files.filter(file => 
+      (file.fileName && file.fileName.toLowerCase().includes(term)) ||
+      (file.description && file.description.toLowerCase().includes(term)) ||
+      (file.tags && file.tags.toLowerCase().includes(term)) ||
+      (file.createdBy && file.createdBy.toLowerCase().includes(term))
+    );
   }
 }

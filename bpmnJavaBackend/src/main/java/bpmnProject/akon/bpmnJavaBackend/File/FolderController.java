@@ -14,99 +14,65 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.springframework.http.ResponseEntity.*;
-import static org.springframework.http.ResponseEntity.badRequest;
-import static org.springframework.http.ResponseEntity.ok;
-import static org.springframework.http.ResponseEntity.status;
 
+@CrossOrigin(origins = {"http://localhost:4200", "http://localhost:3000"})
 @RestController
-@RequestMapping("/api/v1/file/")
+@RequestMapping("/api/v1/folders") // CHANGED: Different base mapping to avoid conflicts
 public class FolderController {
 
     @Autowired
     private FolderService folderService;
 
+    // =================== CREATE FOLDER ===================
 
-    @PostMapping("create-folder")
+    @PostMapping("/create")
+    @PreAuthorize("hasRole('ROLE_MODELER') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<Folder> createFolder(@RequestBody CreateFolderRequest request, Principal principal) {
-        String createdBy = principal != null ? principal.getName() : "anonymous";
-        Folder newFolder;
-        if (request.getParentFolderId() != null) {
-            newFolder = folderService.createSubFolder(
-                    request.getParentFolderId(),
-                    request.getFolderName(),
-                    request.getDescription(),
-                    createdBy
-            );
-        } else {
-            newFolder = folderService.createRootFolder(
-                    request.getFolderName(),
-                    request.getDescription(),
-                    createdBy
-            );
-        }
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        System.out.println("USERNAME: " + auth.getName());
-        System.out.println("AUTHORITIES: " + auth.getAuthorities());
-        return new ResponseEntity<>(newFolder, HttpStatus.OK);
-    }
-
-    // FIXED: Uncommented and fixed the getRootFolders endpoint
-    @GetMapping("all/folders")
-    @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<List<Folder>> getRootFolders() {
-        List<Folder> folders = folderService.getRootFolders();
-        return ok(folders);
-    }
-
-    @GetMapping("/folders/{folderId}")
-    @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<Folder> getFolder(@PathVariable Long folderId) {
-        return folderService.getFolderWithStats(folderId)
-                .map(folder -> ok(folder))
-                .orElse(notFound().build());
-    }
-
-    @GetMapping("/folders/{folderId}/subfolders")
-    @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<List<Folder>> getSubFolders(@PathVariable Long folderId) {
-        List<Folder> subFolders = folderService.getSubFolders(folderId);
-        return ok(subFolders);
-    }
-
-    @GetMapping("/folders/{folderId}/files")
-    @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<?> getFolderFiles(@PathVariable Long folderId) {
         try {
-            Optional<Folder> folderOpt = folderService.getFolderWithStats(folderId);
-            if (!folderOpt.isPresent()) {
-                return badRequest()
-                        .body(Map.of("error", "Folder not found with id: " + folderId));
-            }
+            String createdBy = principal != null ? principal.getName() : "anonymous";
 
-            List<File> files = folderService.getFilesInFolder(folderId);
-            files.forEach(this::prepareFileForResponse);
+            // Simplified - only create simple folders, no parent-child relationships
+            Folder newFolder = folderService.createSimpleFolder(
+                    request.getFolderName(),
+                    request.getDescription(),
+                    createdBy
+            );
 
-            return ok(files);
+            return new ResponseEntity<>(newFolder, HttpStatus.OK);
         } catch (Exception e) {
-            return status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to retrieve files: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-    @GetMapping("/folders/{folderId}/breadcrumb")
-    @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
-    public ResponseEntity<List<FolderService.FolderBreadcrumb>> getFolderBreadcrumb(@PathVariable Long folderId) {
+
+    // =================== GET FOLDERS ===================
+
+    @GetMapping("/all")
+    @PreAuthorize("hasRole('ROLE_VIEWER') or hasRole('ROLE_MODELER') or hasRole('ROLE_ADMIN')")
+    public ResponseEntity<List<Folder>> getAllFolders() {
         try {
-            List<FolderService.FolderBreadcrumb> breadcrumbs = folderService.getFolderBreadcrumb(folderId);
-            return ok(breadcrumbs);
+            List<Folder> folders = folderService.getAllSimpleFolders();
+            return ok(folders);
         } catch (Exception e) {
             return status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-    private void prepareFileForResponse(File file) {
+
+    @GetMapping("/{folderId}")
+    @PreAuthorize("hasRole('ROLE_VIEWER') or hasRole('ROLE_MODELER') or hasRole('ROLE_ADMIN')")
+    public ResponseEntity<Folder> getFolder(@PathVariable Long folderId) {
+        try {
+            return folderService.getFolderById(folderId)
+                    .map(folder -> ok(folder))
+                    .orElse(notFound().build());
+        } catch (Exception e) {
+            return status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
-    @DeleteMapping("/folders/delete/{folderId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    // =================== DELETE FOLDER ===================
+
+    @DeleteMapping("/delete/{folderId}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<Map<String, String>> deleteFolder(@PathVariable Long folderId) {
         try {
             folderService.deleteFolder(folderId);
@@ -116,19 +82,65 @@ public class FolderController {
         }
     }
 
+    // =================== FOLDER OPERATIONS ===================
+
+    @PutMapping("/{folderId}/rename")
+    @PreAuthorize("hasRole('ROLE_MODELER') or hasRole('ROLE_ADMIN')")
+    public ResponseEntity<Folder> renameFolder(
+            @PathVariable Long folderId,
+            @RequestBody Map<String, String> request,
+            Principal principal) {
+        try {
+            String newName = request.get("folderName");
+            String updatedBy = principal != null ? principal.getName() : "anonymous";
+
+            Folder updatedFolder = folderService.renameFolder(folderId, newName, updatedBy);
+            return ok(updatedFolder);
+        } catch (Exception e) {
+            return badRequest().body(null);
+        }
+    }
+
+    @PutMapping("/{folderId}/description")
+    @PreAuthorize("hasRole('ROLE_MODELER') or hasRole('ROLE_ADMIN')")
+    public ResponseEntity<Folder> updateDescription(
+            @PathVariable Long folderId,
+            @RequestBody Map<String, String> request,
+            Principal principal) {
+        try {
+            String description = request.get("description");
+            String updatedBy = principal != null ? principal.getName() : "anonymous";
+
+            Folder updatedFolder = folderService.updateFolderDescription(folderId, description, updatedBy);
+            return ok(updatedFolder);
+        } catch (Exception e) {
+            return badRequest().body(null);
+        }
+    }
+
+    // =================== FOLDER STATS ===================
+
+    @GetMapping("/{folderId}/stats")
+    @PreAuthorize("hasRole('ROLE_VIEWER') or hasRole('ROLE_MODELER') or hasRole('ROLE_ADMIN')")
+    public ResponseEntity<FolderService.FolderStats> getFolderStats(@PathVariable Long folderId) {
+        try {
+            FolderService.FolderStats stats = folderService.getFolderStats(folderId);
+            return ok(stats);
+        } catch (Exception e) {
+            return status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
     public static class CreateFolderRequest {
         private String folderName;
         private String description;
-        private Long parentFolderId;
-        private String createdBy; // This would be populated from the Angular side
+        private String createdBy;
 
         // Getters and Setters
         public String getFolderName() { return folderName; }
         public void setFolderName(String folderName) { this.folderName = folderName; }
         public String getDescription() { return description; }
         public void setDescription(String description) { this.description = description; }
-        public Long getParentFolderId() { return parentFolderId; }
-        public void setParentFolderId(Long parentFolderId) { this.parentFolderId = parentFolderId; }
         public String getCreatedBy() { return createdBy; }
         public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
     }

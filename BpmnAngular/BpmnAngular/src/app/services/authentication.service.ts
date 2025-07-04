@@ -1,4 +1,4 @@
-// ΔΙΟΡΘΩΜΕΝΟ Authentication Service με σωστό token management
+// ΔΙΟΡΘΩΜΕΝΟ Authentication Service - χωρίς αυτόματο logout
 
 import { Injectable, Injector } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
@@ -61,8 +61,7 @@ export interface RegisterRequest {
 })
 export class AuthenticationService {
   private readonly API_URL = 'http://localhost:8080/api/v1/auth';
-  // ΣΗΜΑΝΤΙΚΟ: Χρησιμοποιούμε το ίδιο key παντού
-  private readonly TOKEN_KEY = 'token'; // Όχι 'auth_token'
+  private readonly TOKEN_KEY = 'token';
   private readonly USER_KEY = 'currentUser';
 
   private currentUserSubject = new BehaviorSubject<User | null>(this.getUserFromStorage());
@@ -71,22 +70,19 @@ export class AuthenticationService {
   private tokenSubject = new BehaviorSubject<string | null>(this.getToken());
   public token$ = this.tokenSubject.asObservable();
   
-  // Lazy loading του HttpClient για να αποφύγουμε circular dependency
   private _http: HttpClient | null = null;
 
-  // Token refresh timer
-  private tokenRefreshTimer?: any;
-  private readonly TOKEN_REFRESH_THRESHOLD = 2 * 60 * 1000; // 2 λεπτά πριν τη λήξη
+  // ΑΦΑΙΡΕΘΗΚΕ το αυτόματο token monitoring που έκανε logout
+  private readonly TOKEN_REFRESH_THRESHOLD = 2 * 60 * 1000;
 
   constructor(
     private injector: Injector,
     private router: Router
   ) {
-    this.checkTokenValidity();
-    this.startTokenMonitoring();
+    // ΔΕΝ κάνουμε πια αυτόματο έλεγχο που μπορεί να κάνει logout
+    console.log('AuthenticationService initialized');
   }
 
-  // Lazy getter για HttpClient
   private get http(): HttpClient {
     if (!this._http) {
       this._http = this.injector.get(HttpClient);
@@ -100,61 +96,6 @@ export class AuthenticationService {
       return userData ? JSON.parse(userData) : null;
     }
     return null;
-  }
-
-  private checkTokenValidity(): void {
-    const token = this.getToken();
-    if (token && this.isTokenExpired(token)) {
-      console.log('Token expired on service initialization, logging out');
-      this.logout();
-    }
-  }
-
-  // =================== TOKEN MONITORING ===================
-
-  private startTokenMonitoring(): void {
-    // Έλεγχος κάθε λεπτό
-    setInterval(() => {
-      this.checkAndRefreshToken();
-    }, 60000);
-  }
-
-  private checkAndRefreshToken(): void {
-    const token = this.getToken();
-    if (!token) return;
-
-    const timeUntilExpiry = this.getTimeUntilExpiry(token);
-    
-    // Αν λήγει σε λιγότερο από 2 λεπτά, προσπάθησε refresh
-    if (timeUntilExpiry > 0 && timeUntilExpiry < this.TOKEN_REFRESH_THRESHOLD) {
-      console.log('Token expires soon, attempting refresh...');
-      this.attemptTokenRefresh();
-    }
-    // Αν έχει ήδη λήξει, logout
-    else if (timeUntilExpiry <= 0) {
-      console.log('Token has expired, logging out');
-      this.logout();
-    }
-  }
-
-  private getTimeUntilExpiry(token: string): number {
-    try {
-      const payload = this.getTokenPayload(token);
-      if (!payload.exp) return 0;
-      
-      const expiryTime = payload.exp * 1000;
-      const currentTime = Date.now();
-      
-      return expiryTime - currentTime;
-    } catch (error) {
-      return 0;
-    }
-  }
-
-  private attemptTokenRefresh(): void {
-    // Για τώρα, αφού δεν έχεις refresh token, απλά εμφάνισε warning
-    console.warn('Token refresh not implemented, user will need to login again');
-    // Μπορείς να προσθέσεις notification εδώ
   }
 
   // =================== AUTHENTICATION METHODS ===================
@@ -186,7 +127,6 @@ export class AuthenticationService {
   logout(): void {
     const token = this.getToken();
 
-    // Call backend logout if token exists
     if (token) {
       this.http.post(`${this.API_URL}/logout`, {}, {
         headers: new HttpHeaders({
@@ -216,9 +156,8 @@ export class AuthenticationService {
     if (typeof window !== 'undefined') {
       console.log('Setting session with new token');
 
-      // Calculate token expiry
-      const expiresIn = typeof authResult.expires_in === 'number' ? authResult.expires_in : 3600; // default 1 hour
-      const tokenExpiry = new Date(Date.now() + (expiresIn * 1000));
+      const expiresIn = typeof authResult.expires_in === 'number' ? authResult.expires_in : 3600;
+      const tokenExpiry = new Date(Date.now() + (expiresIn * 1000)); // ΔΙΟΡΘΩΣΗ: 1000 αντί για 36000
       const userWithExpiry = {
         ...authResult.user,
         tokenExpiry: tokenExpiry
@@ -242,13 +181,8 @@ export class AuthenticationService {
       localStorage.removeItem(this.USER_KEY);
       sessionStorage.removeItem(this.TOKEN_KEY);
       sessionStorage.removeItem(this.USER_KEY);
-      // ΣΗΜΑΝΤΙΚΟ: Καθαριζουμε και τα παλιά keys αν υπάρχουν
       localStorage.removeItem('auth_token');
       sessionStorage.removeItem('auth_token');
-    }
-
-    if (this.tokenRefreshTimer) {
-      clearTimeout(this.tokenRefreshTimer);
     }
 
     this.tokenSubject.next(null);
@@ -264,36 +198,29 @@ export class AuthenticationService {
 
   // =================== VALIDATION METHODS ===================
 
-  // ΔΙΟΡΘΩΜΕΝΗ μέθοδος - χρησιμοποιεί σωστό token key
   isAuthenticated(): boolean {
-    const token = this.getToken(); // Χρησιμοποιεί το σωστό key
+    const token = this.getToken();
     if (!token) {
       return false;
     }
 
-    return this.isTokenValid(token);
-  }
-
-  // ΔΙΟΡΘΩΜΕΝΗ μέθοδος - ελέγχει σωστά τη λήξη
-  private isTokenValid(token: string): boolean {
+    // ΑΠΛΟΠΟΙΗΜΕΝΟΣ έλεγχος - δεν κάνει αυτόματο logout
     try {
       const user = this.getCurrentUser();
-      if (!user || !user.tokenExpiry) {
-        // Fallback: έλεγχος από το payload του token
-        return !this.isTokenExpired(token);
+      if (user && user.tokenExpiry) {
+        const now = Date.now();
+        const expiry = new Date(user.tokenExpiry).getTime();
+        return expiry > now;
       }
       
-      const now = Date.now();
-      const expiry = user.tokenExpiry.getTime();
-      
-      return expiry > now;
+      // Fallback: έλεγχος από το payload του token
+      return !this.isTokenExpired(token);
     } catch (error) {
-      console.error('Error checking token validity:', error);
-      return false;
+      console.warn('Error checking token validity:', error);
+      return false; // ΔΕΝ κάνουμε logout, απλά επιστρέφουμε false
     }
   }
 
-  // Fixed isLoggedIn method - alias για isAuthenticated
   isLoggedIn(): boolean {
     return this.isAuthenticated();
   }
@@ -303,7 +230,7 @@ export class AuthenticationService {
       const expiry = this.getTokenExpiration(token);
       const isExpired = expiry ? expiry <= Date.now() : true;
       if (isExpired) {
-        console.log('Token is expired');
+        console.log('Token is expired but not logging out automatically');
       }
       return isExpired;
     } catch (error) {
@@ -330,32 +257,30 @@ export class AuthenticationService {
     }
   }
 
-  // =================== UTILITY METHODS FOR SAVE OPERATIONS ===================
+  // =================== UTILITY METHODS ===================
 
-  /**
-   * Εδώ είναι η κλειδί μέθοδος για τις save operations
-   * Ελέγχει αν το token είναι έγκυρο και αν όχι, κάνει logout
-   */
   ensureValidToken(): Observable<boolean> {
     return new Observable(observer => {
       if (!this.isAuthenticated()) {
         console.warn('Token is invalid or expired');
-        observer.error(new Error('Token is invalid or expired'));
+        observer.next(false);
+        observer.complete();
         return;
       }
 
       const token = this.getToken();
       if (!token) {
-        observer.error(new Error('No token found'));
+        observer.next(false);
+        observer.complete();
         return;
       }
 
       const timeUntilExpiry = this.getTimeUntilExpiry(token);
       
-      // Αν λήγει σε λιγότερο από 1 λεπτό, πρόβλημα
       if (timeUntilExpiry < 60000) {
-        console.warn('Token expires too soon for save operation');
-        observer.error(new Error('Token expires too soon'));
+        console.warn('Token expires soon');
+        observer.next(false);
+        observer.complete();
         return;
       }
 
@@ -364,20 +289,30 @@ export class AuthenticationService {
     });
   }
 
-  /**
-   * Έλεγχος αν το session είναι έγκυρο
-   */
+  private getTimeUntilExpiry(token: string): number {
+    try {
+      const payload = this.getTokenPayload(token);
+      if (!payload.exp) return 0;
+      
+      const expiryTime = payload.exp * 1000;
+      const currentTime = Date.now();
+      
+      return expiryTime - currentTime;
+    } catch (error) {
+      return 0;
+    }
+  }
+
   validateSession(): Observable<boolean> {
     const token = this.getToken();
     
-    if (!token || !this.isTokenValid(token)) {
+    if (!token || !this.isAuthenticated()) {
       return new Observable(observer => {
         observer.next(false);
         observer.complete();
       });
     }
 
-    // Validate with backend
     return this.http.get<{ valid: boolean }>(`${this.API_URL}/validate`)
       .pipe(
         map(response => response.valid),
@@ -390,7 +325,7 @@ export class AuthenticationService {
       );
   }
 
-  // =================== USER AND ROLE METHODS (unchanged) ===================
+  // =================== USER AND ROLE METHODS ===================
 
   getCurrentUser(): User | null {
     return this.currentUserSubject.value;
@@ -473,7 +408,6 @@ export class AuthenticationService {
     );
   }
 
-  // =================== ERROR HANDLING ===================
 
   private handleError = (error: any): Observable<never> => {
     let errorMessage = 'An error occurred';

@@ -2,7 +2,7 @@ package bpmnProject.akon.bpmnJavaBackend.File;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import com.fasterxml.jackson.annotation.JsonIgnore; // Import JsonIgnore
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "files")
@@ -20,7 +20,7 @@ public class File {
     private String fileName;
 
     @Column(name = "file_size")
-    private Long fileSize; // Changed to Long for consistency
+    private Long fileSize;
 
     @Column(name = "file_type", nullable = false)
     private String fileType;
@@ -64,14 +64,10 @@ public class File {
     @Column(name = "is_public", nullable = false)
     private Boolean isPublic = false;
 
-    // =================== MISSING FIELD - ADD is_template ===================
-    @Column(name = "is_template", nullable = false)
-    private Boolean isTemplate = false;
-
     // Relationship with Folder (optional)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "folder_id", insertable = false, updatable = false)
-    @JsonIgnore // Add JsonIgnore to prevent recursion
+    @JsonIgnore
     private Folder folder;
 
     @PrePersist
@@ -94,10 +90,6 @@ public class File {
         if (this.isPublic == null) {
             this.isPublic = false;
         }
-        // =================== ADD is_template DEFAULT ===================
-        if (this.isTemplate == null) {
-            this.isTemplate = false;
-        }
     }
 
     @PreUpdate
@@ -105,10 +97,10 @@ public class File {
         this.updatedTime = LocalDateTime.now();
     }
 
-    // Constructors
+    // =================== CONSTRUCTORS ===================
+
     public File() {
-        this.isPublic = false; // Default value
-        this.isTemplate = false; // Default value
+        this.isPublic = false;
     }
 
     public File(String fileName, String fileType, String xml) {
@@ -117,8 +109,7 @@ public class File {
         this.xml = xml;
         this.fileData = xml;
         this.fileSize = xml != null ? (long) xml.length() : 0L;
-        this.isPublic = false; // Default value
-        this.isTemplate = false; // Default value
+        this.isPublic = false;
     }
 
     // =================== GETTERS AND SETTERS ===================
@@ -262,15 +253,6 @@ public class File {
         this.isPublic = isPublic;
     }
 
-    // =================== ADD is_template GETTER/SETTER ===================
-    public Boolean getIsTemplate() {
-        return isTemplate;
-    }
-
-    public void setIsTemplate(Boolean isTemplate) {
-        this.isTemplate = isTemplate;
-    }
-
     public Folder getFolder() {
         return folder;
     }
@@ -331,7 +313,6 @@ public class File {
                 ", folderId=" + folderId +
                 ", currentVersion=" + currentVersion +
                 ", isPublic=" + isPublic +
-                ", isTemplate=" + isTemplate +
                 ", uploadTime=" + uploadTime +
                 ", updatedTime=" + updatedTime +
                 '}';

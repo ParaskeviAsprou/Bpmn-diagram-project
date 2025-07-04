@@ -181,9 +181,9 @@ export class BpmnService {
    * Get diagrams in specific folder
    */
   getDiagramsInFolder(folderId: number): Observable<BpmnDiagram[]> {
-    if (!this.authService.canView()) {
-      return throwError(() => new Error('Insufficient permissions to view diagrams'));
-    }
+    // if (!this.authService.canView()) {
+    //   return throwError(() => new Error('Insufficient permissions to view diagrams'));
+    // }
 
     return this.fileService.getFilesInFolder(folderId).pipe(
       map(files => files

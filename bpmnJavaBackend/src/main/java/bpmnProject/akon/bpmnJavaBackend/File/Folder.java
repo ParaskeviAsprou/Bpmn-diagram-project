@@ -29,23 +29,9 @@ public class Folder {
     @Column(name = "created_by")
     private String createdBy;
 
-    @Column(name = "folder_path", length = 2000)
-    private String folderPath;
-
-    @Column(name = "is_root", nullable = false)
-    private Boolean isRoot = false;
-
-    // Self-referencing relationship for folder hierarchy
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_folder_id")
-    @JsonIgnore
-    private Folder parentFolder;
-
-    @OneToMany(mappedBy = "parentFolder", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Folder> subFolders = new ArrayList<>();
-
     // Files in this folder
     @OneToMany(mappedBy = "folder", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<File> files = new ArrayList<>();
 
     // Computed fields
@@ -53,24 +39,19 @@ public class Folder {
     private Integer fileCount;
 
     @Transient
-    private Integer subFolderCount;
-
-    @Transient
     private Long totalSize;
 
-    // Constructors
+    // =================== CONSTRUCTORS ===================
+
     public Folder() {
-        this.isRoot = false;
-        this.subFolders = new ArrayList<>();
         this.files = new ArrayList<>();
     }
 
-    public Folder(String folderName, String description, String createdBy, Boolean isRoot) {
+    public Folder(String folderName, String description, String createdBy) {
         this();
         this.folderName = folderName;
         this.description = description;
         this.createdBy = createdBy;
-        this.isRoot = isRoot != null ? isRoot : false;
         this.createdTime = LocalDateTime.now();
         this.updatedTime = LocalDateTime.now();
     }
@@ -125,38 +106,6 @@ public class Folder {
         this.createdBy = createdBy;
     }
 
-    public String getFolderPath() {
-        return folderPath;
-    }
-
-    public void setFolderPath(String folderPath) {
-        this.folderPath = folderPath;
-    }
-
-    public Boolean getIsRoot() {
-        return isRoot;
-    }
-
-    public void setIsRoot(Boolean isRoot) {
-        this.isRoot = isRoot;
-    }
-
-    public Folder getParentFolder() {
-        return parentFolder;
-    }
-
-    public void setParentFolder(Folder parentFolder) {
-        this.parentFolder = parentFolder;
-    }
-
-    public List<Folder> getSubFolders() {
-        return subFolders;
-    }
-
-    public void setSubFolders(List<Folder> subFolders) {
-        this.subFolders = subFolders != null ? subFolders : new ArrayList<>();
-    }
-
     public List<File> getFiles() {
         return files;
     }
@@ -171,14 +120,6 @@ public class Folder {
 
     public void setFileCount(Integer fileCount) {
         this.fileCount = fileCount;
-    }
-
-    public Integer getSubFolderCount() {
-        return subFolders != null ? subFolders.size() : 0;
-    }
-
-    public void setSubFolderCount(Integer subFolderCount) {
-        this.subFolderCount = subFolderCount;
     }
 
     public Long getTotalSize() {
@@ -209,56 +150,17 @@ public class Folder {
         }
     }
 
-    public void addSubFolder(Folder subFolder) {
-        if (subFolders == null) {
-            subFolders = new ArrayList<>();
-        }
-        subFolders.add(subFolder);
-        subFolder.setParentFolder(this);
-        subFolder.setFolderPath(buildFolderPath());
-    }
-
-    public void removeSubFolder(Folder subFolder) {
-        if (subFolders != null) {
-            subFolders.remove(subFolder);
-            subFolder.setParentFolder(null);
-        }
-    }
-
-    public String buildFolderPath() {
-        if (parentFolder == null || Boolean.TRUE.equals(isRoot)) {
-            return "/" + folderName;
-        }
-        return parentFolder.buildFolderPath() + "/" + folderName;
-    }
-
-    public boolean isSubFolderOf(Folder potentialParent) {
-        Folder current = this.parentFolder;
-        while (current != null) {
-            if (current.equals(potentialParent)) {
-                return true;
-            }
-            current = current.getParentFolder();
-        }
-        return false;
-    }
-
     @PrePersist
     public void prePersist() {
         if (createdTime == null) {
             createdTime = LocalDateTime.now();
         }
         updatedTime = LocalDateTime.now();
-        folderPath = buildFolderPath();
-        if (isRoot == null) {
-            isRoot = false;
-        }
     }
 
     @PreUpdate
     public void preUpdate() {
         updatedTime = LocalDateTime.now();
-        folderPath = buildFolderPath();
     }
 
     @Override
@@ -279,8 +181,8 @@ public class Folder {
         return "Folder{" +
                 "id=" + id +
                 ", folderName='" + folderName + '\'' +
-                ", isRoot=" + isRoot +
                 ", createdTime=" + createdTime +
+                ", fileCount=" + getFileCount() +
                 '}';
     }
 }

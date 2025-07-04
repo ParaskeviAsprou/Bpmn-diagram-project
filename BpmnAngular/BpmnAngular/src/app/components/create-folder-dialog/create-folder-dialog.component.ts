@@ -94,7 +94,7 @@ export class CreateFolderDialogComponent implements OnInit {
       this.folderService.createFolder(
         formData.name.trim(),
         formData.description?.trim() || '',
-        this.data.parentFolderId,
+        //this.data.parentFolderId,
         createdBy
       ).subscribe({
         next: (folder) => {

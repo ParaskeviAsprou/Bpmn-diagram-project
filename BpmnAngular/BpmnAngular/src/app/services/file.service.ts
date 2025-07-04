@@ -247,6 +247,22 @@ export class FileService {
   }
 
   /**
+   * Export file as archive (ZIP with all formats)
+   */
+  public exportFileAsArchive(fileId: number): Observable<Blob> {
+    if (!this.authService.canView()) {
+      return throwError(() => new Error('Insufficient permissions to export files'));
+    }
+
+    return this.http.get(`${this.apiServerUrl}/${fileId}/export/archive`, {
+      responseType: 'blob',
+      headers: this.getAuthHeaders()
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
    * Download file as blob
    */
   public downloadFile(fileId: number): Observable<Blob> {
@@ -310,26 +326,6 @@ export class FileService {
       '{}', // empty element colors
       folderId ?? undefined,
       false // don't overwrite by default
-    );
-  }
-
-  /**
-   * Upload BPMN content as file using alternative endpoint
-   */
-  public uploadBpmnContentAlternative(fileName: string, content: string, folderId?: number): Observable<AppFile> {
-    console.log('Uploading BPMN content via alternative endpoint');
-    
-    const payload = {
-      fileName: fileName,
-      content: content,
-      folderId: folderId
-    };
-
-    return this.http.post<AppFile>(`${this.apiServerUrl}/upload-bpmn-content`, payload, {
-      headers: this.getAuthHeaders()
-    }).pipe(
-      tap(response => console.log('Alternative upload response:', response)),
-      catchError(this.handleError)
     );
   }
 

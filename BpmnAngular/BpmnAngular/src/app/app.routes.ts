@@ -9,31 +9,71 @@ import { SettingsComponent } from './components/settings/settings.component';
 import { FileListComponent } from './components/file-list/file-list.component';
 
 export const routes: Routes = [
-      { path: '', redirectTo: 'login', pathMatch: 'full' },
-    { path: 'login', component: LoginComponent },
-    { path: 'register', component: RegisterComponent },
-    
-    // Standalone routes (outside of layout)
-    { path: 'dashboard', component: DashboardComponent, },
-    { path: 'modeler', component: BpmnModelerComponent,  },
-    { path: 'list', component: FileListComponent, },
-    { path: 'settings', component: SettingsComponent,  },
+  // Public routes (no authentication required)
+  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  { path: 'login', component: LoginComponent },
+  { path: 'register', component: RegisterComponent },
+  
+  // ΔΙΟΡΘΩΣΗ: Standalone protected routes (με AuthGuard)
+  { 
+    path: 'dashboard', 
+    component: DashboardComponent, 
+  },
+  { 
+    path: 'modeler', 
+    component: BpmnModelerComponent, 
+    canActivate: [AuthGuard]
+  },
+  { 
+    path: 'list', 
+    component: FileListComponent, 
+    canActivate: [AuthGuard]
+  },
+  { 
+    path: 'settings', 
+    component: SettingsComponent, 
+    canActivate: [AuthGuard]
+  },
+  { 
+    path: 'files', 
+    component: FileListComponent, 
+    canActivate: [AuthGuard]
+  },
 
-    
-    // Layout-wrapped routes
-    {
-        path: 'app', 
-        component: LayoutComponent,
-        canActivate: [AuthGuard],
-        children: [
-            { path: '', redirectTo: 'dashboard', pathMatch: 'full' }, // Default child route
-            { path: 'modeler', component: BpmnModelerComponent },
-            { path: 'dashboard', component: DashboardComponent },
-            { path: 'list', component: FileListComponent },
-            { path: 'settings', component: SettingsComponent }
-        ]
-    },
-    
-    // Wildcard route - MUST be last
-    { path: '**', redirectTo: 'login' }
+  {
+    path: 'app', 
+    component: LayoutComponent,
+    canActivate: [AuthGuard],
+    children: [
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' }, 
+      { 
+        path: 'modeler', 
+        component: BpmnModelerComponent,
+        canActivate: [AuthGuard]
+      },
+      { 
+        path: 'dashboard', 
+        component: DashboardComponent,
+        canActivate: [AuthGuard]
+      },
+      { 
+        path: 'list', 
+        component: FileListComponent,
+        canActivate: [AuthGuard]
+      },
+      { 
+        path: 'settings', 
+        component: SettingsComponent,
+        canActivate: [AuthGuard]
+      },
+
+      { 
+        path: 'files', 
+        component: FileListComponent,
+        canActivate: [AuthGuard]
+      }
+    ]
+  },
+
+  { path: '**', redirectTo: 'login' }
 ];

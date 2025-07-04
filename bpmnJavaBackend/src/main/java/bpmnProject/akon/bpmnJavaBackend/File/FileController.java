@@ -18,10 +18,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import static org.springframework.http.ResponseEntity.*;
 
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = {"http://localhost:4200", "http://localhost:3000"})
 @RestController
 @RequestMapping("/api/v1/file")
 public class FileController {
@@ -49,7 +53,7 @@ public class FileController {
     // =================== BPMN DIAGRAM SAVE ===================
 
     @PostMapping("/save")
-    @PreAuthorize("hasRole('MODELER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ROLE_MODELER') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<?> saveBpmnDiagram(@RequestBody Map<String, Object> payload) {
         try {
             System.out.println("=== SAVE BPMN DIAGRAM DEBUG ===");
@@ -145,7 +149,7 @@ public class FileController {
     // =================== UPDATE EXISTING FILE ===================
 
     @PutMapping("/{id}/content")
-    @PreAuthorize("hasRole('MODELER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ROLE_MODELER') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<?> updateFileContent(@PathVariable Long id, @RequestBody Map<String, Object> payload) {
         try {
             System.out.println("=== UPDATE FILE CONTENT DEBUG ===");
@@ -186,57 +190,10 @@ public class FileController {
         }
     }
 
-    // =================== HELPER METHODS ===================
-
-    private String extractStringValue(Map<String, Object> payload, String key) {
-        return extractStringValue(payload, key, null);
-    }
-
-    private String extractStringValue(Map<String, Object> payload, String key, String defaultValue) {
-        Object value = payload.get(key);
-        return value != null ? value.toString() : defaultValue;
-    }
-
-    private Long extractLongValue(Map<String, Object> payload, String key) {
-        Object value = payload.get(key);
-        if (value != null) {
-            try {
-                if (value instanceof Number) {
-                    return ((Number) value).longValue();
-                } else if (value instanceof String) {
-                    return Long.valueOf((String) value);
-                }
-            } catch (NumberFormatException e) {
-                System.err.println("Invalid number format for key " + key + ": " + value);
-            }
-        }
-        return null;
-    }
-
-    private boolean extractBooleanValue(Map<String, Object> payload, String key, boolean defaultValue) {
-        Object value = payload.get(key);
-        if (value instanceof Boolean) {
-            return (Boolean) value;
-        }
-        return defaultValue;
-    }
-
-    private boolean isValidJson(String jsonString) {
-        if (jsonString == null || jsonString.trim().isEmpty()) {
-            return true;
-        }
-        try {
-            new com.fasterxml.jackson.databind.ObjectMapper().readTree(jsonString);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
     // =================== FILE OPERATIONS ===================
 
     @GetMapping("/all")
-    @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ROLE_VIEWER') or hasRole('ROLE_MODELER') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<List<File>> getAllFiles() {
         try {
             List<File> files = fileService.getAllFiles();
@@ -248,7 +205,7 @@ public class FileController {
     }
 
     @GetMapping("/root-files")
-    @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ROLE_VIEWER') or hasRole('ROLE_MODELER') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<List<File>> getRootFiles() {
         try {
             List<File> files = fileService.getFilesInFolder(null);
@@ -260,7 +217,7 @@ public class FileController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ROLE_VIEWER') or hasRole('ROLE_MODELER') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<?> getFileById(@PathVariable("id") Long id) {
         try {
             Optional<File> fileOpt = fileService.getFileById(id);
@@ -278,7 +235,7 @@ public class FileController {
     }
 
     @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<?> deleteFile(@PathVariable("id") Long id) {
         try {
             File file = fileService.findFileById(id);
@@ -304,7 +261,7 @@ public class FileController {
     // =================== FILE UPLOAD ===================
 
     @PostMapping("/upload")
-    @PreAuthorize("hasRole('MODELER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ROLE_MODELER') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<?> uploadFile(
             @RequestParam("file") MultipartFile multipartFile,
             @RequestParam(value = "folderId", required = false) Long folderId,
@@ -350,7 +307,7 @@ public class FileController {
     // =================== EXPORT OPERATIONS ===================
 
     @GetMapping("/{id}/export/{format}")
-    @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ROLE_VIEWER') or hasRole('ROLE_MODELER') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<byte[]> exportFile(@PathVariable Long id, @PathVariable String format) {
         try {
             File file = fileService.findFileById(id);
@@ -403,12 +360,102 @@ public class FileController {
         }
     }
 
+    // =================== NEW ARCHIVE EXPORT ===================
+
+    @GetMapping("/{id}/export/archive")
+    @PreAuthorize("hasRole('ROLE_VIEWER') or hasRole('ROLE_MODELER') or hasRole('ROLE_ADMIN')")
+    public ResponseEntity<byte[]> exportFileAsArchive(@PathVariable Long id) {
+        try {
+            File file = fileService.findFileById(id);
+            if (file == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ZipOutputStream zos = new ZipOutputStream(baos);
+
+            String baseName = file.getFileName() != null ?
+                    file.getFileName().replaceAll("\\.(bpmn|xml)$", "") : "diagram";
+
+            // Add PDF
+            try {
+                byte[] pdfData = bpmnPdfService.convertBpmnToPdf(file);
+                ZipEntry pdfEntry = new ZipEntry(baseName + ".pdf");
+                zos.putNextEntry(pdfEntry);
+                zos.write(pdfData);
+                zos.closeEntry();
+            } catch (Exception e) {
+                System.err.println("Failed to add PDF to archive: " + e.getMessage());
+            }
+
+            // Add SVG
+            try {
+                byte[] svgData = bpmnPdfService.convertBpmnToSvg(file);
+                ZipEntry svgEntry = new ZipEntry(baseName + ".svg");
+                zos.putNextEntry(svgEntry);
+                zos.write(svgData);
+                zos.closeEntry();
+            } catch (Exception e) {
+                System.err.println("Failed to add SVG to archive: " + e.getMessage());
+            }
+
+            // Add PNG
+            try {
+                byte[] pngData = bpmnPdfService.convertBpmnToPng(file);
+                ZipEntry pngEntry = new ZipEntry(baseName + ".png");
+                zos.putNextEntry(pngEntry);
+                zos.write(pngData);
+                zos.closeEntry();
+            } catch (Exception e) {
+                System.err.println("Failed to add PNG to archive: " + e.getMessage());
+            }
+
+            // Add XML
+            try {
+                String xmlContent = file.getXml() != null ? file.getXml() : file.getFileData();
+                byte[] xmlData = xmlContent != null ? xmlContent.getBytes() : new byte[0];
+                ZipEntry xmlEntry = new ZipEntry(baseName + ".xml");
+                zos.putNextEntry(xmlEntry);
+                zos.write(xmlData);
+                zos.closeEntry();
+            } catch (Exception e) {
+                System.err.println("Failed to add XML to archive: " + e.getMessage());
+            }
+
+            zos.close();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.valueOf("application/zip"));
+            headers.setContentDispositionFormData("attachment", baseName + "_archive.zip");
+            headers.setContentLength(baos.size());
+
+            return new ResponseEntity<>(baos.toByteArray(), headers, HttpStatus.OK);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(("Error creating archive: " + e.getMessage()).getBytes());
+        }
+    }
+
     // =================== FOLDER OPERATIONS ===================
+
+    @GetMapping("/folders/{folderId}/files")
+    @PreAuthorize("hasRole('ROLE_VIEWER') or hasRole('ROLE_MODELER') or hasRole('ROLE_ADMIN')")
+    public ResponseEntity<?> getFolderFiles(@PathVariable Long folderId) {
+        try {
+            List<File> files = fileService.getFilesInFolder(folderId);
+            files.forEach(this::prepareFileForResponse);
+            return ok(files);
+        } catch (Exception e) {
+            return status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to retrieve files: " + e.getMessage()));
+        }
+    }
 
     // =================== FILE EXISTENCE CHECK ===================
 
     @PostMapping("/folders/{folderId}/files/check-exists")
-    @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ROLE_VIEWER') or hasRole('ROLE_MODELER') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<Map<String, Boolean>> checkFileExistsInFolder(
             @PathVariable Long folderId,
             @RequestBody Map<String, String> request) {
@@ -426,7 +473,7 @@ public class FileController {
     }
 
     @PostMapping("/root-files/check-exists")
-    @PreAuthorize("hasRole('VIEWER') or hasRole('MODELER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ROLE_VIEWER') or hasRole('ROLE_MODELER') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<Map<String, Boolean>> checkFileExistsInRoot(
             @RequestBody Map<String, String> request) {
         try {
@@ -439,6 +486,53 @@ public class FileController {
             return ok(Map.of("exists", exists));
         } catch (Exception e) {
             return ok(Map.of("exists", false));
+        }
+    }
+
+    // =================== HELPER METHODS ===================
+
+    private String extractStringValue(Map<String, Object> payload, String key) {
+        return extractStringValue(payload, key, null);
+    }
+
+    private String extractStringValue(Map<String, Object> payload, String key, String defaultValue) {
+        Object value = payload.get(key);
+        return value != null ? value.toString() : defaultValue;
+    }
+
+    private Long extractLongValue(Map<String, Object> payload, String key) {
+        Object value = payload.get(key);
+        if (value != null) {
+            try {
+                if (value instanceof Number) {
+                    return ((Number) value).longValue();
+                } else if (value instanceof String) {
+                    return Long.valueOf((String) value);
+                }
+            } catch (NumberFormatException e) {
+                System.err.println("Invalid number format for key " + key + ": " + value);
+            }
+        }
+        return null;
+    }
+
+    private boolean extractBooleanValue(Map<String, Object> payload, String key, boolean defaultValue) {
+        Object value = payload.get(key);
+        if (value instanceof Boolean) {
+            return (Boolean) value;
+        }
+        return defaultValue;
+    }
+
+    private boolean isValidJson(String jsonString) {
+        if (jsonString == null || jsonString.trim().isEmpty()) {
+            return true;
+        }
+        try {
+            new com.fasterxml.jackson.databind.ObjectMapper().readTree(jsonString);
+            return true;
+        } catch (Exception e) {
+            return false;
         }
     }
 

@@ -69,24 +69,31 @@
                 <span *ngIf="hasUnsavedChanges" class="unsaved-indicator">*</span>
             </button>
 
-            <!-- Export dropdown -->
-            <div class="export-dropdown" *ngIf="canView">
+            <!-- Enhanced Export Button - Now always opens dialog -->
+            <button class="toolbar-btn"
+                *ngIf="canView"
+                (click)="openExportDialog()"
+                title="Export diagram (opens dialog with options)"
+                [disabled]="isExporting">
+                <i class="bx bx-export" [class.spinning]="isExporting"></i>
+                <span>{{ isExporting ? 'Exporting...' : 'Export' }}</span>
+            </button>
+
+            <!-- Quick Export Dropdown (Alternative to main export button) -->
+            <div class="export-dropdown" *ngIf="canView && false">
                 <button class="toolbar-btn" 
                     (click)="toggleExportDropdown()"
-                    title="Export options">
+                    title="Quick export options">
                     <i class="bx bx-export"></i>
-                    <span>Export</span>
+                    <span>Quick Export</span>
                     <i class="bx bx-chevron-down"></i>
                 </button>
                 <div class="dropdown-menu" *ngIf="showExportDropdown">
                     <button class="dropdown-item" 
                         *ngFor="let format of exportFormats"
-                        (click)="exportDiagram(format.format)">
+                        (click)="openExportDialog()">
                         <i class="bx" [class]="format.icon"></i>
-                        <div class="dropdown-content">
-                            <span class="dropdown-title">{{ format.label }}</span>
-                            <small class="dropdown-description">{{ format.description }}</small>
-                        </div>
+                        {{ format.label }}
                     </button>
                 </div>
             </div>
@@ -338,9 +345,26 @@
                     <span>Color</span>
                 </button>
 
+                <button class="quick-action-btn export-btn" 
+                    *ngIf="canView"
+                    (click)="openExportDialog()"
+                    title="Export Diagram">
+                    <i class="bx bx-export"></i>
+                    <span>Export</span>
+                </button>
+
                 <!-- Custom Properties Quick Actions -->
                 <div class="quick-action-divider"></div>
             </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" *ngIf="isExporting">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <h3>Exporting Diagram...</h3>
+            <p>Please wait while we prepare your file</p>
         </div>
     </div>
 </div>

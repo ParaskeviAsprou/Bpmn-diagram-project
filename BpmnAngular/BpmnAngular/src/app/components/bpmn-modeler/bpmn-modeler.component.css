@@ -865,3 +865,257 @@
   color: #667eea;
   z-index: 101;
 }
+
+/* CSS για PDF Export - Προσθήκη στο bpmn-modeler.component.css */
+
+/* PDF Export Button Styles */
+.pdf-export-button {
+  background-color: #f44336 !important;
+  color: white !important;
+  transition: all 0.3s ease;
+}
+
+.pdf-export-button:hover {
+  background-color: #d32f2f !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(244, 67, 54, 0.3);
+}
+
+.pdf-export-button:disabled {
+  background-color: #ccc !important;
+  color: #666 !important;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Floating Action Button για PDF */
+.pdf-export-fab {
+  position: fixed;
+  bottom: 80px; /* Πάνω από άλλα floating buttons */
+  right: 20px;
+  z-index: 1000;
+  background-color: #f44336 !important;
+  color: white !important;
+  box-shadow: 0 4px 20px rgba(244, 67, 54, 0.4);
+  transition: all 0.3s ease;
+}
+
+.pdf-export-fab:hover {
+  background-color: #d32f2f !important;
+  transform: scale(1.1);
+  box-shadow: 0 6px 25px rgba(244, 67, 54, 0.6);
+}
+
+.pdf-export-fab:disabled {
+  background-color: #ccc !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transform: none;
+}
+
+/* Export Progress Overlay */
+.export-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.95);
+  z-index: 2000;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
+}
+
+.export-progress p {
+  margin: 10px 0 0 0;
+  font-weight: 500;
+  color: #333;
+  font-size: 14px;
+}
+
+.export-progress mat-progress-bar {
+  margin-bottom: 10px;
+}
+
+/* Export Toolbar Styles */
+.export-toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.export-toolbar button {
+  min-width: 120px;
+}
+
+/* Loading States */
+.export-loading {
+  opacity: 0.7;
+  pointer-events: none;
+  position: relative;
+}
+
+.export-loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: inherit;
+}
+
+/* Success Animation */
+@keyframes pdf-export-success {
+  0% { 
+    transform: scale(1);
+    background-color: #f44336;
+  }
+  50% { 
+    transform: scale(1.1);
+    background-color: #4caf50;
+  }
+  100% { 
+    transform: scale(1);
+    background-color: #f44336;
+  }
+}
+
+.pdf-export-success {
+  animation: pdf-export-success 0.6s ease-in-out;
+}
+
+/* Error State */
+@keyframes pdf-export-error {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.pdf-export-error {
+  animation: pdf-export-error 0.5s ease-in-out;
+  background-color: #f44336 !important;
+}
+
+/* Tooltip Customization */
+.pdf-tooltip {
+  background-color: #333 !important;
+  color: white !important;
+  font-size: 12px !important;
+  padding: 8px 12px !important;
+  border-radius: 4px !important;
+}
+
+/* Menu Item Styling */
+.mat-menu-item.pdf-export-item {
+  color: #f44336 !important;
+  font-weight: 500;
+}
+
+.mat-menu-item.pdf-export-item:hover {
+  background-color: rgba(244, 67, 54, 0.1) !important;
+}
+
+.mat-menu-item.pdf-export-item mat-icon {
+  color: #f44336 !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .pdf-export-fab {
+    bottom: 20px;
+    right: 16px;
+    width: 48px;
+    height: 48px;
+  }
+  
+  .export-toolbar {
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+  }
+  
+  .export-toolbar button {
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .export-progress {
+    padding: 16px;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .export-progress {
+    background: rgba(33, 33, 33, 0.95);
+    color: white;
+  }
+  
+  .export-progress p {
+    color: #e0e0e0;
+  }
+  
+  .export-toolbar {
+    background: rgba(33, 33, 33, 0.9);
+    color: white;
+  }
+}
+
+/* Print Mode - Hide export buttons when printing */
+@media print {
+  .pdf-export-fab,
+  .export-toolbar,
+  .export-progress {
+    display: none !important;
+  }
+}
+
+/* Focus States για Accessibility */
+.pdf-export-button:focus,
+.pdf-export-fab:focus {
+  outline: 2px solid #f44336;
+  outline-offset: 2px;
+}
+
+/* Disabled State Improvements */
+.pdf-export-button[disabled],
+.pdf-export-fab[disabled] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Loading Spinner Customization */
+.pdf-export-spinner {
+  color: white !important;
+}
+
+.pdf-export-spinner circle {
+  stroke: white !important;
+}
+
+/* Status Badge */
+.export-status-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #4caf50;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+}

@@ -6,15 +6,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { FolderService } from '../../services/folder.service';
+import { AuthenticationService } from '../../services/authentication.service';
 
 export interface CreateFolderDialogData {
   parentFolderId: number | null;
   parentFolderName: string;
-}
-
-export interface CreateFolderDialogResult {
-  name: string;
-  description: string;
 }
 
 @Component({
@@ -27,7 +25,8 @@ export interface CreateFolderDialogResult {
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
-    MatIconModule
+    MatIconModule,
+    MatProgressSpinnerModule
   ],
   templateUrl: './create-folder-dialog.component.html',
   styleUrl: './create-folder-dialog.component.css'
@@ -35,9 +34,12 @@ export interface CreateFolderDialogResult {
 export class CreateFolderDialogComponent implements OnInit {
   folderForm: FormGroup;
   isCreating = false;
+  errorMessage: string = '';
 
   constructor(
     private fb: FormBuilder,
+    private folderService: FolderService,
+    private authService: AuthenticationService,
     public dialogRef: MatDialogRef<CreateFolderDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: CreateFolderDialogData
   ) {
@@ -52,6 +54,8 @@ export class CreateFolderDialogComponent implements OnInit {
         Validators.maxLength(500)
       ]]
     });
+
+    console.log('CreateFolderDialog initialized with data:', this.data);
   }
 
   ngOnInit(): void {
@@ -62,31 +66,57 @@ export class CreateFolderDialogComponent implements OnInit {
         nameInput.focus();
       }
     }, 100);
+
+    console.log('Dialog ready - Parent folder:', this.data.parentFolderName);
   }
 
   onCancel(): void {
-    this.dialogRef.close();
+    console.log('Dialog cancelled by user');
+    this.dialogRef.close(false);
   }
 
   onSubmit(): void {
     if (this.folderForm.valid && !this.isCreating) {
       this.isCreating = true;
+      this.errorMessage = '';
       
-      const result: CreateFolderDialogResult = {
-        name: this.folderForm.value.name.trim(),
-        description: this.folderForm.value.description?.trim() || ''
-      };
+      const formData = this.folderForm.value;
+      const createdBy = this.authService.getCurrentUser()?.username || 'Unknown User';
 
-      setTimeout(() => {
-        this.dialogRef.close(result);
-      }, 300);
+      console.log('Submitting folder creation:', {
+        name: formData.name.trim(),
+        description: formData.description?.trim() || '',
+        parentFolderId: this.data.parentFolderId,
+        createdBy: createdBy
+      });
+
+      // Create the folder directly in the dialog
+      this.folderService.createFolder(
+        formData.name.trim(),
+        formData.description?.trim() || '',
+        this.data.parentFolderId,
+        createdBy
+      ).subscribe({
+        next: (folder) => {
+          console.log('✅ Folder created successfully in dialog:', folder);
+          // Return true to indicate successful creation
+          this.dialogRef.close(true);
+        },
+        error: (error) => {
+          console.error('❌ Error creating folder in dialog:', error);
+          this.errorMessage = error.message || 'Failed to create folder';
+          this.isCreating = false;
+          // Don't close the dialog, let user see the error and try again
+        }
+      });
     } else {
-
+      console.warn('Form is invalid or already creating');
       this.folderForm.markAllAsTouched();
     }
   }
 
-  
+  // =================== FORM HELPERS ===================
+
   get nameControl() {
     return this.folderForm.get('name');
   }
@@ -107,7 +137,7 @@ export class CreateFolderDialogComponent implements OnInit {
       return 'Folder name cannot exceed 100 characters';
     }
     if (control?.hasError('pattern')) {
-      return 'Folder name contains invalid characters';
+      return 'Folder name contains invalid characters. Use letters, numbers, spaces, and basic symbols only.';
     }
     return '';
   }
@@ -123,13 +153,47 @@ export class CreateFolderDialogComponent implements OnInit {
   onKeyDown(event: KeyboardEvent): void {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
+      
+      // If we're in the description textarea and Ctrl+Enter, submit
       if (event.target === document.querySelector('textarea[formControlName="description"]')) {
         if (event.ctrlKey) {
           this.onSubmit();
         }
         return;
       }
+      
+      // Otherwise, submit on Enter
       this.onSubmit();
     }
+    
+    // ESC key to cancel
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.onCancel();
+    }
+  }
+
+  // =================== UI STATE HELPERS ===================
+
+  get canSubmit(): boolean {
+    return this.folderForm.valid && !this.isCreating;
+  }
+
+  get submitButtonText(): string {
+    if (this.isCreating) {
+      return 'Creating...';
+    }
+    return 'Create Folder';
+  }
+
+  get dialogTitle(): string {
+    if (this.data.parentFolderId) {
+      return `Create Folder in "${this.data.parentFolderName}"`;
+    }
+    return 'Create New Folder';
+  }
+
+  clearError(): void {
+    this.errorMessage = '';
   }
 }

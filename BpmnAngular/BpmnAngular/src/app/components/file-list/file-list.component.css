@@ -158,8 +158,13 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Empty State */
@@ -456,37 +461,37 @@
   .files-container {
     padding: 1rem;
   }
-  
+
   .user-info-section {
     flex-direction: column;
     gap: 1rem;
     text-align: center;
   }
-  
+
   .header-section {
     flex-direction: column;
     gap: 1rem;
     text-align: center;
   }
-  
+
   .files-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .file-header {
     padding: 0.75rem 1rem;
   }
-  
+
   .file-content {
     padding: 1rem;
   }
-  
+
   .file-footer {
     padding: 0.75rem 1rem;
     flex-wrap: wrap;
   }
-  
+
   .permissions-info {
     justify-content: center;
   }
@@ -496,17 +501,17 @@
   .user-details h1 {
     font-size: 1.5rem;
   }
-  
+
   .user-badge {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .header-actions {
     flex-direction: column;
     width: 100%;
   }
-  
+
   .btn-primary,
   .btn-secondary,
   .btn-outline {
@@ -534,6 +539,7 @@
     transform: translateX(100%);
     opacity: 0;
   }
+
   to {
     transform: translateX(0);
     opacity: 1;
@@ -546,36 +552,37 @@
     background-color: #1f2937;
     color: #f9fafb;
   }
-  
+
   .file-card {
     background: #374151;
     border-color: #4b5563;
   }
-  
+
   .file-header {
     background: #4b5563;
     border-bottom-color: #6b7280;
   }
-  
+
   .file-footer {
     background: #4b5563;
     border-top-color: #6b7280;
   }
-  
+
   .file-name {
     color: #f9fafb;
   }
-  
+
   .file-description {
     color: #d1d5db;
   }
-  
+
   .empty-state,
   .no-permission-state,
   .loading-state {
     background: #374151;
   }
 }
+
 .file-export-content {
   background: white;
   padding: 15px;
@@ -584,6 +591,7 @@
 
 /* Hide action buttons when generating PDF */
 @media print {
+
   .file-actions,
   .file-footer button,
   .action-btn {
@@ -598,11 +606,13 @@
 }
 
 @media print {
+
   .bpmn-toolbar,
   .properties-panel {
     display: none !important;
   }
 }
+
 /* list-files.component.css */
 
 .files-container {
@@ -763,8 +773,13 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Empty State */
@@ -1061,37 +1076,37 @@
   .files-container {
     padding: 1rem;
   }
-  
+
   .user-info-section {
     flex-direction: column;
     gap: 1rem;
     text-align: center;
   }
-  
+
   .header-section {
     flex-direction: column;
     gap: 1rem;
     text-align: center;
   }
-  
+
   .files-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .file-header {
     padding: 0.75rem 1rem;
   }
-  
+
   .file-content {
     padding: 1rem;
   }
-  
+
   .file-footer {
     padding: 0.75rem 1rem;
     flex-wrap: wrap;
   }
-  
+
   .permissions-info {
     justify-content: center;
   }
@@ -1101,17 +1116,17 @@
   .user-details h1 {
     font-size: 1.5rem;
   }
-  
+
   .user-badge {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .header-actions {
     flex-direction: column;
     width: 100%;
   }
-  
+
   .btn-primary,
   .btn-secondary,
   .btn-outline {
@@ -1139,6 +1154,7 @@
     transform: translateX(100%);
     opacity: 0;
   }
+
   to {
     transform: translateX(0);
     opacity: 1;
@@ -1151,36 +1167,37 @@
     background-color: #1f2937;
     color: #f9fafb;
   }
-  
+
   .file-card {
     background: #374151;
     border-color: #4b5563;
   }
-  
+
   .file-header {
     background: #4b5563;
     border-bottom-color: #6b7280;
   }
-  
+
   .file-footer {
     background: #4b5563;
     border-top-color: #6b7280;
   }
-  
+
   .file-name {
     color: #f9fafb;
   }
-  
+
   .file-description {
     color: #d1d5db;
   }
-  
+
   .empty-state,
   .no-permission-state,
   .loading-state {
     background: #374151;
   }
 }
+
 .file-export-content {
   background: white;
   padding: 15px;
@@ -1189,6 +1206,7 @@
 
 /* Hide action buttons when generating PDF */
 @media print {
+
   .file-actions,
   .file-footer button,
   .action-btn {
@@ -1203,9 +1221,412 @@
 }
 
 @media print {
+
   .bpmn-toolbar,
   .properties-panel {
     display: none !important;
   }
 }
 
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.empty-actions {
+ display: inline-grid;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+/* Enhanced Folders Section Styling */
+
+.folders-section {
+  margin-bottom: 2rem;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+
+.folders-section .mat-card-header {
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.folders-section .mat-card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.folders-section .mat-card-title mat-icon {
+  color: #3b82f6;
+  font-size: 1.5rem;
+}
+
+.folders-section .mat-card-subtitle {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0.25rem 0 0 0;
+}
+
+/* Folders Grid */
+.folders-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+
+/* Individual Folder Card */
+.folder-card {
+  background: white;
+  border-radius: 12px;
+  border: 2px solid #e5e7eb;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+}
+
+.folder-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.folder-card:hover {
+  transform: translateY(-4px);
+  border-color: #3b82f6;
+  box-shadow: 0 12px 24px rgba(59, 130, 246, 0.15);
+}
+
+.folder-card:hover::before {
+  opacity: 1;
+}
+
+.folder-card:active {
+  transform: translateY(-2px);
+}
+
+/* Folder Header */
+.folder-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1.25rem 1.25rem 0.75rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.folder-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  transition: all 0.3s ease;
+}
+
+.folder-card:hover .folder-icon {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
+
+.folder-actions {
+  display: flex;
+  gap: 0.25rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.folder-card:hover .folder-actions {
+  opacity: 1;
+}
+
+.folder-actions button {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  color: #ef4444;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+}
+
+.folder-actions button:hover {
+  background: #ef4444;
+  color: white;
+  transform: scale(1.1);
+}
+
+/* Folder Content */
+.folder-content {
+  padding: 0.75rem 1.25rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.folder-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.folder-description {
+  color: #6b7280;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0 0 1rem 0;
+  flex: 1;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* Folder Stats */
+.folder-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #6b7280;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.stat-item mat-icon {
+  font-size: 1rem !important;
+  width: 16px;
+  height: 16px;
+  color: #9ca3af;
+}
+
+/* Folder Footer */
+.folder-footer {
+  padding: 1rem 1.25rem;
+  background: #f8fafc;
+  border-top: 1px solid #e5e7eb;
+  margin-top: auto;
+}
+
+.folder-footer button {
+  width: 100%;
+  height: 40px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.folder-footer button:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.folder-footer button mat-icon {
+  font-size: 1.125rem !important;
+}
+
+/* Empty folders state */
+.folders-section:has(.folders-grid:empty) {
+  display: none;
+}
+
+/* Alternative folder color schemes */
+.folder-card:nth-child(4n+1) .folder-icon {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.folder-card:nth-child(4n+2) .folder-icon {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.folder-card:nth-child(4n+3) .folder-icon {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.folder-card:nth-child(4n+4) .folder-icon {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* Update footer button colors to match */
+.folder-card:nth-child(4n+1) .folder-footer button {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.folder-card:nth-child(4n+1) .folder-footer button:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.folder-card:nth-child(4n+2) .folder-footer button {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.folder-card:nth-child(4n+2) .folder-footer button:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.folder-card:nth-child(4n+3) .folder-footer button {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.folder-card:nth-child(4n+3) .folder-footer button:hover {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.folder-card:nth-child(4n+4) .folder-footer button {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.folder-card:nth-child(4n+4) .folder-footer button:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* Responsive Design for Folders */
+@media (max-width: 768px) {
+  .folders-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .folder-card {
+    min-height: 160px;
+  }
+  
+  .folder-header {
+    padding: 1rem 1rem 0.5rem;
+  }
+  
+  .folder-content {
+    padding: 0.5rem 1rem;
+  }
+  
+  .folder-footer {
+    padding: 0.75rem 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .folders-grid {
+    grid-template-columns: 1fr;
+    padding: 0.75rem;
+  }
+  
+  .folder-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.25rem !important;
+  }
+  
+  .folder-name {
+    font-size: 1rem;
+  }
+  
+  .folder-description {
+    font-size: 0.8125rem;
+  }
+}
+
+/* Dark mode support for folders */
+@media (prefers-color-scheme: dark) {
+  .folders-section {
+    background: #374151;
+    border-color: #4b5563;
+  }
+  
+  .folders-section .mat-card-header {
+    background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+    border-bottom-color: #6b7280;
+  }
+  
+  .folders-section .mat-card-title {
+    color: #f9fafb;
+  }
+  
+  .folders-section .mat-card-subtitle {
+    color: #d1d5db;
+  }
+  
+  .folder-card {
+    background: #374151;
+    border-color: #4b5563;
+  }
+  
+  .folder-header {
+    background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+  }
+  
+  .folder-name {
+    color: #f9fafb;
+  }
+  
+  .folder-description {
+    color: #d1d5db;
+  }
+  
+  .folder-footer {
+    background: #4b5563;
+    border-top-color: #6b7280;
+  }
+  
+  .stat-item {
+    color: #d1d5db;
+  }
+}

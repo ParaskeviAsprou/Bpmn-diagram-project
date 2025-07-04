@@ -2,6 +2,7 @@ package bpmnProject.akon.bpmnJavaBackend.File;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonIgnore; // Import JsonIgnore
 
 @Entity
 @Table(name = "files")
@@ -70,6 +71,7 @@ public class File {
     // Relationship with Folder (optional)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "folder_id", insertable = false, updatable = false)
+    @JsonIgnore // Add JsonIgnore to prevent recursion
     private Folder folder;
 
     @PrePersist

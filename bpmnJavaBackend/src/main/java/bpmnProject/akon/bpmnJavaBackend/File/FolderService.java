@@ -262,6 +262,14 @@ public class FolderService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public List<File> getFilesInFolder(Long folderId) {
+        if (folderId == null) {
+            return fileRepository.findByFolderIsNullOrderByUploadTimeDesc();
+        }
+        return fileRepository.findByFolderIdOrderByUploadTimeDesc(folderId);
+    }
+
     // =================== RESPONSE CLASSES ===================
 
     public static class FolderBreadcrumb {

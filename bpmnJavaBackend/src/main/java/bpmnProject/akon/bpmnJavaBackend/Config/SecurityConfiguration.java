@@ -56,17 +56,30 @@ public class SecurityConfiguration {
                                 // DEBUG ENDPOINTS
                                 .requestMatchers("/api/v1/debug/**").hasAnyRole("VIEWER", "MODELER", "ADMIN")
 
-                                // FILE ENDPOINTS - SPECIFIC PATTERNS FIRST
+                                // FOLDER ENDPOINTS - SPECIFIC PATTERNS FIRST (FIXED & ADDED)
+                                .requestMatchers("/api/v1/file/create-folder").hasAnyRole("MODELER", "ADMIN")
+                                .requestMatchers("/api/v1/file/all/folders").hasAnyRole("VIEWER", "MODELER", "ADMIN")
+                                .requestMatchers("/api/v1/file/folders/**").hasAnyRole("VIEWER", "MODELER", "ADMIN")
+                                .requestMatchers("/api/v1/file/folders/delete/**").hasRole("ADMIN")
+                                .requestMatchers("/api/v1/file/folders/*/subfolders").hasAnyRole("VIEWER", "MODELER", "ADMIN")
+                                .requestMatchers("/api/v1/file/folders/*/files").hasAnyRole("VIEWER", "MODELER", "ADMIN")
+                                .requestMatchers("/api/v1/file/folders/*/breadcrumb").hasAnyRole("VIEWER", "MODELER", "ADMIN")
+                                .requestMatchers("/api/v1/file/folders/*/move").hasAnyRole("MODELER", "ADMIN")
+
+                                // FILE ENDPOINTS - SPECIFIC PATTERNS
                                 .requestMatchers("/api/v1/file/upload").hasAnyRole("MODELER", "ADMIN")
                                 .requestMatchers("/api/v1/file/all").hasAnyRole("VIEWER", "MODELER", "ADMIN")
+                                .requestMatchers("/api/v1/file/root-files").hasAnyRole("VIEWER", "MODELER", "ADMIN")
                                 .requestMatchers("/api/v1/file/delete/**").hasRole("ADMIN")
                                 .requestMatchers("/api/v1/file/*/export/**").hasAnyRole("VIEWER", "MODELER", "ADMIN")
                                 .requestMatchers("/api/v1/file/*/download").hasAnyRole("VIEWER", "MODELER", "ADMIN")
                                 .requestMatchers("/api/v1/file/*/content").hasAnyRole("VIEWER", "MODELER", "ADMIN")
                                 .requestMatchers("/api/v1/file/*/validate").hasAnyRole("VIEWER", "MODELER", "ADMIN")
                                 .requestMatchers("/api/v1/file/*/preview").hasAnyRole("VIEWER", "MODELER", "ADMIN")
-                                .requestMatchers("/api/v1/file/file/*").hasAnyRole("VIEWER", "MODELER", "ADMIN")
-                                .requestMatchers("/api/v1/file/*").hasAnyRole("VIEWER", "MODELER", "ADMIN")
+                                .requestMatchers("/api/v1/file/*/move-to-folder").hasAnyRole("MODELER", "ADMIN")
+
+                                // GENERAL FILE ENDPOINTS (catch-all for file operations)
+                                .requestMatchers("/api/v1/file/**").hasAnyRole("VIEWER", "MODELER", "ADMIN")
 
                                 // DIAGRAM ENDPOINTS (if you add them later)
                                 .requestMatchers("/api/v1/diagrams/**").permitAll()

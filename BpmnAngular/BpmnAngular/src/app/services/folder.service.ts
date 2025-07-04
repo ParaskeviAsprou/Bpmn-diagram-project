@@ -4,24 +4,32 @@ import { Observable, throwError, BehaviorSubject } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { AuthenticationService } from './authentication.service';
 import { Folder } from '../models/Folder';
-import { FolderTreeNode } from '../models/FolderTreeNode';
+// import { FolderTreeNode } from '../models/FolderTreeNode'; // Commented out
 import { FolderBreadcrumb } from '../models/FolderBreadcrumb';
+
+// Define the payload structure for creating a folder
+interface CreateFolderPayload {
+  folderName: string;
+  description?: string;
+  parentFolderId?: number | null;
+  createdBy: string; // Add this field
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class FolderService {
-  private apiUrl = 'http://localhost:8080/api/v1/file';
+  private apiUrl = 'http://localhost:8080/api/v1'; // Αλλαγή του base URL
   
-  // Current folder state
+  // Current folder state - Keep this for current folder details
   private currentFolderSubject = new BehaviorSubject<Folder | null>(null);
   public currentFolder$ = this.currentFolderSubject.asObservable();
   
-  // Folder tree state
-  private folderTreeSubject = new BehaviorSubject<FolderTreeNode[]>([]);
-  public folderTree$ = this.folderTreeSubject.asObservable();
+  // Folder tree state - Commented out
+  // private folderTreeSubject = new BehaviorSubject<FolderTreeNode[]>([]);
+  // public folderTree$ = this.folderTreeSubject.asObservable();
   
-  // Breadcrumb state
+  // Breadcrumb state - Keep this for navigation
   private breadcrumbSubject = new BehaviorSubject<FolderBreadcrumb[]>([]);
   public breadcrumb$ = this.breadcrumbSubject.asObservable();
 
@@ -29,66 +37,44 @@ export class FolderService {
     private http: HttpClient,
     private authService: AuthenticationService
   ) {
-    this.loadFolderTree();
+    // this.loadFolderTree(); // Commented out
   }
 
   // =================== FOLDER CREATION ===================
 
   /**
-   * Create root folder
-   */
-  createRootFolder(folderName: string, description?: string): Observable<Folder> {
-    const formData = new FormData();
-    formData.append('folderName', folderName);
-    if (description) {
-      formData.append('description', description);
-    }
-
-    return this.http.post<Folder>(`${this.apiUrl}/folders`, formData, {
-      headers: this.getUploadHeaders()
-    }).pipe(
-      tap(() => this.loadFolderTree()),
-      catchError(this.handleError)
-    );
-  }
-
-  /**
-   * Create subfolder
-   */
-  createSubFolder(parentFolderId: number, folderName: string, description?: string): Observable<Folder> {
-    const formData = new FormData();
-    formData.append('folderName', folderName);
-    formData.append('parentFolderId', parentFolderId.toString());
-    if (description) {
-      formData.append('description', description);
-    }
-
-    return this.http.post<Folder>(`${this.apiUrl}/folders`, formData, {
-      headers: this.getUploadHeaders()
-    }).pipe(
-      tap(() => this.loadFolderTree()),
-      catchError(this.handleError)
-    );
-  }
-
-  /**
    * Create folder (generic method)
+   * This method now takes 'createdBy' and sends a JSON payload.
    */
-  createFolder(name: string, description: string, parentFolderId?: number): Observable<Folder> {
+  createFolder(name: string, description: string, parentFolderId: number | null, createdBy: string): Observable<Folder> {
+    const payload: CreateFolderPayload = {
+      folderName: name,
+      description: description,
+      createdBy: createdBy // Pass the createdBy user
+    };
+
     if (parentFolderId !== undefined && parentFolderId !== null) {
-      return this.createSubFolder(parentFolderId, name, description);
-    } else {
-      return this.createRootFolder(name, description);
+      payload.parentFolderId = parentFolderId;
     }
+
+    // Send JSON payload with application/json headers
+    return this.http.post<Folder>(`${this.apiUrl}/folders`, payload, { // Endpoint για δημιουργία φακέλου
+      headers: this.getAuthHeaders() // Use getAuthHeaders for JSON
+    }).pipe(
+      // tap(() => this.loadFolderTree()), // Commented out - ανανέωση θα γίνει από το component
+      catchError(this.handleError)
+    );
   }
 
   // =================== FOLDER QUERIES ===================
 
   /**
-   * Get root folders
+   * Get folders in a specific folder or root folders if folderId is null
    */
-  getRootFolders(): Observable<Folder[]> {
-    return this.http.get<Folder[]>(`${this.apiUrl}/folders`, {
+  getFoldersInFolder(folderId: number | null): Observable<Folder[]> {
+    const url = folderId === null ? `${this.apiUrl}/folders/root` : `${this.apiUrl}/folders/${folderId}/subfolders`;
+    console.log(`Fetching folders from: ${url}`);
+    return this.http.get<Folder[]>(url, {
       headers: this.getAuthHeaders()
     }).pipe(
       catchError(this.handleError)
@@ -107,43 +93,20 @@ export class FolderService {
     );
   }
 
-  /**
-   * Get subfolders
-   */
-  getSubFolders(folderId: number): Observable<Folder[]> {
-    return this.http.get<Folder[]>(`${this.apiUrl}/folders/${folderId}/subfolders`, {
-      headers: this.getAuthHeaders()
-    }).pipe(
-      catchError(this.handleError)
-    );
-  }
-
-  /**
-   * Get files in folder
-   */
-  getFolderFiles(folderId: number): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/folders/${folderId}/files`, {
-      headers: this.getAuthHeaders()
-    }).pipe(
-      catchError(this.handleError)
-    );
-  }
-
-  // =================== FOLDER MANAGEMENT ===================
+  // =================== FOLDER MANAGEMENT (Existing methods remain) ===================
 
   /**
    * Move folder
    */
   moveFolder(folderId: number, newParentFolderId?: number): Observable<Folder> {
-    const formData = new FormData();
-    if (newParentFolderId) {
-      formData.append('newParentFolderId', newParentFolderId.toString());
-    }
-
-    return this.http.post<Folder>(`${this.apiUrl}/folders/${folderId}/move`, formData, {
-      headers: this.getUploadHeaders()
+    const payload = {
+      newParentFolderId: newParentFolderId
+    };
+    // Assuming this endpoint also expects JSON now
+    return this.http.post<Folder>(`${this.apiUrl}/folders/${folderId}/move`, payload, {
+      headers: this.getAuthHeaders()
     }).pipe(
-      tap(() => this.loadFolderTree()),
+      // tap(() => this.loadFolderTree()), // Commented out
       catchError(this.handleError)
     );
   }
@@ -152,13 +115,14 @@ export class FolderService {
    * Rename folder
    */
   renameFolder(folderId: number, newName: string): Observable<Folder> {
-    const formData = new FormData();
-    formData.append('newName', newName);
-
-    return this.http.put<Folder>(`${this.apiUrl}/folders/${folderId}`, formData, {
-      headers: this.getUploadHeaders()
+    const payload = {
+      newName: newName
+    };
+    // Assuming this endpoint also expects JSON now
+    return this.http.put<Folder>(`${this.apiUrl}/folders/${folderId}`, payload, {
+      headers: this.getAuthHeaders()
     }).pipe(
-      tap(() => this.loadFolderTree()),
+      // tap(() => this.loadFolderTree()), // Commented out
       catchError(this.handleError)
     );
   }
@@ -170,38 +134,38 @@ export class FolderService {
     return this.http.delete(`${this.apiUrl}/folders/delete/${folderId}`, {
       headers: this.getAuthHeaders()
     }).pipe(
-      tap(() => this.loadFolderTree()),
+      // tap(() => this.loadFolderTree()), // Commented out
       catchError(this.handleError)
     );
   }
 
-  // =================== FOLDER TREE AND NAVIGATION ===================
+  // =================== FOLDER TREE AND NAVIGATION (Modified/Commented) ===================
 
   /**
-   * Get folder tree
+   * Get folder tree - Commented out
    */
-  getFolderTree(): Observable<FolderTreeNode[]> {
-    return this.http.get<FolderTreeNode[]>(`${this.apiUrl}/folders/tree`, {
-      headers: this.getAuthHeaders()
-    }).pipe(
-      tap(tree => this.folderTreeSubject.next(tree)),
-      catchError(this.handleError)
-    );
-  }
+  // getFolderTree(): Observable<FolderTreeNode[]> {
+  //   return this.http.get<FolderTreeNode[]>(`${this.apiUrl}/folders/tree`, {
+  //     headers: this.getAuthHeaders()
+  //   }).pipe(
+  //     tap(tree => this.folderTreeSubject.next(tree)),
+  //     catchError(this.handleError)
+  //   );
+  // }
 
   /**
-   * Load folder tree and update state
+   * Load folder tree and update state - Commented out
    */
-  loadFolderTree(): void {
-    this.getFolderTree().subscribe({
-      next: (tree) => {
-        this.folderTreeSubject.next(tree);
-      },
-      error: (error) => {
-        console.error('Error loading folder tree:', error);
-      }
-    });
-  }
+  // loadFolderTree(): void {
+  //   this.getFolderTree().subscribe({
+  //     next: (tree) => {
+  //       this.folderTreeSubject.next(tree);
+  //     },
+  //     error: (error) => {
+  //       console.error('Error loading folder tree:', error);
+  //     }
+  //   });
+  // }
 
   /**
    * Get folder breadcrumb
@@ -215,7 +179,7 @@ export class FolderService {
     );
   }
 
-  // =================== FILE MANAGEMENT ===================
+  // =================== FILE MANAGEMENT (Existing methods remain) ===================
 
   /**
    * Move file to folder
@@ -226,14 +190,15 @@ export class FolderService {
       formData.append('folderId', folderId.toString());
     }
 
-    return this.http.post(`${this.apiUrl}/${fileId}/move-to-folder`, formData, {
-      headers: this.getUploadHeaders()
+    // This still uses FormData, which is appropriate for file-related operations
+    return this.http.post(`${this.apiUrl}/file/${fileId}/move-to-folder`, formData, {
+      headers: this.getUploadHeaders() // Use getUploadHeaders for FormData
     }).pipe(
       catchError(this.handleError)
     );
   }
 
-  // =================== STATE MANAGEMENT ===================
+  // =================== STATE MANAGEMENT (Existing methods remain) ===================
 
   /**
    * Set current folder
@@ -282,7 +247,7 @@ export class FolderService {
     return this.breadcrumbSubject.value;
   }
 
-  // =================== UTILITY METHODS ===================
+  // =================== UTILITY METHODS (Existing methods remain) ===================
 
   /**
    * Format file size
@@ -311,21 +276,30 @@ export class FolderService {
 
   // =================== PRIVATE METHODS ===================
 
+  /**
+   * Get authentication headers for JSON requests
+   */
   private getAuthHeaders(): HttpHeaders {
     const token = this.authService.getToken();
-    let headers = new HttpHeaders();
+    let headers = new HttpHeaders({
+      'Content-Type': 'application/json' // Explicitly set for JSON
+    });
     if (token) {
       headers = headers.set('Authorization', `Bearer ${token}`);
     }
     return headers;
   }
 
+  /**
+   * Get headers for file upload (multipart form data)
+   */
   private getUploadHeaders(): HttpHeaders {
     const token = this.authService.getToken();
     let headers = new HttpHeaders();
     if (token) {
       headers = headers.set('Authorization', `Bearer ${token}`);
     }
+    // Do NOT set 'Content-Type' for FormData, browser handles it
     return headers;
   }
 
@@ -349,7 +323,7 @@ export class FolderService {
           errorMessage = 'Folder not found';
           break;
         case 409:
-          errorMessage = 'Folder name already exists';
+          errorMessage = error.error?.message || 'Folder name already exists'; // Εδώ το μήνυμα μπορεί να έρχεται από το backend
           break;
         case 400:
           errorMessage = error.error?.message || 'Invalid folder operation';

@@ -1,7 +1,5 @@
-<!-- Enhanced bpmn-modeler.component.html -->
 
 <div class="bpmn-container">
-    <!-- User Info and Permissions Banner -->
     <div class="user-info-banner">
         <div class="user-details">
             <span class="user-name">{{ currentUserFullName }}</span>
@@ -14,19 +12,19 @@
         </div>
         <div class="permissions-indicator">
             <span class="permission" *ngIf="canView" title="Can view diagrams">
-                <i class="bx bx-show"></i> View
+               View
             </span>
             <span class="permission" *ngIf="canEdit" title="Can edit diagrams">
-                <i class="bx bx-edit"></i> Edit
+               Edit
             </span>
             <span class="permission" *ngIf="canCreate" title="Can create diagrams">
-                <i class="bx bx-plus"></i> Create
+                Create
             </span>
             <span class="permission" *ngIf="canDelete" title="Can delete diagrams">
-                <i class="bx bx-trash"></i> Delete
+                Delete
             </span>
             <span class="permission" *ngIf="canManageCustomProperties" title="Can manage custom properties">
-                <i class="bx bx-cog"></i> Properties
+              Properties
             </span>
         </div>
     </div>

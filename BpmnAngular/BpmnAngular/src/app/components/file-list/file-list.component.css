@@ -21,7 +21,9 @@
   margin-bottom: 2rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
-
+.breadcrumb-nav{
+  margin:5px;
+}
 .user-details h1 {
   margin: 0 0 0.5rem 0;
   font-size: 2rem;
@@ -1235,10 +1237,11 @@
 }
 
 .empty-actions {
- display: inline-grid;
+  display: inline-grid;
   flex-wrap: wrap;
   gap: 8px;
 }
+
 /* Enhanced Folders Section Styling */
 
 .folders-section {
@@ -1545,19 +1548,19 @@
     gap: 1rem;
     padding: 1rem;
   }
-  
+
   .folder-card {
     min-height: 160px;
   }
-  
+
   .folder-header {
     padding: 1rem 1rem 0.5rem;
   }
-  
+
   .folder-content {
     padding: 0.5rem 1rem;
   }
-  
+
   .folder-footer {
     padding: 0.75rem 1rem;
   }
@@ -1568,17 +1571,17 @@
     grid-template-columns: 1fr;
     padding: 0.75rem;
   }
-  
+
   .folder-icon {
     width: 40px;
     height: 40px;
     font-size: 1.25rem !important;
   }
-  
+
   .folder-name {
     font-size: 1rem;
   }
-  
+
   .folder-description {
     font-size: 0.8125rem;
   }
@@ -1590,43 +1593,252 @@
     background: #374151;
     border-color: #4b5563;
   }
-  
+
   .folders-section .mat-card-header {
     background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
     border-bottom-color: #6b7280;
   }
-  
+
   .folders-section .mat-card-title {
     color: #f9fafb;
   }
-  
+
   .folders-section .mat-card-subtitle {
     color: #d1d5db;
   }
-  
+
   .folder-card {
     background: #374151;
     border-color: #4b5563;
   }
-  
+
   .folder-header {
     background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
   }
-  
+
   .folder-name {
     color: #f9fafb;
   }
-  
+
   .folder-description {
     color: #d1d5db;
   }
-  
+
   .folder-footer {
     background: #4b5563;
     border-top-color: #6b7280;
   }
-  
+
   .stat-item {
     color: #d1d5db;
   }
 }
+/* Search Container Styles */
+.search-container {
+  display: flex;
+  text-align: center;
+  justify-content: flex-end;
+  width:100%;
+  margin: 8px auto 16px;
+  padding: 8px 12px;
+
+}
+
+.search-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  border-radius: 12px 12px 0 0;
+}
+
+/* Search Field Styling */
+.search-field {
+  width: 25%;
+
+  /* position: relative; */
+}
+
+.search-field .mat-mdc-form-field-wrapper {
+  padding-bottom: 0;
+}
+
+.search-field .mat-mdc-text-field-wrapper {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    inset 0 1px 1px rgba(0, 0, 0, 0.05);
+  border: none !important;
+}
+
+.search-field .mat-mdc-text-field-wrapper:hover {
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 
+    0 2px 6px rgba(0, 0, 0, 0.08),
+    inset 0 1px 1px rgba(0, 0, 0, 0.05);
+  border: none !important;
+}
+
+.search-field .mat-mdc-text-field-wrapper.mdc-text-field--focused {
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 
+    0 0 0 2px rgba(59, 130, 246, 0.1),
+    0 2px 8px rgba(0, 0, 0, 0.1);
+  border: none !important;
+}
+
+/* Input Field Styling */
+.search-field input {
+  color: #1f2937;
+  font-size: 15px;
+  height: 0.5px;
+  font-weight: 400;
+  padding: 8px 12px 8px 8px !important;
+  background: transparent;
+  transition: all 0.2s ease;
+  border: none !important;
+  outline: none !important;
+}
+
+.search-field input::placeholder {
+  color: #9ca3af;
+
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+.search-field input:focus::placeholder {
+  opacity: 0.7;
+
+}
+
+/* Label Styling */
+.search-field .mat-mdc-floating-label {
+  color: #6b7280;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.search-field .mat-mdc-floating-label.mdc-floating-label--float-above {
+  color: #3b82f6;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.search-field button[matSuffix] {
+  background-color: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+  color: white;
+  border: none;
+  border-radius: 100%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(239, 68, 68, 0.3);
+  margin-right: 4px;
+}
+
+.search-field button[matSuffix]:hover {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(239, 68, 68, 0.4);
+}
+
+.search-field button[matSuffix]:active {
+  transform: scale(0.95);
+}
+
+.search-field button[matSuffix] mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+
+input[type="file"] {
+  font-family: inherit;
+  font-size: 14px;
+  padding: 12px;
+  border-bottom: 2px dashed #d1d5db;
+  background: rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+input[type="file"]:hover {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.search-field .mat-mdc-form-field-wrapper {
+  padding-bottom: 0 !important;
+}
+
+.search-field .mat-mdc-form-field-focus-overlay {
+  background: transparent !important;
+}
+
+.search-field .mdc-notched-outline {
+  border: none !important;
+  display: none !important;
+}
+
+.search-field .mdc-notched-outline__leading,
+.search-field .mdc-notched-outline__notch,
+.search-field .mdc-notched-outline__trailing {
+  border: none !important;
+  display: none !important;
+}
+
+.search-field .mat-mdc-form-field-infix {
+  border: none !important;
+  padding: 4px 0 !important;
+  min-height: auto !important;
+}
+
+.search-field .mat-mdc-form-field-subscript-wrapper {
+  display: none !important;
+}
+
+
+
+.search-container {
+  animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
+.footer-section {
+  margin-top: 32px; 
+}
+
+.footer-content {
+  display: flex;
+  justify-content: center; 
+  align-items: center;    
+  padding: 16px 0;
+}
+
+.search-field .mat-mdc-form-field-suffix {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+
+
+
+
+  
+
+
+
+
+
+

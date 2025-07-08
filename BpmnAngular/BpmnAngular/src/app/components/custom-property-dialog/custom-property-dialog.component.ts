@@ -756,7 +756,6 @@ export class CustomPropertyDialogComponent implements OnInit {
 
   cancelEdit(): void {
     this.editingIndex = -1;
-    // Reset form to original values
     if (this.editingIndex >= 0) {
       this.propertyForms[this.editingIndex] = this.createPropertyForm(this.properties[this.editingIndex]);
     }
@@ -861,7 +860,7 @@ export class CustomPropertyDialogComponent implements OnInit {
         this.propertyForms.push(this.createPropertyForm(newProperty));
       });
 
-      this.selectedTabIndex = 0; // Switch back to properties tab
+      this.selectedTabIndex = 0; 
     }
   }
 
@@ -881,4 +880,6 @@ export class CustomPropertyDialogComponent implements OnInit {
   onCancel(): void {
     this.dialogRef.close();
   }
+
+  
 }

@@ -27,6 +27,9 @@ import BpmnModeler from 'bpmn-js/lib/Modeler';
 import BpmnViewer from 'bpmn-js/lib/Viewer';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import { FormsModule } from '@angular/forms';
+import { MatFormField, MatLabel } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 
 @Component({
   selector: 'app-file-list',
@@ -43,7 +46,7 @@ import { jsPDF } from 'jspdf';
     MatToolbarModule,
     MatCardModule,
     MatMenuModule,
-    MatBadgeModule
+    MatBadgeModule,FormsModule,MatLabel,MatFormField,MatInputModule,MatIconModule
   ],
   templateUrl: './file-list.component.html',
   styleUrl: './file-list.component.css'
@@ -80,6 +83,7 @@ export class FileListComponent implements OnInit, OnDestroy {
     private fileService: FileService,
     public authenticationService: AuthenticationService,
     private customPropertyService: CustomPropertyService,
+    private authService: AuthenticationService,
     private router: Router
   ) { }
 
@@ -108,6 +112,7 @@ export class FileListComponent implements OnInit, OnDestroy {
 
     console.log('User authenticated, loading files...');
     this.loadFilesOnly();
+    this.originalAppFile = [...this.appFile];
   }
 
   ngOnDestroy() {
@@ -151,6 +156,7 @@ export class FileListComponent implements OnInit, OnDestroy {
       next: (files: AppFile[]) => {
         console.log('Loaded files successfully:', files.length);
         this.appFile = files;
+        this.originalAppFile = [...files];
         this.isLoading = false;
         this.showNotification(`Loaded ${files.length} files successfully`, 'success');
       },
@@ -240,7 +246,7 @@ export class FileListComponent implements OnInit, OnDestroy {
   }
 
   // =================== ENHANCED EXPORT FUNCTIONALITY - ALL THROUGH DIALOG ===================
- 
+
 
   openExportDialog(): void {
     if (!this.canView) {
@@ -293,7 +299,7 @@ export class FileListComponent implements OnInit, OnDestroy {
       return;
     }
 
- 
+
     this.openExportDialog();
   }
 
@@ -380,7 +386,7 @@ export class FileListComponent implements OnInit, OnDestroy {
       useCORS: true,
       allowTaint: true,
       logging: false,
-      
+
     }).then(canvas => {
       try {
         this.generatePDFWithOptions(canvas, options);
@@ -437,7 +443,7 @@ export class FileListComponent implements OnInit, OnDestroy {
       }
 
       html2canvas(tempDiv, {
-       
+
         useCORS: true
       }).then(canvas => {
         canvas.toBlob((blob) => {
@@ -790,7 +796,6 @@ export class FileListComponent implements OnInit, OnDestroy {
     this.snackBar.open(message, 'Close', config);
   }
 
-  // =================== GETTER PROPERTIES ===================
 
   get currentUserRole(): string {
     if (this.authenticationService.hasRole('ROLE_ADMIN')) return 'Administrator';
@@ -839,10 +844,32 @@ export class FileListComponent implements OnInit, OnDestroy {
   }
 
   navigateToRoot(): void {
-    // Already at root
+    if (!this.authService.isAuthenticated()) {
+      console.error('Dashboard: User not authenticated for modeler access');
+      this.router.navigate(['/dashoard']);
+    }
   }
 
   deleteFolder(id: number, folder: any): void {
     this.showNotification('Folder operations are temporarily disabled.', 'info');
+  }
+  searchTerm: string = '';
+  originalAppFile: any[] = [];
+  filterFiles(): void {
+    const term = this.searchTerm.trim().toLowerCase();
+
+    if (!term) {
+      this.appFile = [...this.originalAppFile];
+      return;
+    }
+
+    this.appFile = this.originalAppFile.filter(file =>
+      file.fileName?.toLowerCase().includes(term)
+    );
+  }
+
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.filterFiles();
   }
 }

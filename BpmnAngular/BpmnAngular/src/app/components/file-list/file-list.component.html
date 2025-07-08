@@ -1,4 +1,4 @@
-<div class="file-container">
+<div class="files-container" >
   <mat-toolbar color="primary" class="user-info-section">
     <div class="user-details">
       <h1 class="mat-h1">Your BPMN Files</h1>
@@ -19,19 +19,15 @@
     <div class="permissions-info">
       <mat-chip-set>
         <mat-chip *ngIf="canView" matTooltip="Can view files">
-          <mat-icon>visibility</mat-icon>
           View
         </mat-chip>
         <mat-chip *ngIf="canEdit" matTooltip="Can edit files">
-          <mat-icon>edit</mat-icon>
           Edit
         </mat-chip>
         <mat-chip *ngIf="canCreate" matTooltip="Can create files">
-          <mat-icon>add</mat-icon>
           Create
         </mat-chip>
         <mat-chip *ngIf="canDelete" matTooltip="Can delete files">
-          <mat-icon>delete</mat-icon>
           Delete
         </mat-chip>
       </mat-chip-set>
@@ -40,10 +36,12 @@
 
   <div class="files-container">
     <!-- Simplified Navigation -->
-    <mat-card *ngIf="canView && currentFolderName" class="breadcrumb-section">
+    <mat-card *ngIf="canView && currentFolderName" class="breadcrumb-section"
+      style="margin-bottom: 16px;">
       <mat-card-content>
         <div class="breadcrumb-nav">
-          <button mat-button class="breadcrumb-link" (click)="navigateToRoot()" matTooltip="Navigate to Root">
+          <button mat-button class="breadcrumb-link" (click)="navigateToRoot()"
+            matTooltip="Navigate to Root">
             <mat-icon>home</mat-icon>
             Root
           </button>
@@ -62,7 +60,8 @@
         <div class="action-bar-content">
           <div class="action-group">
             <h2 class="section-title">
-              <mat-icon>{{ currentFolderName ? 'folder_open' : 'home' }}</mat-icon>
+              <mat-icon>{{ currentFolderName ? 'folder_open' : 'home'
+                }}</mat-icon>
               {{ currentFolderName }}
             </h2>
             <span class="item-count">{{ getItemCount() }} items</span>
@@ -108,8 +107,21 @@
             </button>
           </div>
         </div>
+
       </mat-card-content>
+
     </mat-card>
+    <div class="search-container">
+      <mat-form-field class="search-field" appearance="outline">
+        <mat-label>Search files</mat-label>
+        <input matInput [(ngModel)]="searchTerm" (keyup)="filterFiles()" />
+
+        <button *ngIf="searchTerm" matSuffix mat-icon-button
+          (click)="clearSearch()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-form-field>
+    </div>
 
     <!-- Hidden file input for uploads -->
     <input #fileInput
@@ -124,7 +136,8 @@
         <div class="no-permission-content">
           <mat-icon class="no-permission-icon">lock</mat-icon>
           <h2>Access Restricted</h2>
-          <p>You do not have permission to view files. Please contact your administrator for access.</p>
+          <p>You do not have permission to view files. Please contact your
+            administrator for access.</p>
 
           <div class="permission-info">
             <div class="info-item">
@@ -155,7 +168,8 @@
     <div *ngIf="!isLoading && canView" class="content-area">
 
       <!-- Simplified Folders Section (Only when in Root) -->
-      <mat-card *ngIf="!currentFolderName && folders && folders.length > 0" class="folders-section">
+      <mat-card *ngIf="!currentFolderName && folders && folders.length > 0"
+        class="folders-section">
         <mat-card-header>
           <mat-card-title>
             <mat-icon>folder</mat-icon>
@@ -182,7 +196,8 @@
 
               <div class="folder-content">
                 <h4 class="folder-name">{{ folder.folderName }}</h4>
-                <p class="folder-description">{{ folder.description || 'No description' }}</p>
+                <p class="folder-description">{{ folder.description ||
+                  'No description' }}</p>
 
                 <div class="folder-stats">
                   <div class="stat-item">
@@ -224,7 +239,8 @@
               <div class="file-header">
                 <div class="file-icon-container">
                   <mat-icon class="file-icon">description</mat-icon>
-                  <div class="file-type-badge">{{ getFileTypeLabel(file) }}</div>
+                  <div class="file-type-badge">{{ getFileTypeLabel(file)
+                    }}</div>
                 </div>
 
                 <div class="file-actions">
@@ -245,7 +261,7 @@
                   </button>
 
                   <!-- Export menu -->
-                  <button mat-icon-button
+                  <!-- <button mat-icon-button
                     *ngIf="canExportFile(file)"
                     [matMenuTriggerFor]="fileExportMenu"
                     matTooltip="Export options">
@@ -255,7 +271,7 @@
                     <button mat-menu-item (click)="openExportDialog()">
                       <mat-icon>tune</mat-icon>
                       <span>Export Options...</span>
-                    </button>
+                    </button> -->
                     <mat-divider></mat-divider>
                     <!-- <button mat-menu-item (click)="quickExport(file, 'pdf')">
                       <mat-icon>picture_as_pdf</mat-icon>
@@ -277,7 +293,7 @@
                       <mat-icon>archive</mat-icon>
                       <span>Complete Archive (ZIP)</span>
                     </button> -->
-                  </mat-menu>
+                  <!-- </mat-menu> -->
 
                   <!-- More actions menu -->
                   <button mat-icon-button [matMenuTriggerFor]="fileActionsMenu"
@@ -301,8 +317,10 @@
               </div>
 
               <div class="file-content">
-                <h4 class="file-name" [matTooltip]="file.fileName">{{ file.fileName || 'Untitled' }}</h4>
-                <p class="file-description" *ngIf="file.description">{{ file.description }}</p>
+                <h4 class="file-name" [matTooltip]="file.fileName">{{
+                  file.fileName || 'Untitled' }}</h4>
+                <p class="file-description" *ngIf="file.description">{{
+                  file.description }}</p>
 
                 <div class="file-metadata">
                   <div class="metadata-grid">
@@ -362,16 +380,17 @@
                     color="primary"
                     (click)="openFile(file)"
                     class="open-button">
-                    <mat-icon>{{ isViewerOnly ? 'visibility' : 'edit' }}</mat-icon>
+                    <mat-icon>{{ isViewerOnly ? 'visibility' : 'edit'
+                      }}</mat-icon>
                     {{ isViewerOnly ? 'View' : 'Open' }}
                   </button>
                 </div>
 
                 <div class="secondary-actions">
-                    <button mat-menu-item (click)="openExportDialog()">
-                      <mat-icon>tune</mat-icon>
-                      <span>Export Options...</span>
-                    </button>
+                  <!-- <button mat-menu-item (click)="openExportDialog()">
+                    <mat-icon>tune</mat-icon>
+                    <span>Export Options...</span>
+                  </button> -->
                   <!-- <button mat-icon-button
                     *ngIf="canExportFile(file)"
                     (click)="quickExport(file, 'pdf')"
@@ -438,7 +457,8 @@
 
             <div *ngIf="!canCreate" class="no-create-info">
               <mat-icon>info</mat-icon>
-              <p>Contact your administrator to get permissions for creating new content.</p>
+              <p>Contact your administrator to get permissions for creating new
+                content.</p>
             </div>
           </div>
         </mat-card-content>
@@ -447,7 +467,7 @@
 
     <!-- Enhanced Footer -->
     <div class="footer-section">
-      <mat-card>
+      <mat-card class="footer-card">
         <mat-card-content>
           <div class="footer-content">
             <button mat-stroked-button (click)="navigateToDashboard()"
@@ -455,15 +475,10 @@
               <mat-icon>arrow_back</mat-icon>
               Back to Dashboard
             </button>
-
-            <div class="footer-info">
-              <span class="app-info">BPMN File Manager</span>
-              <span class="separator">•</span>
-              <span class="user-info">{{ currentUserFullName }}</span>
-            </div>
           </div>
         </mat-card-content>
       </mat-card>
     </div>
+
   </div>
 </div>

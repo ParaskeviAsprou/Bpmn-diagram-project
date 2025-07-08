@@ -19,35 +19,35 @@
   <div class="form-inline my-2 my-lg-0">
     <div class="btn-container">
       <div class="search-section">
-        <form [formGroup]="searchOptions" class="search-form"
-          (ngSubmit)="onSearchSubmit()">
-          <div class="search-input-container">
+        <!-- <form [formGroup]="searchOptions" class="search-form"
+          (ngSubmit)="onSearchSubmit()"> -->
+          <!-- <div class="search-input-container">
             <input
               class="form-control search-input"
               type="search"
               placeholder="Search..."
               aria-label="Search"
               formControlName="searchTerm"
-              autocomplete="off">
-            <button
+              autocomplete="off"> -->
+            <!-- <button
               type="button"
               class="clear-search-btn"
               *ngIf="searchOptions.get('searchTerm')?.value"
               (click)="clearSearch()">
               <i class="bx bx-x"></i>
-            </button>
-          </div>
+            </button> -->
+          <!-- </div> -->
 
           <!-- Search Results Dropdown -->
-          <div class="search-results" *ngIf="showSearchResults">
+          <!-- <div class="search-results" *ngIf="showSearchResults">
             <div
               class="search-result-item"
               *ngFor="let result of searchResults"
               (click)="selectSearchResult(result)">
               {{ result }}
             </div>
-          </div>
-        </form>
+          </div> -->
+        <!-- </form> -->
       </div>
 
       <button class="btn btn-logout my-2 my-sm-0" type="button"

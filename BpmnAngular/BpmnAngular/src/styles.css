@@ -185,7 +185,7 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  font-size: 2.5rem;
+  font-size: -1.5rem;
   font-weight: 800;
 }
 
@@ -487,9 +487,8 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 .user-info-section{
  padding: 4.5rem 2rem !important;
 }
-/* Add these styles to your global styles.css or in the bpmn-modeler.component.css */
 
-/* Color Dialog Panel Styles */
+
 .color-dialog-panel .mat-mdc-dialog-container {
   border-radius: 12px;
   overflow: hidden;
@@ -500,7 +499,6 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
   backdrop-filter: blur(4px);
 }
 
-/* Enhance the color dialog animations */
 .color-dialog-panel {
   animation: colorDialogSlideIn 0.3s ease-out;
 }

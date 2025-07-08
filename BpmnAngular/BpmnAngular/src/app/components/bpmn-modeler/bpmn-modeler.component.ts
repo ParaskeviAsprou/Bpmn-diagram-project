@@ -6,22 +6,16 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf'
-// Services
 import { FileService } from '../../services/file.service';
 import { AuthenticationService, User } from '../../services/authentication.service';
 import { CustomProperty, CustomPropertyService } from '../../services/custom-properties.service';
-
-// Components and Dialogs
 import { MatDialog } from '@angular/material/dialog';
 import { CustomPropertyDialogComponent, CustomPropertyDialogData, CustomPropertyDialogResult } from '../custom-property-dialog/custom-property-dialog.component';
 import { SaveConfirmationDialogComponent, SaveConfirmationData, SaveConfirmationResult } from '../save-confirmation-dialog/save-confirmation-dialog.component';
 import { ColorDialogComponent, ColorDialogData, ColorDialogResult } from '../color-dialog/color-dialog.component';
 import { ExportDialogComponent, ExportDialogData, ExportDialogResult } from '../export-dialog-result/export-dialog-result.component';
-
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import BpmnViewer from 'bpmn-js/lib/Viewer';
-
-// Material Components
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -61,8 +55,6 @@ export interface ExportFormat {
 })
 export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('modelerContainer', { static: true }) modelerContainer!: ElementRef;
-
-  // =================== CORE PROPERTIES ===================
   private modeler!: BpmnModeler | BpmnViewer;
   private destroy$ = new Subject<void>();
 
@@ -79,20 +71,20 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
   lastSaveTime: Date | null = null;
   showExportDropdown: boolean = false;
 
-  // Current folder context
+
   private currentFolderContext = {
     folderId: undefined as number | undefined,
     folderName: 'Root',
     path: '/'
   };
 
-  // Custom Properties
+
   elementCustomProperties: CustomProperty[] = [];
 
-  // Element colors storage
+
   private elementColors: { [elementId: string]: { fill?: string; stroke?: string } } = {};
 
-  // Export formats configuration - Updated to use dialog for all exports
+
   exportFormats: ExportFormat[] = [
     { format: 'pdf', label: 'Export as PDF', icon: 'picture_as_pdf', description: 'Portable Document Format' },
     { format: 'svg', label: 'Export as SVG', icon: 'image', description: 'Scalable Vector Graphics' },
@@ -100,15 +92,14 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     { format: 'xml', label: 'Export as XML', icon: 'code', description: 'BPMN XML Source' }
   ];
 
-  // User and Permissions
+
   currentUser: User | null = null;
   canEdit: boolean = false;
   canView: boolean = false;
   canCreate: boolean = false;
   canDelete: boolean = false;
 
-  // Editable properties
-  editableProperties: any = {
+ editableProperties: any = {
     name: '',
     id: '',
     documentation: ''
@@ -144,7 +135,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     private customPropertyService: CustomPropertyService
   ) { }
 
-  // =================== LIFECYCLE HOOKS ===================
+  
 
   @HostListener('document:keydown', ['$event'])
   onKeydown(event: KeyboardEvent): void {
@@ -229,12 +220,11 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
           path: state.folderId ? `/${state.folderName}` : '/'
         };
 
-        // Load file if there was one
         if (state.fileId) {
           this.loadFileById(state.fileId);
         }
 
-        // Show notification about unsaved changes
+
         if (state.hasUnsavedChanges) {
           this.showNotification('Welcome back! You had unsaved changes. Please remember to save your work.', 'warning');
         }
@@ -273,7 +263,6 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     if (!this.currentFile) {
-      // Αν δεν έχει αρχείο, ανοίγει το save dialog
       this.openSaveDialog();
       return;
     }
@@ -288,8 +277,6 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
       this.showNotification('No changes to save.', 'success');
       return;
     }
-
-    // Άμεση αποθήκευση στο υπάρχον αρχείο
     this.modeler.saveXML({ format: true })
       .then((xmlResult: any) => {
         const xml = xmlResult.xml;
@@ -303,8 +290,6 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
         this.showNotification('Error saving diagram: ' + error.message, 'error');
       });
   }
-
-  // =================== INITIALIZATION ===================
 
   private initializePermissions(): void {
     this.currentUser = this.authService.getCurrentUser();
@@ -345,7 +330,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
 
       this.setupEventListeners();
 
-      // Load initial diagram
+
       if (this.currentFile) {
         this.loadDiagramFromFile(this.currentFile);
       } else {
@@ -361,7 +346,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
   private setupEventListeners(): void {
     if (!this.modeler) return;
 
-    // Selection management
+
     this.modeler.on('selection.changed', (e: any) => {
       const element = e.newSelection[0];
       this.selectedElement = element || null;
@@ -374,8 +359,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     if (!this.isViewerOnly) {
-      // Change detection
-      this.modeler.on('element.changed', () => {
+     this.modeler.on('element.changed', () => {
         this.markAsChanged();
       });
 
@@ -384,8 +368,6 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
       });
     }
   }
-
-  // =================== SAVE FUNCTIONALITY WITH DIALOG ===================
 
   openSaveDialog(): void {
     if (!this.canEdit) {
@@ -444,7 +426,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
           return;
         }
 
-        // Προχωράμε στην αποθήκευση
+      
         this.performSave(result);
       },
       error: (error) => {
@@ -456,7 +438,6 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private performSave(result: SaveConfirmationResult): void {
-    // Enhanced authentication check
     if (!this.isUserAuthenticated()) {
       this.showNotification('Your session has expired. Please log in again.', 'error');
       this.redirectToLogin();
@@ -485,9 +466,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
       });
   }
 
-  // Keep existing save methods but make them private
   private saveAsNewFile(xml: string, fileName: string, customProperties: any, elementColors: any): void {
-    // ΤΡΙΤΟΣ ΕΛΕΓΧΟΣ: Πριν τη HTTP κλήση
     if (!this.authService.isAuthenticated()) {
       this.showNotification('Your session has expired. Please log in again.', 'error');
       this.redirectToLogin();
@@ -512,7 +491,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
         this.isSaving = false;
         this.showNotification('Diagram saved successfully as ' + fileName, 'success');
 
-        // Ασφαλής navigation χωρίς reload
+
         if (savedFile.id) {
           this.updateUrlWithoutReload(savedFile.id);
         }
@@ -520,8 +499,6 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
       error: (error: any) => {
         console.error('Error saving file:', error);
         this.isSaving = false;
-
-        // ΒΕΛΤΙΩΜΕΝΟ error handling - δεν κάνει logout για κάθε error
         this.handleSaveError(error, 'saving');
       }
     });
@@ -532,8 +509,6 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
       this.isSaving = false;
       return;
     }
-
-    // ΤΡΙΤΟΣ ΕΛΕΓΧΟΣ: Πριν τη HTTP κλήση
     if (!this.authService.isAuthenticated()) {
       this.showNotification('Your session has expired. Please log in again.', 'error');
       this.redirectToLogin();
@@ -559,8 +534,6 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
       error: (error: any) => {
         console.error('Error updating file:', error);
         this.isSaving = false;
-
-        // ΒΕΛΤΙΩΜΕΝΟ error handling
         this.handleSaveError(error, 'updating');
       }
     });
@@ -571,8 +544,6 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     let shouldLogout = false;
 
     console.error(`Save error during ${operation}:`, error);
-
-    // Enhanced error categorization
     if (error.status === 401) {
       errorMessage = 'Your session has expired. Please log in again.';
       shouldLogout = true;
@@ -595,8 +566,6 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.showNotification(errorMessage, 'error');
-
-    // Only logout for authentication errors
     if (shouldLogout) {
       setTimeout(() => {
         this.redirectToLogin();
@@ -626,7 +595,6 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
         fileId: fileId
       };
 
-      // Add folder context if available
       if (this.currentFolderContext.folderId) {
         queryParams.folderId = this.currentFolderContext.folderId;
         queryParams.folderName = this.currentFolderContext.folderName;
@@ -634,7 +602,6 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
 
       const url = this.router.createUrlTree(['/modeler'], { queryParams });
 
-      // Use replaceState to avoid page reload
       window.history.replaceState({}, '', url.toString());
 
       console.log('URL updated without reload:', url.toString());
@@ -643,11 +610,6 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  // =================== ENHANCED EXPORT FUNCTIONALITY WITH DIALOG ===================
-
-  /**
-   * Main export method - Always opens the export dialog first
-   */
   openExportDialog(): void {
     if (!this.canView) {
       this.showNotification('You do not have permission to export diagrams.', 'error');
@@ -678,9 +640,6 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  /**
-   * Updated exportDiagram method - Now opens dialog instead of direct export
-   */
   exportDiagram(format: 'pdf' | 'svg' | 'png' | 'xml'): void {
     if (!this.canView) {
       this.showNotification('You do not have permission to export diagrams.', 'error');
@@ -688,7 +647,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.showExportDropdown = false;
-    
+
     this.openExportDialog();
   }
 
@@ -696,8 +655,6 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.currentFile?.id) return;
 
     this.isExporting = true;
-
-    // Handle different export types based on format
     switch (result.format) {
       case 'pdf':
         this.exportToPdfWithOptions(result);
@@ -716,8 +673,6 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
         this.showNotification('Unsupported export format', 'error');
     }
   }
-
-  // =================== ENHANCED EXPORT METHODS WITH OPTIONS ===================
 
   private exportToPdfWithOptions(options: ExportDialogResult): void {
     if (!this.modeler) {
@@ -761,8 +716,6 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.enhanceSVGForPDF(svgElement);
-
-    // Quality-based scaling
     let scale = 2;
     switch (options.quality) {
       case 'high': scale = 3; break;
@@ -774,8 +727,6 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
       useCORS: true,
       allowTaint: true,
       logging: false,
-      scale: scale,
-      backgroundColor: '#ffffff'
     }).then(canvas => {
       try {
         this.generatePDFWithOptions(canvas, options);
@@ -832,8 +783,6 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
       }
 
       html2canvas(tempDiv, {
-        backgroundColor: '#ffffff',
-        scale: scale,
         useCORS: true
       }).then(canvas => {
         canvas.toBlob((blob) => {
@@ -870,50 +819,47 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  // =================== PDF PROCESSING HELPERS ===================
+ private processSVGForPDF(svgString: string): string {
+  let processedSVG = svgString
+    .replace(/data-element-id="[^"]*"/g, '')
+    //.replace(/class="[^"]*djs-outline[^"]*"/g, '')
+    //.replace(/<g[^>]*class="djs-outline"[^>]*>.*?<\/g>/gs, '') 
+    .replace(/stroke="none"/g, '')
+    .replace(/stroke-width="0"/g, '');
 
-  private processSVGForPDF(svgString: string): string {
-    // Clean up SVG for better PDF rendering
-    let processedSVG = svgString
-      .replace(/data-element-id="[^"]*"/g, '')
-      .replace(/class="[^"]*djs-outline[^"]*"/g, '')
-      .replace(/<g[^>]*class="djs-outline"[^>]*>.*?<\/g>/g, '');
+  processedSVG = processedSVG.replace('<svg',
+    '<svg style="font-family: Arial, sans-serif; background: white;"');
 
-    // Add basic styling
-    processedSVG = processedSVG.replace('<svg',
-      '<svg style="font-family: Arial, sans-serif; background: white;"');
-
-    return processedSVG;
-  }
-
-  private enhanceSVGForPDF(svgElement: SVGSVGElement): void {
-  svgElement.style.background = 'white';
-
-  const textElements = svgElement.querySelectorAll('text, tspan');
-  textElements.forEach(element => {
-    const textEl = element as SVGTextElement;
-    textEl.style.fontFamily = 'Arial, Helvetica, sans-serif';
-    textEl.style.fontSize = textEl.style.fontSize || '12px';
-    if (!textEl.style.fill || textEl.style.fill === 'currentColor') {
-      textEl.style.fill = '#333333';
-    }
-  });
-
-  const shapeElements = svgElement.querySelectorAll('rect, circle, ellipse, path, polygon');
-  shapeElements.forEach(element => {
-    const shapeEl = element as SVGElement;
-    if (!shapeEl.style.stroke || shapeEl.style.stroke === 'none') {
-      shapeEl.style.stroke = '#000000';
-      shapeEl.style.strokeWidth = '1px';
-    }
-  });
-
+  return processedSVG;
 }
 
 
+  private enhanceSVGForPDF(svgElement: SVGSVGElement): void {
+    svgElement.style.background = 'white';
+
+    const textElements = svgElement.querySelectorAll('text, tspan');
+    textElements.forEach(element => {
+      const textEl = element as SVGTextElement;
+      textEl.style.fontFamily = 'Arial, Helvetica, sans-serif';
+      textEl.style.fontSize = textEl.style.fontSize || '12px';
+      if (!textEl.style.fill || textEl.style.fill === 'currentColor') {
+        textEl.style.fill = '#333333';
+      }
+    });
+
+    const shapeElements = svgElement.querySelectorAll('rect, circle, ellipse, path, polygon');
+    shapeElements.forEach(element => {
+      const shapeEl = element as SVGElement;
+      if (!shapeEl.style.stroke || shapeEl.style.stroke === 'none') {
+        shapeEl.style.stroke = '#000000';
+        shapeEl.style.strokeWidth = '1px';
+      }
+    });
+
+  }
+
   private generatePDFWithOptions(canvas: HTMLCanvasElement, options: ExportDialogResult): void {
-    // Determine paper dimensions
-    let pdfWidth = 210, pdfHeight = 297; // A4 default
+    let pdfWidth = 210, pdfHeight = 297;
 
     switch (options.paperSize) {
       case 'a3': pdfWidth = 297; pdfHeight = 420; break;
@@ -922,19 +868,18 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
       case 'auto':
         const aspectRatio = canvas.width / canvas.height;
         if (aspectRatio > 1) {
-          pdfWidth = 297; pdfHeight = 210; // Landscape A4
+          pdfWidth = 297; pdfHeight = 210;
         }
         break;
     }
 
     const pdf = new jsPDF(pdfWidth > pdfHeight ? 'l' : 'p', 'mm', [pdfWidth, pdfHeight]);
 
-    // Header
     if (options.includeMetadata) {
       this.addPDFHeader(pdf, options.fileName);
     }
 
-    // Calculate dimensions
+  
     const margin = 15;
     const headerSpace = options.includeMetadata ? 45 : 15;
     const availableWidth = pdfWidth - (2 * margin);
@@ -992,8 +937,6 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
 
     pdf.text('Page 1', pageWidth - 25, pageHeight - 10);
   }
-
-  // =================== CUSTOM PROPERTIES WITH NEW DIALOG ===================
 
   openCustomPropertiesDialog(): void {
     if (!this.customPropertyService.canManageProperties()) {
@@ -1219,8 +1162,6 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       });
   }
-
-  // =================== EXISTING ZOOM, COLORS, PROPERTIES METHODS ===================
 
   zoomIn(): void {
     if (this.modeler && 'get' in this.modeler) {
@@ -1564,7 +1505,6 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     window.URL.revokeObjectURL(url);
   }
 
-  // =================== GETTERS ===================
 
   get currentDiagramName(): string {
     return this.currentFile?.fileName || 'New Diagram';
@@ -1595,4 +1535,5 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
   get canEditProperties(): boolean {
     return this.canEdit && this.selectedElement && !this.isViewerOnly;
   }
+  
 }

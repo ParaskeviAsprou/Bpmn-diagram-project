@@ -30,11 +30,45 @@ import { jsPDF } from 'jspdf';
 import { FormsModule } from '@angular/forms';
 import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatCell, MatHeaderCell, MatHeaderRow, MatRow, MatTable, MatTableDataSource } from '@angular/material/table';
+import { MatOption } from '@angular/material/core';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { MatPaginator } from '@angular/material/paginator';
+import { RbacService } from '../../services/rbac.service';
+import { PermissionService } from '../../services/permission.service';
+import { SelectionModel } from '@angular/cdk/collections';
 
+export interface FileWithPermissions {
+  id: number;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  createdBy: string;
+  uploadTime: string;
+  updatedTime?: string;
+  description?: string;
+  folderId?: number;
+  folderName?: string;
+  canView: boolean;
+  canEdit: boolean;
+  canAssign: boolean;
+  canDelete: boolean;
+  permissionLevel: string;
+  accessSource: 'DIRECT' | 'GROUP' | 'ROLE' | 'ADMIN';
+  sharedCount?: number;
+}
 @Component({
   selector: 'app-file-list',
   standalone: true,
   imports: [
+    MatRow,
+    MatPaginator,
+    MatHeaderRow,
+    MatCheckbox,
+    MatTable,
+    MatOption,
+    MatHeaderCell,
+    MatCell,
     CommonModule,
     MatIconModule,
     MatChipsModule,
@@ -46,7 +80,7 @@ import { MatInputModule } from '@angular/material/input';
     MatToolbarModule,
     MatCardModule,
     MatMenuModule,
-    MatBadgeModule,FormsModule,MatLabel,MatFormField,MatInputModule,MatIconModule
+    MatBadgeModule, FormsModule, MatLabel, MatFormField, MatInputModule, MatIconModule
   ],
   templateUrl: './file-list.component.html',
   styleUrl: './file-list.component.css'
@@ -59,6 +93,15 @@ export class FileListComponent implements OnInit, OnDestroy {
   private modeler!: BpmnModeler | BpmnViewer;
   private elementColors: { [elementId: string]: { fill?: string; stroke?: string } } = {};
 
+ dataSource = new MatTableDataSource<FileWithPermissions>();
+  selection = new SelectionModel<FileWithPermissions>(true, []);
+  
+  // View properties
+  viewMode: 'table' | 'cards' = 'table';
+  displayedColumns: string[] = [
+    'select', 'fileName', 'permissionLevel', 'accessSource', 
+    'createdBy', 'updatedTime', 'fileSize', 'sharing', 'actions'
+  ];
   appFile: AppFile[] = [];
   folders: any[] = [];
 
@@ -75,6 +118,14 @@ export class FileListComponent implements OnInit, OnDestroy {
   canCreate: boolean = false;
   isViewerOnly: boolean = false;
 
+  loading = false;
+  totalCount = 0;
+  filteredCount = 0;
+
+  // Filter properties
+  searchTerm = '';
+  permissionFilter = '';
+  accessSourceFilter = '';
   readonly popup = inject(MatDialog);
   readonly snackBar = inject(MatSnackBar);
   private destroy$ = new Subject<void>();
@@ -84,7 +135,12 @@ export class FileListComponent implements OnInit, OnDestroy {
     public authenticationService: AuthenticationService,
     private customPropertyService: CustomPropertyService,
     private authService: AuthenticationService,
-    private router: Router
+    private router: Router,
+    public rbacService: RbacService,
+    private permissionService: PermissionService,
+    private navigationService: NavigationService,
+    private dialog: MatDialog,
+
   ) { }
 
   ngOnInit() {

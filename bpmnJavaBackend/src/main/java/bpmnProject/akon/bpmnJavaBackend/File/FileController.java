@@ -1,5 +1,7 @@
 package bpmnProject.akon.bpmnJavaBackend.File;
 
+import bpmnProject.akon.bpmnJavaBackend.Config.RBACSecurityService;
+import bpmnProject.akon.bpmnJavaBackend.User.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -8,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -34,6 +37,8 @@ public class FileController {
     private final FolderService folderService;
     private final BpmnPdfService bpmnPdfService;
     private final FileRepository fileRepository;
+    private final DiagramAssignmentService assignmentService;
+    private final RBACSecurityService rbacSecurityService;
 
     @Autowired
     private FileVersionRepository fileVersionRepository;
@@ -43,11 +48,13 @@ public class FileController {
 
     @Autowired
     public FileController(FileService fileService, FolderService folderService,
-                          BpmnPdfService bpmnPdfService, FileRepository fileRepository) {
+                          BpmnPdfService bpmnPdfService, FileRepository fileRepository, DiagramAssignmentService assignmentService, RBACSecurityService rbacSecurityService) {
         this.fileService = fileService;
         this.folderService = folderService;
         this.bpmnPdfService = bpmnPdfService;
         this.fileRepository = fileRepository;
+        this.assignmentService = assignmentService;
+        this.rbacSecurityService = rbacSecurityService;
     }
 
     // =================== BPMN DIAGRAM SAVE ===================
@@ -119,7 +126,22 @@ public class FileController {
             }
 
             System.out.println("File saved successfully with ID: " + savedFile.getId());
-
+            User currentUserEntity = getCurrentUserEntity();
+            if (currentUserEntity != null && !currentUserEntity.hasRole("ROLE_ADMIN")) {
+                try {
+                    assignmentService.assignDiagramToUser(
+                            savedFile.getId(),
+                            currentUserEntity.getId(),
+                            DiagramAssignment.PermissionLevel.ADMIN,
+                            currentUser,
+                            "Auto-assigned to creator"
+                    );
+                    System.out.println("Auto-assigned diagram to creator with ADMIN permissions");
+                } catch (Exception e) {
+                    System.err.println("Failed to auto-assign diagram to creator: " + e.getMessage());
+                    // Don't fail the whole operation, just log the error
+                }
+            }
             // Return the file in the format expected by Angular
             prepareFileForResponse(savedFile);
             return ok(savedFile);
@@ -152,6 +174,12 @@ public class FileController {
     @PreAuthorize("hasRole('ROLE_MODELER') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<?> updateFileContent(@PathVariable Long id, @RequestBody Map<String, Object> payload) {
         try {
+            // Check edit permission
+            if (!rbacSecurityService.canEditDiagram(id)) {
+                return status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", "You don't have permission to edit this diagram"));
+            }
+
             System.out.println("=== UPDATE FILE CONTENT DEBUG ===");
             System.out.println("File ID: " + id);
             System.out.println("Payload: " + payload);
@@ -196,7 +224,17 @@ public class FileController {
     @PreAuthorize("hasRole('ROLE_VIEWER') or hasRole('ROLE_MODELER') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<List<File>> getAllFiles() {
         try {
-            List<File> files = fileService.getAllFiles();
+            User currentUser = getCurrentUserEntity();
+            List<File> files;
+
+            if (currentUser != null && currentUser.hasRole("ROLE_ADMIN")) {
+                // Admins see all files
+                files = fileService.getAllFiles();
+            } else {
+                // Non-admins see only assigned files
+                files = assignmentService.getAccessibleDiagrams(currentUser);
+            }
+
             files.forEach(this::prepareFileForResponse);
             return ok(files);
         } catch (Exception e) {
@@ -220,6 +258,12 @@ public class FileController {
     @PreAuthorize("hasRole('ROLE_VIEWER') or hasRole('ROLE_MODELER') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<?> getFileById(@PathVariable("id") Long id) {
         try {
+            // Check access permission
+            if (!rbacSecurityService.canViewDiagram(id)) {
+                return status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", "Access denied to this diagram"));
+            }
+
             Optional<File> fileOpt = fileService.getFileById(id);
             if (!fileOpt.isPresent()) {
                 return notFound().build();
@@ -471,7 +515,57 @@ public class FileController {
             return ok(Map.of("exists", false));
         }
     }
+    @GetMapping("/{id}/sharing")
+    @PreAuthorize("hasRole('ROLE_MODELER') or hasRole('ROLE_ADMIN')")
+    public ResponseEntity<?> getDiagramSharingInfo(@PathVariable Long id) {
+        try {
+            // Check if user can view sharing info (must have access to diagram)
+            if (!rbacSecurityService.canViewDiagram(id)) {
+                return status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", "Access denied to this diagram"));
+            }
 
+            List<DiagramAssignment> assignments = assignmentService.getDiagramAssignments(id);
+            boolean canAssign = rbacSecurityService.canAssignDiagram(id);
+
+            return ok(Map.of(
+                    "assignments", assignments,
+                    "canAssign", canAssign
+            ));
+        } catch (Exception e) {
+            return status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to get sharing info: " + e.getMessage()));
+        }
+    }
+    @GetMapping("/{id}/access-info")
+    @PreAuthorize("hasRole('ROLE_VIEWER') or hasRole('ROLE_MODELER') or hasRole('ROLE_ADMIN')")
+    public ResponseEntity<Map<String, Object>> getFileAccessInfo(@PathVariable Long id) {
+        try {
+            User currentUser = getCurrentUserEntity();
+            if (currentUser == null) {
+                return status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            boolean canView = rbacSecurityService.canViewDiagram(id);
+            boolean canEdit = rbacSecurityService.canEditDiagram(id);
+            boolean canAssign = rbacSecurityService.canAssignDiagram(id);
+
+            DiagramAssignment.PermissionLevel permissionLevel = null;
+            if (canView) {
+                permissionLevel = assignmentService.getUserPermissionLevel(id, currentUser);
+            }
+
+            return ok(Map.of(
+                    "canView", canView,
+                    "canEdit", canEdit,
+                    "canAssign", canAssign,
+                    "permissionLevel", permissionLevel != null ? permissionLevel : "NONE"
+            ));
+        } catch (Exception e) {
+            return status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to get access info: " + e.getMessage()));
+        }
+    }
     @PostMapping("/root-files/check-exists")
     @PreAuthorize("hasRole('ROLE_VIEWER') or hasRole('ROLE_MODELER') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<Map<String, Boolean>> checkFileExistsInRoot(
@@ -543,9 +637,18 @@ public class FileController {
             file.setBase64Data(java.util.Base64.getEncoder().encodeToString(file.getFileData().getBytes()));
         }
     }
-
     private String getCurrentUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication != null ? authentication.getName() : "system";
+    }
+    private User getCurrentUserEntity() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication instanceof UsernamePasswordAuthenticationToken) {
+            Object principal = authentication.getPrincipal();
+            if (principal instanceof User) {
+                return (User) principal;
+            }
+        }
+        return null;
     }
 }

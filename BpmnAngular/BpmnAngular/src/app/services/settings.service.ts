@@ -8,7 +8,7 @@ import { UserService } from '../components/settings/settings.component';
   providedIn: 'root'
 })
 export class SettingsService {
-  private apiUrl = 'http://localhost:8080/api/settings'; // Backend URL
+  private apiUrl = 'http://localhost:8080/api/settings'; 
 
   constructor(private http: HttpClient) { }
 

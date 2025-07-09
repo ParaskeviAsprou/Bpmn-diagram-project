@@ -15,6 +15,14 @@ export interface User {
   roles: Role[];
   enabled: boolean;
   tokenExpiry?: Date;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  address?: string;
+  profilePicture?: string;
+  accountNonExpired?: boolean;
+  accountNonLocked?: boolean;
+  credentialsNonExpired?: boolean;
 }
 
 export interface Role {
@@ -69,7 +77,7 @@ export class AuthenticationService {
 
   private tokenSubject = new BehaviorSubject<string | null>(this.getToken());
   public token$ = this.tokenSubject.asObservable();
-  
+
   private _http: HttpClient | null = null;
 
   // ΑΦΑΙΡΕΘΗΚΕ το αυτόματο token monitoring που έκανε logout
@@ -212,7 +220,7 @@ export class AuthenticationService {
         const expiry = new Date(user.tokenExpiry).getTime();
         return expiry > now;
       }
-      
+
       // Fallback: έλεγχος από το payload του token
       return !this.isTokenExpired(token);
     } catch (error) {
@@ -276,7 +284,7 @@ export class AuthenticationService {
       }
 
       const timeUntilExpiry = this.getTimeUntilExpiry(token);
-      
+
       if (timeUntilExpiry < 60000) {
         console.warn('Token expires soon');
         observer.next(false);
@@ -293,10 +301,10 @@ export class AuthenticationService {
     try {
       const payload = this.getTokenPayload(token);
       if (!payload.exp) return 0;
-      
+
       const expiryTime = payload.exp * 1000;
       const currentTime = Date.now();
-      
+
       return expiryTime - currentTime;
     } catch (error) {
       return 0;
@@ -305,7 +313,7 @@ export class AuthenticationService {
 
   validateSession(): Observable<boolean> {
     const token = this.getToken();
-    
+
     if (!token || !this.isAuthenticated()) {
       return new Observable(observer => {
         observer.next(false);

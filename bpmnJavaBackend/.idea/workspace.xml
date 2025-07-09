@@ -5,17 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b0e063aa-5f23-4c09-b845-b72058de053f" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/app.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/app.component.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/bpmn-modeler/bpmn-modeler.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/bpmn-modeler/bpmn-modeler.component.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/bpmn-modeler/bpmn-modeler.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/bpmn-modeler/bpmn-modeler.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/custom-property-dialog/custom-property-dialog.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/custom-property-dialog/custom-property-dialog.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/file-list/file-list.component.css" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/file-list/file-list.component.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/file-list/file-list.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/file-list/file-list.component.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/file-list/file-list.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/file-list/file-list.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/styles.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -327,6 +317,11 @@
           <properties class="org.hibernate.QueryParameterException" package="org.hibernate" />
           <option name="timeStamp" value="1" />
         </breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/bpmnProject/akon/bpmnJavaBackend/File/FileController.java</url>
+          <line>225</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>

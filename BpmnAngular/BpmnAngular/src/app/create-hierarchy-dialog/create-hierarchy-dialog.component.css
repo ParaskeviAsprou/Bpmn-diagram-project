@@ -1,0 +1,41 @@
+  .form-content {
+      min-width: 400px;
+      padding: 1rem 0;
+    }
+
+    .full-width {
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+
+    .hierarchy-explanation {
+      display: flex;
+      gap: 0.75rem;
+      padding: 1rem;
+      background-color: #f5f5f5;
+      border-radius: 8px;
+      margin-top: 1rem;
+    }
+
+    .info-icon {
+      color: #2196f3;
+      margin-top: 0.25rem;
+    }
+
+    .explanation-text {
+      flex: 1;
+    }
+
+    .explanation-text strong {
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    .explanation-text ul {
+      margin: 0;
+      padding-left: 1.5rem;
+    }
+
+    .explanation-text li {
+      margin-bottom: 0.25rem;
+    }

@@ -1,0 +1,349 @@
+/* src/app/diagrams/diagram-sharing/diagram-sharing.component.scss */
+.sharing-dialog {
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.dialog-header {
+  padding: 20px 24px 0;
+  
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+    color: #333;
+    
+    mat-icon {
+      color: #2196f3;
+    }
+  }
+  
+  .dialog-subtitle {
+    margin: 8px 0 0 0;
+    color: #666;
+    font-size: 14px;
+    font-weight: 500;
+  }
+}
+
+.dialog-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px !important;
+  
+  mat-card {
+    margin-bottom: 24px;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+.dialog-actions {
+  padding: 16px 24px !important;
+  border-top: 1px solid #e0e0e0;
+  justify-content: flex-end;
+}
+
+.assignment-form-card {
+  border-left: 4px solid #4caf50;
+}
+
+.assignment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.form-section {
+  h4 {
+    margin: 0 0 16px 0;
+    color: #333;
+    font-weight: 500;
+    font-size: 16px;
+  }
+}
+
+.assignment-type-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.assignment-type-option {
+  .type-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    
+    mat-icon {
+      color: #666;
+    }
+    
+    span {
+      font-weight: 500;
+    }
+  }
+}
+
+.permission-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.permission-option {
+  .permission-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    
+    .permission-header {
+      display: flex;
+      align-items: center;
+    }
+    
+    .permission-description {
+      font-size: 12px;
+      color: #666;
+      margin-left: 4px;
+    }
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+  
+  button {
+    min-width: 150px;
+  }
+}
+
+
+.option-content {
+  .option-primary {
+    font-weight: 500;
+    color: #333;
+  }
+  
+  .option-secondary {
+    font-size: 12px;
+    color: #666;
+    margin-top: 2px;
+  }
+}
+
+
+.no-permission-card {
+  border-left: 4px solid #ff9800;
+  
+  .no-permission-content {
+    text-align: center;
+    padding: 32px 16px;
+    
+    mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      color: #ff9800;
+      margin-bottom: 16px;
+    }
+    
+    h3 {
+      margin: 0 0 12px 0;
+      color: #333;
+    }
+    
+    p {
+      margin: 0;
+      color: #666;
+      line-height: 1.5;
+    }
+  }
+}
+
+.assignments-card {
+  border-left: 4px solid #2196f3;
+}
+
+.assignments-table-container {
+  overflow-x: auto;
+  margin-top: 16px;
+}
+
+.assignments-table {
+  width: 100%;
+  
+  th {
+    font-weight: 600;
+    color: #333;
+    border-bottom: 2px solid #e0e0e0;
+  }
+  
+  td {
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  tr:hover {
+    background-color: #f9f9f9;
+  }
+}
+
+.assignee-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  
+  .assignee-icon {
+    color: #666;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+  
+  .assignee-details {
+    .assignee-name {
+      font-weight: 500;
+      color: #333;
+    }
+    
+    .assignee-type {
+      font-size: 12px;
+      color: #666;
+      text-transform: capitalize;
+    }
+  }
+}
+
+.type-chip {
+  font-size: 11px;
+  min-height: 24px;
+}
+
+.permission-select {
+  width: 120px;
+  font-size: 14px;
+  
+  ::ng-deep .mat-select-value {
+    display: flex;
+    align-items: center;
+  }
+}
+
+.permission-chip {
+  font-size: 11px;
+  min-height: 24px;
+}
+
+.no-assignments {
+  text-align: center;
+  padding: 48px 16px;
+  color: #666;
+  
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
+  
+  h3 {
+    margin: 0 0 12px 0;
+    color: #333;
+  }
+  
+  p {
+    margin: 0;
+    line-height: 1.5;
+  }
+}
+
+@media (max-width: 768px) {
+  .sharing-dialog {
+    max-width: 95vw;
+    max-height: 95vh;
+  }
+  
+  .dialog-content {
+    padding: 16px !important;
+  }
+  
+  .assignments-table {
+    font-size: 14px;
+    
+    .assignee-info {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+  }
+  
+  .permission-group {
+    gap: 12px;
+  }
+  
+  .assignment-type-group {
+    gap: 8px;
+  }
+}
+
+::ng-deep {
+  .mat-radio-button {
+    margin-bottom: 8px;
+    
+    .mat-radio-label-content {
+      width: 100%;
+    }
+  }
+  
+  .mat-chip {
+    &.mat-primary {
+      background-color: #2196f3;
+    }
+    
+    &.mat-accent {
+      background-color: #ff9800;
+    }
+    
+    &.mat-warn {
+      background-color: #f44336;
+    }
+  }
+  
+  .mat-form-field-appearance-outline {
+    .mat-form-field-outline {
+      color: #ddd;
+    }
+    
+    &.mat-focused .mat-form-field-outline {
+      color: #2196f3;
+    }
+  }
+  
+  .success-snackbar {
+    background-color: #4caf50;
+    color: white;
+  }
+  
+  .error-snackbar {
+    background-color: #f44336;
+    color: white;
+  }
+}
+
+.loading {
+  pointer-events: none;
+  opacity: 0.6;
+}

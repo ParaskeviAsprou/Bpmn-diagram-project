@@ -1,0 +1,219 @@
+<!-- src/app/diagrams/diagram-sharing/diagram-sharing.component.html -->
+<div class="sharing-dialog">
+  <div class="dialog-header">
+    <h2 mat-dialog-title>
+      <mat-icon>share</mat-icon>
+      Share Diagram
+    </h2>
+    <p class="dialog-subtitle">{{ data.diagramName }}</p>
+  </div>
+
+  <mat-dialog-content class="dialog-content">
+    <!-- Create New Assignment -->
+    <mat-card class="assignment-form-card" *ngIf="data.canAssign">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>add_circle</mat-icon>
+          Add New Assignment
+        </mat-card-title>
+      </mat-card-header>
+      
+      <mat-card-content>
+        <form [formGroup]="assignmentForm" class="assignment-form">
+          <!-- Assignment Type Selection -->
+          <div class="form-section">
+            <h4>Assignment Type</h4>
+            <mat-radio-group formControlName="assignmentType" class="assignment-type-group">
+              <mat-radio-button 
+                *ngFor="let type of assignmentTypes" 
+                [value]="type.value"
+                class="assignment-type-option">
+                <div class="type-content">
+                  <mat-icon>{{ type.icon }}</mat-icon>
+                  <span>{{ type.label }}</span>
+                </div>
+              </mat-radio-button>
+            </mat-radio-group>
+          </div>
+
+          <!-- Target Selection -->
+          <div class="form-section">
+            <h4>Select {{ assignmentForm.get('assignmentType')?.value === 'USER' ? 'User' : 
+                              assignmentForm.get('assignmentType')?.value === 'GROUP' ? 'Group' : 'Role' }}</h4>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Choose {{ assignmentForm.get('assignmentType')?.value?.toLowerCase() }}</mat-label>
+              <mat-select formControlName="targetId">
+                <mat-option *ngFor="let option of availableOptions" [value]="option.id">
+                  <div class="option-content">
+                    <div class="option-primary">
+                      {{ getOptionDisplayName(option, assignmentForm.get('assignmentType')?.value) }}
+                    </div>
+                    <div class="option-secondary" *ngIf="getOptionSecondaryText(option, assignmentForm.get('assignmentType')?.value)">
+                      {{ getOptionSecondaryText(option, assignmentForm.get('assignmentType')?.value) }}
+                    </div>
+                  </div>
+                </mat-option>
+              </mat-select>
+              <mat-error *ngIf="assignmentForm.get('targetId')?.hasError('required')">
+                Please select a {{ assignmentForm.get('assignmentType')?.value?.toLowerCase() }}
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <!-- Permission Level -->
+          <div class="form-section">
+            <h4>Permission Level</h4>
+            <mat-radio-group formControlName="permissionLevel" class="permission-group">
+              <mat-radio-button 
+                *ngFor="let permission of permissionLevels" 
+                [value]="permission.value"
+                class="permission-option">
+                <div class="permission-content">
+                  <div class="permission-header">
+                    <mat-chip [color]="permission.color" selected>
+                      {{ permission.label }}
+                    </mat-chip>
+                  </div>
+                  <div class="permission-description">
+                    {{ permission.description }}
+                  </div>
+                </div>
+              </mat-radio-button>
+            </mat-radio-group>
+          </div>
+
+          <!-- Notes -->
+          <div class="form-section">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Notes (optional)</mat-label>
+              <textarea matInput formControlName="notes" rows="2" 
+                        placeholder="Add any notes about this assignment"></textarea>
+            </mat-form-field>
+          </div>
+
+          <div class="form-actions">
+            <button mat-raised-button color="primary" 
+                    (click)="createAssignment()" 
+                    [disabled]="!assignmentForm.valid || loading">
+              <mat-icon>add</mat-icon>
+              Create Assignment
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- No Permission Message -->
+    <mat-card class="no-permission-card" *ngIf="!data.canAssign">
+      <mat-card-content>
+        <div class="no-permission-content">
+          <mat-icon>block</mat-icon>
+          <h3>Limited Access</h3>
+          <p>You can view current assignments but cannot create new ones. Only users with Admin permission on this diagram can assign it to others.</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Current Assignments -->
+    <mat-card class="assignments-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>people</mat-icon>
+          Current Assignments ({{ assignments.length }})
+        </mat-card-title>
+      </mat-card-header>
+      
+      <mat-card-content>
+        <div class="assignments-table-container" *ngIf="assignments.length > 0">
+          <table mat-table [dataSource]="assignments" class="assignments-table">
+            <!-- Assigned To Column -->
+            <ng-container matColumnDef="assignedTo">
+              <th mat-header-cell *matHeaderCellDef>Assigned To</th>
+              <td mat-cell *matCellDef="let assignment">
+                <div class="assignee-info">
+                  <mat-icon class="assignee-icon">
+                    {{ getAssignmentTypeIcon(assignment.assignmentType) }}
+                  </mat-icon>
+                  <div class="assignee-details">
+                    <div class="assignee-name">{{ assignment.assignedToName }}</div>
+                    <div class="assignee-type">{{ assignment.assignmentType }}</div>
+                  </div>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Type Column -->
+            <ng-container matColumnDef="type">
+              <th mat-header-cell *matHeaderCellDef>Type</th>
+              <td mat-cell *matCellDef="let assignment">
+                <mat-chip class="type-chip">
+                  {{ assignment.assignmentType }}
+                </mat-chip>
+              </td>
+            </ng-container>
+
+            <!-- Permission Column -->
+            <ng-container matColumnDef="permission">
+              <th mat-header-cell *matHeaderCellDef>Permission</th>
+              <td mat-cell *matCellDef="let assignment">
+                <mat-select 
+                  [value]="assignment.permissionLevel"
+                  (selectionChange)="updatePermission(assignment, $event.value)"
+                  [disabled]="!data.canAssign"
+                  class="permission-select">
+                  <mat-option *ngFor="let permission of permissionLevels" [value]="permission.value">
+                    <mat-chip [color]="permission.color" selected class="permission-chip">
+                      {{ permission.label }}
+                    </mat-chip>
+                  </mat-option>
+                </mat-select>
+              </td>
+            </ng-container>
+
+            <!-- Assigned By Column -->
+            <ng-container matColumnDef="assignedBy">
+              <th mat-header-cell *matHeaderCellDef>Assigned By</th>
+              <td mat-cell *matCellDef="let assignment">
+                {{ assignment.assignedBy }}
+              </td>
+            </ng-container>
+
+            <!-- Date Column -->
+            <ng-container matColumnDef="date">
+              <th mat-header-cell *matHeaderCellDef>Date</th>
+              <td mat-cell *matCellDef="let assignment">
+                {{ formatDate(assignment.assignedTime) }}
+              </td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let assignment">
+                <button mat-icon-button color="warn" 
+                        (click)="removeAssignment(assignment)"
+                        [disabled]="!data.canAssign"
+                        matTooltip="Remove assignment">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          </table>
+        </div>
+
+        <div class="no-assignments" *ngIf="assignments.length === 0">
+          <mat-icon>people_outline</mat-icon>
+          <h3>No Assignments</h3>
+          <p>This diagram hasn't been shared with anyone yet.</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </mat-dialog-content>
+
+  <mat-dialog-actions class="dialog-actions">
+    <button mat-button (click)="close()">Close</button>
+  </mat-dialog-actions>
+</div>

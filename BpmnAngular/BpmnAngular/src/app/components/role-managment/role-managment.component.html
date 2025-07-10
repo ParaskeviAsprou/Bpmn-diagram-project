@@ -1,0 +1,287 @@
+<!-- src/app/admin/role-management/role-management.component.html -->
+<div class="role-management-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>admin_panel_settings</mat-icon>
+        Role Management
+      </mat-card-title>
+      <mat-card-subtitle>Manage system roles and hierarchy</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <mat-tab-group [(selectedIndex)]="selectedTab" class="full-width-tabs">
+        
+        <!-- Roles Tab -->
+        <mat-tab label="Roles">
+          <div class="tab-content">
+            <div class="section-header">
+              <h3>System Roles</h3>
+              <p class="section-description">Create and manage system roles. Role names must start with "ROLE_".</p>
+            </div>
+
+            <!-- Role Form -->
+            <mat-card class="form-card">
+              <mat-card-header>
+                <mat-card-title>{{ editingRole ? 'Edit' : 'Create' }} Role</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <form [formGroup]="roleForm" class="role-form">
+                  <div class="form-row">
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Role Name</mat-label>
+                      <input matInput formControlName="name" placeholder="ROLE_EXAMPLE">
+                      <mat-hint>Must start with "ROLE_" and use uppercase letters and underscores</mat-hint>
+                      <mat-error *ngIf="roleForm.get('name')?.hasError('required')">
+                        Role name is required
+                      </mat-error>
+                      <mat-error *ngIf="roleForm.get('name')?.hasError('pattern')">
+                        Role name must start with "ROLE_" and contain only uppercase letters and underscores
+                      </mat-error>
+                    </mat-form-field>
+                  </div>
+
+                  <div class="form-row">
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Display Name</mat-label>
+                      <input matInput formControlName="displayName" placeholder="Example Role">
+                      <mat-error *ngIf="roleForm.get('displayName')?.hasError('required')">
+                        Display name is required
+                      </mat-error>
+                    </mat-form-field>
+                  </div>
+
+                  <div class="form-row">
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Description</mat-label>
+                      <textarea matInput formControlName="description" rows="3" 
+                                placeholder="Describe the role's purpose and permissions"></textarea>
+                    </mat-form-field>
+                  </div>
+
+                  <div class="form-actions">
+                    <button mat-raised-button color="primary" 
+                            (click)="saveRole()" 
+                            [disabled]="!roleForm.valid || loading">
+                      <mat-icon>{{ editingRole ? 'edit' : 'add' }}</mat-icon>
+                      {{ editingRole ? 'Update' : 'Create' }} Role
+                    </button>
+                    <button mat-button 
+                            (click)="resetRoleForm()" 
+                            *ngIf="editingRole">
+                      <mat-icon>clear</mat-icon>
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </mat-card-content>
+            </mat-card>
+
+            <!-- Roles Table -->
+            <mat-card class="table-card">
+              <mat-card-header>
+                <mat-card-title>Existing Roles</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="table-container">
+                  <table mat-table [dataSource]="roles" class="full-width-table">
+                    <ng-container matColumnDef="name">
+                      <th mat-header-cell *matHeaderCellDef>Role Name</th>
+                      <td mat-cell *matCellDef="let role">
+                        <div class="role-name">
+                          <mat-chip color="primary">{{ role.name }}</mat-chip>
+                        </div>
+                      </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="displayName">
+                      <th mat-header-cell *matHeaderCellDef>Display Name</th>
+                      <td mat-cell *matCellDef="let role">
+                        <strong>{{ role.displayName }}</strong>
+                      </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="description">
+                      <th mat-header-cell *matHeaderCellDef>Description</th>
+                      <td mat-cell *matCellDef="let role">
+                        {{ role.description || 'No description' }}
+                      </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="actions">
+                      <th mat-header-cell *matHeaderCellDef>Actions</th>
+                      <td mat-cell *matCellDef="let role">
+                        <button mat-icon-button (click)="editRole(role)" 
+                                matTooltip="Edit role">
+                          <mat-icon>edit</mat-icon>
+                        </button>
+                        <button mat-icon-button color="warn" 
+                                (click)="deleteRole(role)"
+                                matTooltip="Delete role"
+                                [disabled]="role.name === 'ROLE_ADMIN'">
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      </td>
+                    </ng-container>
+
+                    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+                  </table>
+
+                  <div *ngIf="roles.length === 0" class="no-data">
+                    <mat-icon>admin_panel_settings</mat-icon>
+                    <p>No roles defined yet</p>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </mat-tab>
+
+        <!-- Role Hierarchy Tab -->
+        <mat-tab label="Role Hierarchy">
+          <div class="tab-content">
+            <div class="section-header">
+              <h3>Role Hierarchy</h3>
+              <p class="section-description">Define role inheritance relationships. Higher roles inherit permissions from lower roles.</p>
+            </div>
+
+            <!-- Hierarchy Form -->
+            <mat-card class="form-card">
+              <mat-card-header>
+                <mat-card-title>Create Role Hierarchy</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <form [formGroup]="hierarchyForm" class="hierarchy-form">
+                  <div class="form-row">
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>Parent Role (Higher Authority)</mat-label>
+                      <mat-select formControlName="parentRoleId" (selectionChange)="onParentRoleChange()">
+                        <mat-option *ngFor="let role of availableParentRoles" [value]="role.id">
+                          {{ role.displayName }} ({{ role.name }})
+                        </mat-option>
+                      </mat-select>
+                      <mat-error *ngIf="hierarchyForm.get('parentRoleId')?.hasError('required')">
+                        Parent role is required
+                      </mat-error>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>Child Role (Inherits from Parent)</mat-label>
+                      <mat-select formControlName="childRoleId">
+                        <mat-option *ngFor="let role of availableChildRoles" [value]="role.id">
+                          {{ role.displayName }} ({{ role.name }})
+                        </mat-option>
+                      </mat-select>
+                      <mat-error *ngIf="hierarchyForm.get('childRoleId')?.hasError('required')">
+                        Child role is required
+                      </mat-error>
+                    </mat-form-field>
+                  </div>
+
+                  <div class="form-row">
+                    <mat-form-field appearance="outline" class="quarter-width">
+                      <mat-label>Hierarchy Level</mat-label>
+                      <input matInput type="number" formControlName="hierarchyLevel" min="1">
+                      <mat-hint>Higher numbers indicate deeper hierarchy levels</mat-hint>
+                      <mat-error *ngIf="hierarchyForm.get('hierarchyLevel')?.hasError('required')">
+                        Level is required
+                      </mat-error>
+                      <mat-error *ngIf="hierarchyForm.get('hierarchyLevel')?.hasError('min')">
+                        Level must be at least 1
+                      </mat-error>
+                    </mat-form-field>
+                  </div>
+
+                  <div class="form-actions">
+                    <button mat-raised-button color="primary" 
+                            (click)="createHierarchy()" 
+                            [disabled]="!hierarchyForm.valid || loading">
+                      <mat-icon>account_tree</mat-icon>
+                      Create Hierarchy
+                    </button>
+                  </div>
+                </form>
+              </mat-card-content>
+            </mat-card>
+
+            <!-- Hierarchy Tree Visualization -->
+            <mat-card class="tree-card" *ngIf="roleHierarchyTree.length > 0">
+              <mat-card-header>
+                <mat-card-title>Role Hierarchy Tree</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="hierarchy-tree">
+                  <div *ngFor="let node of roleHierarchyTree" class="tree-node">
+                    <app-role-tree-node [node]="node"></app-role-tree-node>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+
+            <!-- Hierarchy Table -->
+            <mat-card class="table-card">
+              <mat-card-header>
+                <mat-card-title>Hierarchy Relationships</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="table-container">
+                  <table mat-table [dataSource]="hierarchies" class="full-width-table">
+                    <ng-container matColumnDef="parentRole">
+                      <th mat-header-cell *matHeaderCellDef>Parent Role</th>
+                      <td mat-cell *matCellDef="let hierarchy">
+                        <mat-chip color="accent">
+                          {{ hierarchy.parentRole?.displayName || getRoleName(hierarchy.parentRoleId) }}
+                        </mat-chip>
+                      </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="childRole">
+                      <th mat-header-cell *matHeaderCellDef>Child Role</th>
+                      <td mat-cell *matCellDef="let hierarchy">
+                        <mat-chip>
+                          {{ hierarchy.childRole?.displayName || getRoleName(hierarchy.childRoleId) }}
+                        </mat-chip>
+                      </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="level">
+                      <th mat-header-cell *matHeaderCellDef>Level</th>
+                      <td mat-cell *matCellDef="let hierarchy">
+                        <mat-form-field appearance="outline" class="level-field">
+                          <input matInput type="number" 
+                                 [value]="hierarchy.hierarchyLevel"
+                                 (blur)="onHierarchyLevelBlur(hierarchy, $event)"
+                                 min="1">
+                        </mat-form-field>
+                      </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="actions">
+                      <th mat-header-cell *matHeaderCellDef>Actions</th>
+                      <td mat-cell *matCellDef="let hierarchy">
+                        <button mat-icon-button color="warn" 
+                                (click)="deleteHierarchy(hierarchy)"
+                                matTooltip="Remove hierarchy">
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      </td>
+                    </ng-container>
+
+                    <tr mat-header-row *matHeaderRowDef="hierarchyColumns"></tr>
+                    <tr mat-row *matRowDef="let row; columns: hierarchyColumns;"></tr>
+                  </table>
+
+                  <div *ngIf="hierarchies.length === 0" class="no-data">
+                    <mat-icon>account_tree</mat-icon>
+                    <p>No role hierarchies defined</p>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </mat-card-content>
+  </mat-card>
+</div>

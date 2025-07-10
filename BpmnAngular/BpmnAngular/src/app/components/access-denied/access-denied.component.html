@@ -1,0 +1,106 @@
+ <div class="access-denied-container">
+      <mat-card class="access-denied-card">
+        <mat-card-content>
+          <div class="access-denied-content">
+            <!-- Error Icon -->
+            <div class="error-icon">
+              <mat-icon>block</mat-icon>
+            </div>
+
+            <!-- Error Message -->
+            <h1>Access Denied</h1>
+            <p class="error-description">
+              You don't have permission to access this resource.
+            </p>
+
+            <!-- User Info -->
+            <div class="user-info" *ngIf="currentUser">
+              <mat-card class="user-card">
+                <mat-card-header>
+                  <mat-card-title>Your Current Access Level</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <div class="user-details">
+                    <div class="user-name">
+                      <mat-icon>person</mat-icon>
+                      {{ getUserDisplayName() }}
+                    </div>
+                    <div class="user-roles">
+                      <span class="roles-label">Current Roles:</span>
+                      <div class="roles-list">
+                        <mat-chip 
+                          *ngFor="let role of currentUser.roles" 
+                          [color]="getRoleColor(role.name)"
+                          selected>
+                          {{ role.displayName || role.name }}
+                        </mat-chip>
+                      </div>
+                    </div>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            </div>
+
+            <!-- Suggested Actions -->
+            <div class="suggested-actions">
+              <h3>What can you do?</h3>
+              <mat-list>
+                <mat-list-item>
+                  <mat-icon matListIcon>folder_special</mat-icon>
+                  <div matLine>Go to your diagrams</div>
+                  <div matLine>View and edit diagrams you have access to</div>
+                  <button mat-icon-button (click)="goToMyDiagrams()">
+                    <mat-icon>arrow_forward</mat-icon>
+                  </button>
+                </mat-list-item>
+
+                <mat-list-item *ngIf="canCreateDiagrams()">
+                  <mat-icon matListIcon>add_circle</mat-icon>
+                  <div matLine>Create a new diagram</div>
+                  <div matLine>Start building a new BPMN diagram</div>
+                  <button mat-icon-button (click)="createNewDiagram()">
+                    <mat-icon>arrow_forward</mat-icon>
+                  </button>
+                </mat-list-item>
+
+                <mat-list-item>
+                  <mat-icon matListIcon>contact_support</mat-icon>
+                  <div matLine>Contact your administrator</div>
+                  <div matLine>Request access to additional resources</div>
+                  <button mat-icon-button (click)="contactAdmin()">
+                    <mat-icon>arrow_forward</mat-icon>
+                  </button>
+                </mat-list-item>
+              </mat-list>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+              <button mat-raised-button color="primary" (click)="goBack()">
+                <mat-icon>arrow_back</mat-icon>
+                Go Back
+              </button>
+              
+              <button mat-raised-button (click)="goToMyDiagrams()">
+                <mat-icon>home</mat-icon>
+                My Diagrams
+              </button>
+              
+              <button mat-button (click)="logout()" color="warn">
+                <mat-icon>logout</mat-icon>
+                Logout
+              </button>
+            </div>
+
+            <!-- Help Text -->
+            <div class="help-text">
+              <p>
+                <mat-icon>info</mat-icon>
+                If you believe you should have access to this resource, please contact your system administrator
+                for assistance with role assignments.
+              </p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>

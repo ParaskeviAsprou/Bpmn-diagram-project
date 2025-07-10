@@ -1,0 +1,269 @@
+/* src/app/error/access-denied/access-denied.component.scss */
+.access-denied-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.access-denied-card {
+  max-width: 600px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.access-denied-content {
+  text-align: center;
+  padding: 20px;
+}
+
+.error-icon {
+  margin-bottom: 24px;
+  
+  mat-icon {
+    font-size: 80px;
+    width: 80px;
+    height: 80px;
+    color: #f44336;
+    opacity: 0.8;
+  }
+}
+
+h1 {
+  font-size: 32px;
+  font-weight: 300;
+  color: #333;
+  margin: 0 0 16px 0;
+}
+
+.error-description {
+  font-size: 18px;
+  color: #666;
+  margin: 0 0 32px 0;
+  line-height: 1.5;
+}
+
+.user-info {
+  margin: 32px 0;
+  
+  .user-card {
+    text-align: left;
+    background-color: #f8f9fa;
+    border-left: 4px solid #2196f3;
+  }
+  
+  .user-details {
+    .user-name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 16px;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 12px;
+      
+      mat-icon {
+        color: #666;
+      }
+    }
+    
+    .user-roles {
+      .roles-label {
+        font-size: 14px;
+        color: #666;
+        display: block;
+        margin-bottom: 8px;
+      }
+      
+      .roles-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+    }
+  }
+}
+
+.suggested-actions {
+  margin: 32px 0;
+  text-align: left;
+  
+  h3 {
+    margin: 0 0 16px 0;
+    color: #333;
+    font-weight: 500;
+    text-align: center;
+  }
+  
+  mat-list {
+    padding: 0;
+  }
+  
+  mat-list-item {
+    border-bottom: 1px solid #e0e0e0;
+    
+    &:last-child {
+      border-bottom: none;
+    }
+    
+    &:hover {
+      background-color: #f5f5f5;
+    }
+    
+    mat-icon[matListIcon] {
+      color: #2196f3;
+    }
+    
+    button {
+      margin-left: auto;
+    }
+  }
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin: 32px 0;
+  flex-wrap: wrap;
+  
+  button {
+    min-width: 120px;
+  }
+}
+
+.help-text {
+  margin-top: 32px;
+  padding: 16px;
+  background-color: #e3f2fd;
+  border-radius: 8px;
+  border-left: 4px solid #2196f3;
+  
+  p {
+    margin: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 14px;
+    color: #1976d2;
+    line-height: 1.5;
+    
+    mat-icon {
+      flex-shrink: 0;
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      margin-top: 2px;
+    }
+  }
+}
+
+
+@media (max-width: 768px) {
+  .access-denied-container {
+    padding: 12px;
+  }
+  
+  .access-denied-content {
+    padding: 16px;
+  }
+  
+  .error-icon mat-icon {
+    font-size: 60px;
+    width: 60px;
+    height: 60px;
+  }
+  
+  h1 {
+    font-size: 24px;
+  }
+  
+  .error-description {
+    font-size: 16px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    
+    button {
+      width: 100%;
+    }
+  }
+  
+  .suggested-actions mat-list-item {
+    padding: 12px 16px;
+  }
+}
+
+
+::ng-deep {
+  .mat-chip {
+    &.mat-primary {
+      background-color: #2196f3;
+    }
+    
+    &.mat-accent {
+      background-color: #ff9800;
+    }
+    
+    &.mat-warn {
+      background-color: #f44336;
+    }
+  }
+  
+  .mat-list-item-content {
+    padding: 16px !important;
+  }
+  
+  .mat-card {
+    .mat-card-header-text {
+      margin: 0;
+    }
+  }
+}
+
+
+.access-denied-card {
+  animation: slideIn 0.6s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.error-icon mat-icon {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+
+.action-buttons button {
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}

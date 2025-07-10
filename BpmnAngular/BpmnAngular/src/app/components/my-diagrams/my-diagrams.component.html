@@ -1,0 +1,244 @@
+<!-- src/app/diagrams/my-diagrams/my-diagrams.component.html -->
+<div class="my-diagrams-container">
+  <div class="header-section">
+    <div class="page-header">
+      <h1>
+        <mat-icon>folder_special</mat-icon>
+        My Diagrams
+      </h1>
+      <p class="page-subtitle">
+        BPMN diagrams you have access to based on your roles and assignments
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <button mat-raised-button color="primary" (click)="loadDiagrams()" [disabled]="loading">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <mat-card class="filters-card">
+    <mat-card-content>
+      <div class="filters-container">
+        <!-- Search Filter -->
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search diagrams</mat-label>
+          <input matInput 
+                 [(ngModel)]="filterText" 
+                 (input)="applyFilters()"
+                 placeholder="Search by name, description, or creator">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        <!-- Permission Filter -->
+        <mat-form-field appearance="outline" class="permission-filter">
+          <mat-label>Permission Level</mat-label>
+          <mat-select [(value)]="selectedPermissionFilter" (selectionChange)="applyFilters()">
+            <mat-option *ngFor="let filter of permissionFilters" [value]="filter.value">
+              <div class="permission-option">
+                <span>{{ filter.label }}</span>
+                <mat-chip color="primary" class="count-chip">{{ filter.count }}</mat-chip>
+              </div>
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Owner Filter -->
+        <div class="toggle-filter">
+          <mat-slide-toggle 
+            [(ngModel)]="showOnlyMyDiagrams" 
+            (change)="applyFilters()"
+            color="primary">
+            Show only my diagrams
+          </mat-slide-toggle>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Diagrams Table -->
+  <mat-card class="table-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>table_chart</mat-icon>
+        Available Diagrams ({{ dataSource.filteredData?.length || 0 }})
+      </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="table-container">
+        <table mat-table [dataSource]="dataSource" matSort class="diagrams-table">
+          
+          <!-- File Name Column -->
+          <ng-container matColumnDef="fileName">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>File Name</th>
+            <td mat-cell *matCellDef="let diagram">
+              <div class="file-info">
+                <div class="file-name" (click)="openDiagram(diagram)" [class.clickable]="diagram.accessInfo?.canView">
+                  <mat-icon class="file-icon">description</mat-icon>
+                  <span>{{ diagram.fileName }}</span>
+                </div>
+                <div class="file-size">{{ formatFileSize(diagram.fileSize) }}</div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Description Column -->
+          <ng-container matColumnDef="description">
+            <th mat-header-cell *matHeaderCellDef>Description</th>
+            <td mat-cell *matCellDef="let diagram">
+              <div class="description" [title]="diagram.description">
+                {{ diagram.description }}
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Created By Column -->
+          <ng-container matColumnDef="createdBy">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Created By</th>
+            <td mat-cell *matCellDef="let diagram">
+              <div class="creator-info">
+                <mat-icon class="creator-icon" *ngIf="diagram.createdBy === currentUser?.username">star</mat-icon>
+                <span>{{ diagram.createdBy }}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Permission Column -->
+          <ng-container matColumnDef="permission">
+            <th mat-header-cell *matHeaderCellDef>Permission</th>
+            <td mat-cell *matCellDef="let diagram">
+              <div class="permission-info">
+                <mat-chip 
+                  [color]="getPermissionColor(diagram.accessInfo?.permissionLevel || 'VIEW')" 
+                  selected
+                  class="permission-chip">
+                  <mat-icon class="permission-icon">
+                    {{ getPermissionIcon(diagram.accessInfo?.permissionLevel || 'VIEW') }}
+                  </mat-icon>
+                  {{ diagram.accessInfo?.permissionLevel || 'VIEW' }}
+                </mat-chip>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Assignment Source Column -->
+          <ng-container matColumnDef="assignmentSource">
+            <th mat-header-cell *matHeaderCellDef>Access Source</th>
+            <td mat-cell *matCellDef="let diagram">
+              <div class="source-info">
+                <mat-icon class="source-icon">
+                  {{ getAssignmentSourceIcon(diagram.assignmentSource || 'assigned') }}
+                </mat-icon>
+                <span>{{ getAssignmentSourceLabel(diagram.assignmentSource || 'assigned') }}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Updated Time Column -->
+          <ng-container matColumnDef="updatedTime">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Last Updated</th>
+            <td mat-cell *matCellDef="let diagram">
+              <div class="date-info">
+                {{ formatDate(diagram.updatedTime) }}
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let diagram">
+              <div class="action-buttons">
+                <!-- View Button -->
+                <button mat-icon-button 
+                        (click)="openDiagram(diagram)"
+                        [disabled]="!diagram.accessInfo?.canView"
+                        matTooltip="View diagram"
+                        color="primary">
+                  <mat-icon>visibility</mat-icon>
+                </button>
+
+                <!-- Edit Button -->
+                <button mat-icon-button 
+                        (click)="editDiagram(diagram)"
+                        [disabled]="!diagram.accessInfo?.canEdit"
+                        matTooltip="Edit diagram"
+                        color="accent">
+                  <mat-icon>edit</mat-icon>
+                </button>
+
+                <!-- Share Button -->
+                <button mat-icon-button 
+                        (click)="shareDiagram(diagram)"
+                        matTooltip="View sharing"
+                        color="primary">
+                  <mat-icon>{{ diagram.accessInfo?.canAssign ? 'share' : 'people' }}</mat-icon>
+                </button>
+
+                <!-- Export Menu -->
+                <button mat-icon-button 
+                        [matMenuTriggerFor]="exportMenu"
+                        [disabled]="!diagram.accessInfo?.canView"
+                        matTooltip="Export diagram">
+                  <mat-icon>download</mat-icon>
+                </button>
+                <mat-menu #exportMenu="matMenu">
+                  <button mat-menu-item (click)="exportDiagram(diagram, 'xml')">
+                    <mat-icon>code</mat-icon>
+                    <span>Export as XML</span>
+                  </button>
+                  <button mat-menu-item (click)="exportDiagram(diagram, 'pdf')">
+                    <mat-icon>picture_as_pdf</mat-icon>
+                    <span>Export as PDF</span>
+                  </button>
+                  <button mat-menu-item (click)="exportDiagram(diagram, 'svg')">
+                    <mat-icon>image</mat-icon>
+                    <span>Export as SVG</span>
+                  </button>
+                  <button mat-menu-item (click)="exportDiagram(diagram, 'png')">
+                    <mat-icon>photo</mat-icon>
+                    <span>Export as PNG</span>
+                  </button>
+                </mat-menu>
+              </div>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;" 
+              [class.highlight-row]="row.createdBy === currentUser?.username"></tr>
+        </table>
+
+        <!-- Loading Spinner -->
+        <div class="loading-container" *ngIf="loading">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Loading diagrams...</p>
+        </div>
+
+        <!-- No Data Message -->
+        <div class="no-data-container" *ngIf="!loading && dataSource.filteredData?.length === 0">
+          <mat-icon>folder_open</mat-icon>
+          <h3>No Diagrams Found</h3>
+          <p *ngIf="filterText || selectedPermissionFilter !== 'all' || showOnlyMyDiagrams">
+            Try adjusting your filters to see more results.
+          </p>
+          <p *ngIf="!filterText && selectedPermissionFilter === 'all' && !showOnlyMyDiagrams">
+            You don't have access to any diagrams yet. Contact your administrator to get access to diagrams.
+          </p>
+        </div>
+      </div>
+
+      <!-- Paginator -->
+      <mat-paginator 
+        [pageSizeOptions]="[10, 25, 50, 100]"
+        [pageSize]="25"
+        showFirstLastButtons
+        *ngIf="(dataSource.filteredData?.length || 0) > 0">
+      </mat-paginator>
+    </mat-card-content>
+  </mat-card>
+</div>

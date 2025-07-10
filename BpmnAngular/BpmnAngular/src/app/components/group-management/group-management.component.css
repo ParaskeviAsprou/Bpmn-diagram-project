@@ -1,0 +1,81 @@
+ .group-management-container {
+      padding: 1.5rem;
+    }
+
+    .header-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .groups-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .group-card {
+      height: fit-content;
+    }
+
+    .group-card mat-card-header {
+      position: relative;
+    }
+
+    .card-actions {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      display: flex;
+      gap: 0.25rem;
+    }
+
+    .user-count-chip {
+      margin-left: 0.5rem;
+      font-size: 0.75rem;
+      height: 20px;
+      line-height: 20px;
+    }
+
+    .group-info {
+      margin-top: 1rem;
+    }
+
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+
+    .label {
+      font-weight: 500;
+      color: #666;
+    }
+
+    .value {
+      color: #333;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+    }
+
+    .empty-icon {
+      font-size: 4rem;
+      height: 4rem;
+      width: 4rem;
+      color: #ccc;
+      margin-bottom: 1rem;
+    }
+
+    .no-groups {
+      margin-top: 2rem;
+    }
+
+    @media (max-width: 768px) {
+      .groups-grid {
+        grid-template-columns: 1fr;
+      }
+    }

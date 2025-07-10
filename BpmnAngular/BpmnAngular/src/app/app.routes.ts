@@ -10,78 +10,59 @@ import { FileListComponent } from './components/file-list/file-list.component';
 import { MyDiagramsComponent } from './components/my-diagrams/my-diagrams.component';
 import { RbacGuard, RoleGuard } from './guards/rbac.guard';
 import { GroupManagementComponent } from './components/group-management/group-management.component';
-import { RoleManagementComponent } from './components/role-managment/role-managment.component';
 import { UserManagementComponent } from './components/user-management/user-management.component';
+import { RoleManagementComponent } from './components/role-managment/role-managment.component';
 
 export const routes: Routes = [
-
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  // Public routes
+  { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
 
-
-  {
-    path: 'dashboard',
-    component: DashboardComponent,
-  },
-  {
-    path: 'modeler',
-    component: BpmnModelerComponent,
-    canActivate: [AuthGuard]
-  },
-  {
-    path: 'list',
-    component: FileListComponent,
-    canActivate: [AuthGuard]
-  },
-  {
-    path: 'settings',
-    component: SettingsComponent,
-    canActivate: [AuthGuard]
-  },
-  {
-    path: 'files',
-    component: FileListComponent,
-    canActivate: [AuthGuard]
-  },
-
+  // Main application routes with layout
   {
     path: 'app',
     component: LayoutComponent,
     canActivate: [AuthGuard],
     children: [
+      // Default redirect to dashboard
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      {
-        path: 'modeler',
-        component: BpmnModelerComponent,
-        canActivate: [AuthGuard]
-      },
+      
+      // Core application routes
       {
         path: 'dashboard',
         component: DashboardComponent,
-        canActivate: [AuthGuard]
+        data: {
+          title: 'Dashboard',
+          breadcrumb: 'Dashboard'
+        }
       },
       {
-        path: 'list',
+        path: 'modeler',
+        component: BpmnModelerComponent,
+        data: {
+          title: 'BPMN Modeler',
+          breadcrumb: 'Modeler'
+        }
+      },
+      {
+        path: 'files',
         component: FileListComponent,
-        canActivate: [AuthGuard]
+        data: {
+          title: 'File Management',
+          breadcrumb: 'Files'
+        }
       },
       {
         path: 'settings',
         component: SettingsComponent,
-        canActivate: [AuthGuard]
+        data: {
+          title: 'Settings',
+          breadcrumb: 'Settings'
+        }
       },
 
-      {
-        path: 'files',
-        component: FileListComponent,
-        canActivate: [AuthGuard]
-      },
-      {
-        path: '',
-        redirectTo: '/my-diagrams',
-        pathMatch: 'full'
-      },
+      // Diagrams section
       {
         path: 'diagrams',
         canActivate: [RbacGuard],
@@ -89,7 +70,7 @@ export const routes: Routes = [
         children: [
           {
             path: '',
-            redirectTo: '/my-diagrams',
+            redirectTo: 'my',
             pathMatch: 'full'
           },
           {
@@ -102,6 +83,8 @@ export const routes: Routes = [
           }
         ]
       },
+
+      // Admin section
       {
         path: 'admin',
         canActivate: [RbacGuard],
@@ -137,18 +120,18 @@ export const routes: Routes = [
             }
           }
         ]
-      },
+      }
     ]
   },
-  {
-    path: 'my-diagrams',
-    component: MyDiagramsComponent,
-    canActivate: [RbacGuard],
-    data: {
-      roles: RoleGuard.anyUser(),
-      title: 'My Diagrams',
-      breadcrumb: 'My Diagrams'
-    }
-  },
-  { path: '**', redirectTo: 'login' }
+
+  // Legacy routes for backward compatibility (redirect to app layout)
+  { path: 'dashboard', redirectTo: '/app/dashboard', pathMatch: 'full' },
+  { path: 'modeler', redirectTo: '/app/modeler', pathMatch: 'full' },
+  { path: 'list', redirectTo: '/app/files', pathMatch: 'full' },
+  { path: 'files', redirectTo: '/app/files', pathMatch: 'full' },
+  { path: 'settings', redirectTo: '/app/settings', pathMatch: 'full' },
+  { path: 'my-diagrams', redirectTo: '/app/diagrams/my', pathMatch: 'full' },
+
+  // Catch-all route
+  { path: '**', redirectTo: '/login' }
 ];

@@ -5,7 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b0e063aa-5f23-4c09-b845-b72058de053f" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/file-list/file-list.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/file-list/file-list.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/app.routes.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/app.routes.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/version-history-dialog/version-history-dialog.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../BpmnAngular/BpmnAngular/src/app/components/version-history-dialog/version-history-dialog.component.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

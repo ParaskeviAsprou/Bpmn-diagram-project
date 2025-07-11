@@ -3,7 +3,6 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-
 export interface Group {
   id: number;
   name: string;
@@ -11,72 +10,49 @@ export interface Group {
   createdBy: string;
   uploadTime: string;
   isActive: boolean;
-  users: any[];
-}
-
-export interface GroupInfo {
-  group: Group;
-  userCount: number;
-}
-
-export interface CreateGroupRequest {
-  name: string;
-  description: string;
-}
-
-export interface UpdateGroupRequest {
-  name: string;
-  description: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class GroupService {
-   private apiUrl = 'http://localhost:8080/api/v1/file';
+  private readonly API_URL = 'http://localhost:8080/api/v1/groups';
 
   constructor(private http: HttpClient) {}
 
-  // Group CRUD operations
   getAllGroups(): Observable<Group[]> {
-    return this.http.get<Group[]>(`${this.apiUrl}`);
+    return this.http.get<Group[]>(this.API_URL);
   }
 
-  getGroupsWithUserCount(): Observable<GroupInfo[]> {
-    return this.http.get<GroupInfo[]>(`${this.apiUrl}/with-user-count`);
+  getGroupsWithUserCount(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.API_URL}/with-user-count`);
   }
 
-  createGroup(request: CreateGroupRequest): Observable<Group> {
-    return this.http.post<Group>(`${this.apiUrl}`, request);
+  createGroup(name: string, description: string): Observable<Group> {
+    return this.http.post<Group>(this.API_URL, { name, description });
   }
 
-  updateGroup(groupId: number, request: UpdateGroupRequest): Observable<Group> {
-    return this.http.put<Group>(`${this.apiUrl}/${groupId}`, request);
+  updateGroup(id: number, name: string, description: string): Observable<Group> {
+    return this.http.put<Group>(`${this.API_URL}/${id}`, { name, description });
   }
 
-  deleteGroup(groupId: number): Observable<{message: string}> {
-    return this.http.delete<{message: string}>(`${this.apiUrl}/delete/${groupId}`);
+  deleteGroup(id: number): Observable<any> {
+    return this.http.delete(`${this.API_URL}/${id}`);
   }
 
-  // User management within groups
   addUserToGroup(groupId: number, userId: number): Observable<Group> {
-    return this.http.post<Group>(`${this.apiUrl}/${groupId}/users/${userId}`, {});
+    return this.http.post<Group>(`${this.API_URL}/${groupId}/users/${userId}`, {});
   }
 
   removeUserFromGroup(groupId: number, userId: number): Observable<Group> {
-    return this.http.delete<Group>(`${this.apiUrl}/${groupId}/users/${userId}`);
+    return this.http.delete<Group>(`${this.API_URL}/${groupId}/users/${userId}`);
   }
 
   addUsersToGroup(groupId: number, userIds: number[]): Observable<Group> {
-    return this.http.post<Group>(`${this.apiUrl}/${groupId}/users`, userIds);
+    return this.http.post<Group>(`${this.API_URL}/${groupId}/users`, userIds);
   }
 
-  // Search and filter
   searchGroups(query: string): Observable<Group[]> {
-    return this.http.get<Group[]>(`${this.apiUrl}/search`, { params: { q: query } });
-  }
-
-  getMyGroups(): Observable<Group[]> {
-    return this.http.get<Group[]>(`${this.apiUrl}/my-groups`);
+    return this.http.get<Group[]>(`${this.API_URL}/search`, { params: { q: query } });
   }
 }

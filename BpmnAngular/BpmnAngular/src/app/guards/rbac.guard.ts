@@ -10,7 +10,7 @@ import {
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { AuthenticationService } from '../services/authentication.service';
-import { DiagramAssignmentService } from '../services/diagram-assgnment.service';
+import { DiagramService } from '../services/diagram-assgnment.service';
 
 export interface RoleRequirement {
   roles?: string[];
@@ -30,7 +30,7 @@ export class RbacGuard implements CanActivate, CanActivateChild {
 
   constructor(
     private authService: AuthenticationService,
-    private diagramAssignmentService: DiagramAssignmentService,
+    private diagramAssignmentService: DiagramService,
     private router: Router
   ) {}
 

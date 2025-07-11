@@ -8,29 +8,28 @@ import { Router } from '@angular/router';
 
 export interface User {
   id: number;
-  username: string;
+  firstname: string;
+  lastname: string;
   email: string;
-  firstname?: string;
-  lastname?: string;
+  username: string;
   roles: Role[];
-  enabled: boolean;
   tokenExpiry?: Date;
-  firstName: string;
-  lastName: string;
-  phone?: string;
-  address?: string;
-  profilePicture?: string;
-  accountNonExpired?: boolean;
-  accountNonLocked?: boolean;
-  credentialsNonExpired?: boolean;
 }
 
 export interface Role {
   id: number;
   name: string;
   displayName: string;
+  description: string;
 }
 
+export interface AuthResponse {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+  user: User;
+  expires_in: number;
+}
 export interface LoginRequest {
   username: string;
   password: string;
@@ -108,48 +107,96 @@ export class AuthenticationService {
 
   // =================== AUTHENTICATION METHODS ===================
 
-  login(credentials: LoginRequest): Observable<LoginResponse> {
-    console.log('Attempting login for user:', credentials.username);
+  // login(credentials: LoginRequest): Observable<LoginResponse> {
+  //   console.log('Attempting login for user:', credentials.username);
 
-    return this.http.post<LoginResponse>(`${this.API_URL}/login`, credentials)
-      .pipe(
-        tap(response => {
-          console.log('Login response received:', response);
-          this.setSession(response);
-        }),
-        catchError(this.handleError)
-      );
+  //   return this.http.post<LoginResponse>(`${this.API_URL}/login`, credentials)
+  //     .pipe(
+  //       tap(response => {
+  //         console.log('Login response received:', response);
+  //         this.setSession(response);
+  //       }),
+  //       catchError(this.handleError)
+  //     );
+  // }
+
+  // register(userData: RegisterRequest): Observable<AuthenticationResponse> {
+  //   return this.http.post<AuthenticationResponse>(`${this.API_URL}/register`, userData)
+  //     .pipe(
+  //       tap(response => {
+  //         console.log('Registration response received:', response);
+  //         this.setSession(response);
+  //       }),
+  //       catchError(this.handleError)
+  //     );
+  // }
+
+  // logout(): void {
+  //   const token = this.getToken();
+
+  //   if (token) {
+  //     this.http.post(`${this.API_URL}/logout`, {}, {
+  //       headers: new HttpHeaders({
+  //         'Authorization': `Bearer ${token}`
+  //       })
+  //     }).subscribe({
+  //       next: () => {
+  //         console.log('Backend logout successful');
+  //       },
+  //       error: (error) => console.warn('Backend logout failed:', error)
+  //     });
+  //   }
+
+  //   this.clearSession();
+  //   this.router.navigate(['/login']);
+  // }
+  login(username: string, password: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.API_URL}/login`, {
+      username,
+      password
+    }).pipe(
+      tap(response => {
+        if (response.access_token) {
+          localStorage.setItem('access_token', response.access_token);
+          localStorage.setItem('token_type', response.token_type);
+          this.currentUserSubject.next(response.user);
+        }
+      })
+    );
   }
 
-  register(userData: RegisterRequest): Observable<AuthenticationResponse> {
-    return this.http.post<AuthenticationResponse>(`${this.API_URL}/register`, userData)
-      .pipe(
-        tap(response => {
-          console.log('Registration response received:', response);
-          this.setSession(response);
-        }),
-        catchError(this.handleError)
-      );
+  register(userData: any): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.API_URL}/register`, userData);
   }
 
-  logout(): void {
-    const token = this.getToken();
-
+  logout(): Observable<any> {
+    return this.http.post(`${this.API_URL}/logout`, {}).pipe(
+      tap(() => {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('token_type');
+        this.currentUserSubject.next(null);
+        this.router.navigate(['/login']);
+      })
+    );
+  }
+  validateToken(): Observable<{ valid: boolean }> {
+    return this.http.get<{ valid: boolean }>(`${this.API_URL}/validate`);
+  }
+  private loadCurrentUser(): void {
+    const token = localStorage.getItem('access_token');
     if (token) {
-      this.http.post(`${this.API_URL}/logout`, {}, {
-        headers: new HttpHeaders({
-          'Authorization': `Bearer ${token}`
-        })
-      }).subscribe({
-        next: () => {
-          console.log('Backend logout successful');
+      // Load user from backend or decode JWT
+      this.validateToken().subscribe({
+        next: (result) => {
+          if (!result.valid) {
+            this.logout().subscribe();
+          }
         },
-        error: (error) => console.warn('Backend logout failed:', error)
+        error: () => {
+          this.logout().subscribe();
+        }
       });
     }
-
-    this.clearSession();
-    this.router.navigate(['/login']);
   }
 
   refreshToken(): Observable<AuthenticationResponse> {
@@ -198,36 +245,43 @@ export class AuthenticationService {
   }
 
   getToken(): string | null {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem(this.TOKEN_KEY) || sessionStorage.getItem(this.TOKEN_KEY);
-    }
-    return null;
+    return localStorage.getItem('access_token');
   }
+  // getToken(): string | null {
+  //   if (typeof window !== 'undefined') {
+  //     return localStorage.getItem(this.TOKEN_KEY) || sessionStorage.getItem(this.TOKEN_KEY);
+  //   }
+  //   return null;
+  // }
 
   // =================== VALIDATION METHODS ===================
-
   isAuthenticated(): boolean {
-    const token = this.getToken();
-    if (!token) {
-      return false;
-    }
-
-    // ΑΠΛΟΠΟΙΗΜΕΝΟΣ έλεγχος - δεν κάνει αυτόματο logout
-    try {
-      const user = this.getCurrentUser();
-      if (user && user.tokenExpiry) {
-        const now = Date.now();
-        const expiry = new Date(user.tokenExpiry).getTime();
-        return expiry > now;
-      }
-
-      // Fallback: έλεγχος από το payload του token
-      return !this.isTokenExpired(token);
-    } catch (error) {
-      console.warn('Error checking token validity:', error);
-      return false; // ΔΕΝ κάνουμε logout, απλά επιστρέφουμε false
-    }
+    return !!this.getToken();
   }
+
+
+  // isAuthenticated(): boolean {
+  //   const token = this.getToken();
+  //   if (!token) {
+  //     return false;
+  //   }
+
+  //   // ΑΠΛΟΠΟΙΗΜΕΝΟΣ έλεγχος - δεν κάνει αυτόματο logout
+  //   try {
+  //     const user = this.getCurrentUser();
+  //     if (user && user.tokenExpiry) {
+  //       const now = Date.now();
+  //       const expiry = new Date(user.tokenExpiry).getTime();
+  //       return expiry > now;
+  //     }
+
+  //     // Fallback: έλεγχος από το payload του token
+  //     return !this.isTokenExpired(token);
+  //   } catch (error) {
+  //     console.warn('Error checking token validity:', error);
+  //     return false; // ΔΕΝ κάνουμε logout, απλά επιστρέφουμε false
+  //   }
+  // }
 
   isLoggedIn(): boolean {
     return this.isAuthenticated();
@@ -351,32 +405,39 @@ export class AuthenticationService {
     }
   }
 
+  // hasRole(roleName: string): boolean {
+  //   const user = this.getCurrentUser();
+  //   const tokenRoles = this.getUserRolesFromToken();
+
+  //   if (user && user.roles) {
+  //     const hasRoleFromUser = user.roles.some(role =>
+  //       role.name === roleName || role.name === `ROLE_${roleName.toUpperCase()}`
+  //     );
+  //     if (hasRoleFromUser) return true;
+  //   }
+
+  //   return tokenRoles.some(role =>
+  //     role === roleName ||
+  //     role === `ROLE_${roleName.toUpperCase()}` ||
+  //     (role.startsWith('ROLE_') && role.substring(5) === roleName.toUpperCase())
+  //   );
+  // }
   hasRole(roleName: string): boolean {
-    const user = this.getCurrentUser();
-    const tokenRoles = this.getUserRolesFromToken();
-
-    if (user && user.roles) {
-      const hasRoleFromUser = user.roles.some(role =>
-        role.name === roleName || role.name === `ROLE_${roleName.toUpperCase()}`
-      );
-      if (hasRoleFromUser) return true;
-    }
-
-    return tokenRoles.some(role =>
-      role === roleName ||
-      role === `ROLE_${roleName.toUpperCase()}` ||
-      (role.startsWith('ROLE_') && role.substring(5) === roleName.toUpperCase())
-    );
+    const user = this.currentUserSubject.value;
+    return user?.roles?.some(role => role.name === roleName) || false;
   }
 
-  hasAnyRole(roleNames: string[]): boolean {
-    return roleNames.some(role => this.hasRole(role));
-  }
+  // hasAnyRole(roleNames: string[]): boolean {
+  //   return roleNames.some(role => this.hasRole(role));
+  // }
 
   hasAllRoles(roleNames: string[]): boolean {
     return roleNames.every(role => this.hasRole(role));
   }
-
+ hasAnyRole(roleNames: string[]): boolean {
+    return roleNames.some(role => this.hasRole(role));
+  }
+  
   canEdit(): boolean {
     return this.hasAnyRole(['MODELER', 'ADMIN', 'ROLE_MODELER', 'ROLE_ADMIN']);
   }

@@ -40,49 +40,45 @@ export interface CreateHierarchyRequest {
   providedIn: 'root'
 })
 export class RoleService {
-  private apiUrl = 'http://localhost:8080/api/v1/file';
+  private readonly API_URL = 'http://localhost:8080/api/v1';
 
   constructor(private http: HttpClient) {}
 
-  // Role CRUD operations
+  // Role Management
   getAllRoles(): Observable<Role[]> {
-    return this.http.get<Role[]>(`${this.apiUrl}/users/roles`);
+    return this.http.get<Role[]>(`${this.API_URL}/users/roles`);
   }
 
   createRole(role: Partial<Role>): Observable<Role> {
-    return this.http.post<Role>(`${this.apiUrl}/admin/roles`, role);
+    return this.http.post<Role>(`${this.API_URL}/admin/roles`, role);
   }
 
   updateRole(id: number, role: Partial<Role>): Observable<Role> {
-    return this.http.put<Role>(`${this.apiUrl}/admin/roles/${id}`, role);
+    return this.http.put<Role>(`${this.API_URL}/admin/roles/${id}`, role);
   }
 
   deleteRole(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/admin/roles/${id}`);
+    return this.http.delete<void>(`${this.API_URL}/admin/roles/${id}`);
   }
 
-  // Role Hierarchy operations
+  // Role Hierarchy Management
   getRoleHierarchyTree(): Observable<RoleTreeNode[]> {
-    return this.http.get<RoleTreeNode[]>(`${this.apiUrl}/admin/role-hierarchy/tree`);
+    return this.http.get<RoleTreeNode[]>(`${this.API_URL}/admin/role-hierarchy/tree`);
   }
 
-  getAllHierarchies(): Observable<RoleHierarchy[]> {
-    return this.http.get<RoleHierarchy[]>(`${this.apiUrl}/admin/role-hierarchy`);
+  createHierarchy(parentRoleId: number, childRoleId: number, hierarchyLevel: number): Observable<any> {
+    return this.http.post(`${this.API_URL}/admin/role-hierarchy`, {
+      parentRoleId,
+      childRoleId,
+      hierarchyLevel
+    });
   }
 
-  createHierarchy(request: CreateHierarchyRequest): Observable<RoleHierarchy> {
-    return this.http.post<RoleHierarchy>(`${this.apiUrl}/admin/role-hierarchy`, request);
-  }
-
-  deleteHierarchy(hierarchyId: number): Observable<{message: string}> {
-    return this.http.delete<{message: string}>(`${this.apiUrl}/admin/role-hierarchy/${hierarchyId}`);
+  deleteHierarchy(hierarchyId: number): Observable<any> {
+    return this.http.delete(`${this.API_URL}/admin/role-hierarchy/${hierarchyId}`);
   }
 
   getChildRoles(parentRoleId: number): Observable<Role[]> {
-    return this.http.get<Role[]>(`${this.apiUrl}/admin/role-hierarchy/parent/${parentRoleId}/children`);
-  }
-
-  updateHierarchyLevel(hierarchyId: number, level: number): Observable<RoleHierarchy> {
-    return this.http.put<RoleHierarchy>(`${this.apiUrl}/admin/role-hierarchy/${hierarchyId}/level`, { level });
+    return this.http.get<Role[]>(`${this.API_URL}/admin/role-hierarchy/parent/${parentRoleId}/children`);
   }
 }

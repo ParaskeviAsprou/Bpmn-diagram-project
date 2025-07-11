@@ -5,7 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf'
+import { jsPDF } from 'jspdf';
 import { FileService } from '../../services/file.service';
 import { AuthenticationService, User } from '../../services/authentication.service';
 import { CustomProperty, CustomPropertyService } from '../../services/custom-properties.service';
@@ -864,7 +864,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     switch (options.paperSize) {
       case 'a3': pdfWidth = 297; pdfHeight = 420; break;
       case 'letter': pdfWidth = 216; pdfHeight = 279; break;
-      case 'tabloid': pdfWidth = 279; pdfHeight = 432; break;
+      case 'a4': pdfWidth = 279; pdfHeight = 432; break;
       case 'auto':
         const aspectRatio = canvas.width / canvas.height;
         if (aspectRatio > 1) {

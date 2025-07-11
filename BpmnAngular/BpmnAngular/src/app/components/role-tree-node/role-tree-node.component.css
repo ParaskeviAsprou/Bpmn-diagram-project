@@ -1,0 +1,39 @@
+  .tree-node-container {
+      margin: 4px 0;
+    }
+    
+    .node-content {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      border-left: 2px solid #e0e0e0;
+      background-color: #fafafa;
+      border-radius: 4px;
+    }
+    
+    .tree-icon {
+      color: #666;
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+    
+    .role-name {
+      color: #666;
+      font-size: 12px;
+    }
+    
+    .level-badge {
+      background-color: #e3f2fd;
+      color: #1976d2;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    
+    .children {
+      border-left: 1px dashed #ccc;
+      margin-left: 10px;
+    }

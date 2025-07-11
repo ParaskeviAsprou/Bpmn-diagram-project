@@ -1,0 +1,19 @@
+  <div class="tree-node-container">
+      <div class="node-content" [style.margin-left.px]="node.level * 20">
+        <mat-icon class="tree-icon">
+          {{ node.children.length > 0 ? 'account_tree' : 'person' }}
+        </mat-icon>
+        <mat-chip [color]="getChipColor()">
+          {{ node.role.displayName }}
+        </mat-chip>
+        <span class="role-name">({{ node.role.name }})</span>
+        <span class="level-badge">Level {{ node.level }}</span>
+      </div>
+      
+      <div class="children" *ngIf="node.children.length > 0">
+        <app-role-tree-node 
+          *ngFor="let child of node.children" 
+          [node]="child">
+        </app-role-tree-node>
+      </div>
+    </div>

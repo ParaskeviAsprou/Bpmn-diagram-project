@@ -1,22 +1,15 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialogActions, MatDialogConfig, MatDialogContent } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { forkJoin, Observable } from 'rxjs';
-import { GroupService, Group } from '../../services/group.service';
-import { RoleService, Role } from '../../services/role.service';
-import { AssignToGroupRequest, AssignToRoleRequest, AssignToUserRequest, DiagramAssignment, DiagramAssignmentService } from '../../services/diagram-assgnment.service';
-import { UserService } from '../../services/user.service';
-import { MatIcon } from '@angular/material/icon';
-import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
-import { MatInput } from '@angular/material/input';
-import { MatOption, MatSelect } from '@angular/material/select';
-import { MatButton } from '@angular/material/button';
-import { MatCard, MatCardContent, MatCardHeader, MatCardTitle } from '@angular/material/card';
-import { MatRadioButton } from '@angular/material/radio';
-import { MatChip } from '@angular/material/chips';
+import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatButtonModule } from '@angular/material/button';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
-import { MatTableModule } from '@angular/material/table';
+
+import { DiagramAssignment, DiagramService } from '../../services/diagram-assgnment.service';
 
 export interface DiagramSharingData {
   diagramId: number;
@@ -24,296 +17,182 @@ export interface DiagramSharingData {
   canAssign: boolean;
 }
 
-interface UserOption {
-  id: number;
-  name: string;
-  email: string;
+export interface DiagramSharingResult {
+  assignments: {
+    users: number[];
+    groups: number[];
+    roles: number[];
+  };
+  permissionLevel: 'VIEW' | 'EDIT' | 'ADMIN';
 }
+
 @Component({
   selector: 'app-diagram-sharing',
   standalone: true,
-  imports: [MatTableModule,
+  imports: [
     CommonModule,
-    MatLabel,MatError,MatOption,MatChip,
-    MatRadioButton,
-    MatCard,
     ReactiveFormsModule,
-    MatCardContent,
-    MatCardTitle,
-    MatCard,
-    MatCardHeader,
-    MatIcon,
-    MatFormField,
-    MatInput,
-    MatSelect,
-    MatButton,
-    MatDialogActions, 
-    MatDialogContent
+    MatDialogModule,
+    MatTabsModule,
+    MatSelectModule,
+    MatFormFieldModule,
+    MatButtonModule,
+    MatChipsModule,
+    MatIconModule
   ],
-  templateUrl: './diagram-sharing.component.html',
-  styleUrl: './diagram-sharing.component.css'
+  template:'./diagram-sharing.component.html',
+  styleUrls: ['./diagram-sharing.component.css'],
 })
 export class DiagramSharingComponent implements OnInit {
-  assignmentForm: FormGroup;
-  assignments: DiagramAssignment[] = [];
-  loading = false;
   
-  // Assignment options
-  assignmentTypes = [
-    { value: 'USER', label: 'User', icon: 'person' },
-    { value: 'GROUP', label: 'Group', icon: 'group' },
-    { value: 'ROLE', label: 'Role', icon: 'admin_panel_settings' }
-  ];
-  
-  permissionLevels = [
-    { value: 'VIEW', label: 'View Only', description: 'Can only view the diagram', color: 'primary' },
-    { value: 'EDIT', label: 'Edit', description: 'Can view and edit the diagram', color: 'accent' },
-    { value: 'ADMIN', label: 'Admin', description: 'Full control including sharing', color: 'warn' }
-  ];
-  
-  // Available options for selection
-  users: UserOption[] = [];
-  groups: Group[] = [];
-  roles: Role[] = [];
-  
-  // Filtered options based on assignment type
-  get availableOptions(): any[] {
-    const type = this.assignmentForm.get('assignmentType')?.value;
-    switch (type) {
-      case 'USER': return this.users;
-      case 'GROUP': return this.groups;
-      case 'ROLE': return this.roles;
-      default: return [];
-    }
-  }
 
-  displayedColumns = ['assignedTo', 'type', 'permission', 'assignedBy', 'date', 'actions'];
+  availableUsers: any[] = [];
+  availableGroups: any[] = [];
+  availableRoles: any[] = [];
+  currentAssignments: any[] = [];
 
   constructor(
-    public dialogRef: MatDialogRef<DiagramSharingComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: DiagramSharingData,
     private fb: FormBuilder,
-    private assignmentService: DiagramAssignmentService,
-    private userService: UserService,
-    private groupService: GroupService,
-    private roleService: RoleService,
-    private snackBar: MatSnackBar
-  ) {
-    this.assignmentForm = this.fb.group({
-      assignmentType: ['USER', Validators.required],
-      targetId: ['', Validators.required],
-      permissionLevel: ['VIEW', Validators.required],
-      notes: ['']
-    });
+    private dialogRef: MatDialogRef<DiagramSharingComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: DiagramSharingData,
+    private assignmentService: DiagramService
+  ) {}
+
+  ngOnInit() {
+    this.permissionControl = this.fb.control<'VIEW' | 'EDIT' | 'ADMIN'>('VIEW');
+    this.usersControl = this.fb.control<number[]>([]);
+    this.groupsControl = this.fb.control<number[]>([]);
+    this.rolesControl = this.fb.control<number[]>([]);
+    this.loadAvailableOptions();
+    this.loadCurrentAssignments();
   }
 
-  ngOnInit(): void {
-    this.loadData();
-    this.loadAssignments();
+  private loadAvailableOptions() {
+    // Εδώ θα φορτώνετε χρήστες, ομάδες, ρόλους από το backend
+    // Για τώρα mock data
+    this.availableUsers = [
+      { id: 1, firstName: 'John', lastName: 'Doe', email: 'john@example.com' },
+      { id: 2, firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com' }
+    ];
     
-    // Watch for assignment type changes
-    this.assignmentForm.get('assignmentType')?.valueChanges.subscribe(() => {
-      this.assignmentForm.get('targetId')?.setValue('');
-    });
+    this.availableGroups = [
+      { id: 1, name: 'Developers', description: 'Development Team' },
+      { id: 2, name: 'Managers', description: 'Management Team' }
+    ];
+    
+    this.availableRoles = [
+      { id: 1, name: 'ROLE_MODELER', displayName: 'Modeler', description: 'Can edit diagrams' },
+      { id: 2, name: 'ROLE_VIEWER', displayName: 'Viewer', description: 'Can view diagrams' }
+    ];
   }
 
-  loadData(): void {
-    this.loading = true;
-    
-    forkJoin({
-      users: this.userService.getAllUsers(),
-      groups: this.groupService.getAllGroups(),
-      roles: this.roleService.getAllRoles()
-    }).subscribe({
-      next: (data) => {
-        this.users = data.users.map(user => ({
-          id: user.id,
-          name: `${user.firstName} ${user.lastName}`.trim() || user.email,
-          email: user.email
-        }));
-        this.groups = data.groups;
-        this.roles = data.roles;
-        this.loading = false;
-      },
-      error: (error) => {
-        this.showError('Failed to load assignment options');
-        this.loading = false;
-      }
-    });
-  }
-
-  loadAssignments(): void {
-    this.assignmentService.getDiagramAssignments(this.data.diagramId).subscribe({
-      next: (assignments) => {
-        this.assignments = assignments;
-      },
-      error: (error) => {
-        this.showError('Failed to load current assignments');
-      }
-    });
-  }
-
-  createAssignment(): void {
-    if (!this.assignmentForm.valid) return;
-    
-    const formValue = this.assignmentForm.value;
-    const type = formValue.assignmentType;
-    const targetId = formValue.targetId;
-    const permissionLevel = formValue.permissionLevel;
-    const notes = formValue.notes;
-    
-    this.loading = true;
-    
-    let assignmentRequest: Observable<DiagramAssignment>;
-    
-    switch (type) {
-      case 'USER':
-        const userRequest: AssignToUserRequest = {
-          userId: targetId,
-          permissionLevel,
-          notes
-        };
-        assignmentRequest = this.assignmentService.assignToUser(this.data.diagramId, userRequest);
-        break;
-        
-      case 'GROUP':
-        const groupRequest: AssignToGroupRequest = {
-          groupId: targetId,
-          permissionLevel,
-          notes
-        };
-        assignmentRequest = this.assignmentService.assignToGroup(this.data.diagramId, groupRequest);
-        break;
-        
-      case 'ROLE':
-        const roleRequest: AssignToRoleRequest = {
-          roleId: targetId,
-          permissionLevel,
-          notes
-        };
-        assignmentRequest = this.assignmentService.assignToRole(this.data.diagramId, roleRequest);
-        break;
-        
-      default:
-        this.loading = false;
-        return;
-    }
-    
-    assignmentRequest.subscribe({
-      next: (assignment) => {
-        this.showSuccess('Assignment created successfully');
-        this.loadAssignments();
-        this.assignmentForm.reset();
-        this.assignmentForm.patchValue({
-          assignmentType: 'USER',
-          permissionLevel: 'VIEW'
-        });
-        this.loading = false;
-      },
-      error: (error) => {
-        this.showError(error.error?.message || 'Failed to create assignment');
-        this.loading = false;
-      }
-    });
-  }
-
-  removeAssignment(assignment: DiagramAssignment): void {
-    const assignedToName = assignment.assignedToName;
-    
-    if (confirm(`Remove access for "${assignedToName}"?`)) {
-      this.assignmentService.removeAssignment(assignment.id).subscribe({
-        next: () => {
-          this.showSuccess('Assignment removed successfully');
-          this.loadAssignments();
+  private loadCurrentAssignments() {
+    if (this.data.diagramId) {
+      this.assignmentService.getDiagramAssignments(this.data.diagramId).subscribe({
+        next: (assignments: DiagramAssignment[]) => {
+          this.currentAssignments = assignments;
         },
-        error: () => {
-          this.showError('Failed to remove assignment');
+        error: (error:any) => {
+          console.error('Failed to load current assignments:', error);
         }
       });
     }
   }
 
-  updatePermission(assignment: DiagramAssignment, newPermission: 'VIEW' | 'EDIT' | 'ADMIN'): void {
-    this.assignmentService.updateAssignmentPermission(assignment.id, newPermission).subscribe({
-      next: () => {
-        this.showSuccess('Permission updated successfully');
-        assignment.permissionLevel = newPermission;
-      },
-      error: () => {
-        this.showError('Failed to update permission');
-      }
-    });
+  hasSelections(): boolean {
+    return (this.usersControl.value?.length || 0) > 0 ||
+           (this.groupsControl.value?.length || 0) > 0 ||
+           (this.rolesControl.value?.length || 0) > 0;
   }
 
-  getOptionDisplayName(option: any, type: string): string {
+  getUserName(userId: number): string {
+    const user = this.availableUsers.find(u => u.id === userId);
+    return user ? `${user.firstName} ${user.lastName}` : 'Unknown User';
+  }
+
+  getGroupName(groupId: number): string {
+    const group = this.availableGroups.find(g => g.id === groupId);
+    return group ? group.name : 'Unknown Group';
+  }
+
+  getRoleName(roleId: number): string {
+    const role = this.availableRoles.find(r => r.id === roleId);
+    return role ? role.displayName : 'Unknown Role';
+  }
+
+  removeUser(userId: number) {
+    const current = this.usersControl.value || [];
+    this.usersControl.setValue(current.filter(id => id !== userId));
+  }
+
+  removeGroup(groupId: number) {
+    const current = this.groupsControl.value || [];
+    this.groupsControl.setValue(current.filter(id => id !== groupId));
+  }
+
+  removeRole(roleId: number) {
+    const current = this.rolesControl.value || [];
+    this.rolesControl.setValue(current.filter(id => id !== roleId));
+  }
+
+  getAssignmentIcon(type: string): string {
     switch (type) {
+      case 'USER': return 'person';
+      case 'GROUP': return 'group';
+      case 'ROLE': return 'security';
+      default: return 'help';
+    }
+  }
+
+  getAssignmentName(assignment: any): string {
+    switch (assignment.assignmentType) {
       case 'USER':
-        return option.name;
+        return this.getUserName(assignment.assignedUserId);
       case 'GROUP':
-        return option.name;
+        return this.getGroupName(assignment.assignedGroupId);
       case 'ROLE':
-        return option.displayName || option.name;
+        return this.getRoleName(assignment.assignedRoleId);
       default:
         return 'Unknown';
     }
   }
 
-  getOptionSecondaryText(option: any, type: string): string {
-    switch (type) {
-      case 'USER':
-        return option.email;
-      case 'GROUP':
-        return option.description || '';
-      case 'ROLE':
-        return option.description || '';
-      default:
-        return '';
-    }
-  }
-
-  getAssignmentTypeIcon(type: string): string {
-    switch (type) {
-      case 'USER': return 'person';
-      case 'GROUP': return 'group';
-      case 'ROLE': return 'admin_panel_settings';
-      default: return 'help';
-    }
-  }
-
   getPermissionColor(level: string): string {
     switch (level) {
-      case 'VIEW': return 'primary';
-      case 'EDIT': return 'accent';
       case 'ADMIN': return 'warn';
+      case 'EDIT': return 'accent';
+      case 'VIEW': return 'primary';
       default: return 'basic';
     }
   }
 
-  formatDate(date: string): string {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  removeAssignment(assignment: any) {
+    if (confirm('Are you sure you want to remove this assignment?')) {
+      this.assignmentService.removeAssignment(assignment.id).subscribe({
+        next: () => {
+          this.loadCurrentAssignments();
+        },
+        error: (error) => {
+          console.error('Failed to remove assignment:', error);
+        }
+      });
+    }
   }
 
-  close(): void {
+  onShare() {
+    const result: DiagramSharingResult = {
+      assignments: {
+        users: this.usersControl.value || [],
+        groups: this.groupsControl.value || [],
+        roles: this.rolesControl.value || []
+      },
+      permissionLevel: this.permissionControl.value || 'VIEW'
+    };
+
+    this.dialogRef.close(result);
+  }
+
+  onCancel() {
     this.dialogRef.close();
-  }
-
-  showSuccess(message: string): void {
-    this.snackBar.open(message, 'Close', { 
-      duration: 3000, 
-      panelClass: 'success-snackbar' 
-    });
-  }
-
-  showError(message: string): void {
-    this.snackBar.open(message, 'Close', { 
-      duration: 5000, 
-      panelClass: 'error-snackbar' 
-    });
   }
 }

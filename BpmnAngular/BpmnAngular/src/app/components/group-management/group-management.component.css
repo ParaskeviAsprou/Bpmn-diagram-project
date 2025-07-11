@@ -1,81 +1,271 @@
- .group-management-container {
-      padding: 1.5rem;
+.group-management {
+      padding: 20px;
+      position: relative;
     }
 
-    .header-section {
+    .management-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 2rem;
+      margin-bottom: 30px;
     }
 
     .groups-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-      gap: 1.5rem;
+      gap: 20px;
     }
 
     .group-card {
-      height: fit-content;
-    }
-
-    .group-card mat-card-header {
-      position: relative;
-    }
-
-    .card-actions {
-      position: absolute;
-      top: 8px;
-      right: 8px;
       display: flex;
-      gap: 0.25rem;
-    }
-
-    .user-count-chip {
-      margin-left: 0.5rem;
-      font-size: 0.75rem;
-      height: 20px;
-      line-height: 20px;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
     .group-info {
-      margin-top: 1rem;
+      flex: 1;
     }
 
-    .info-item {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 0.5rem;
-    }
-
-    .label {
-      font-weight: 500;
-      color: #666;
-    }
-
-    .value {
+    .group-info h3 {
+      margin: 0 0 8px 0;
       color: #333;
     }
 
-    .empty-state {
-      text-align: center;
-      padding: 3rem 1rem;
+    .group-info p {
+      margin: 0 0 10px 0;
+      color: #666;
     }
 
-    .empty-icon {
-      font-size: 4rem;
-      height: 4rem;
-      width: 4rem;
-      color: #ccc;
-      margin-bottom: 1rem;
+    .group-meta {
+      display: flex;
+      gap: 15px;
+      font-size: 12px;
+      color: #888;
     }
 
-    .no-groups {
-      margin-top: 2rem;
+    .group-actions {
+      display: flex;
+      gap: 8px;
     }
 
-    @media (max-width: 768px) {
-      .groups-grid {
-        grid-template-columns: 1fr;
-      }
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-backdrop {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 8px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 90%;
+      overflow-y: auto;
+      position: relative;
+      z-index: 1001;
+    }
+
+    .modal.large .modal-content {
+      max-width: 800px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+      padding: 0 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 20px;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    .members-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .available-users,
+    .group-members {
+      min-height: 400px;
+    }
+
+    .available-users h4,
+    .group-members h4 {
+      margin: 0 0 15px 0;
+      color: #333;
+    }
+
+    .user-search {
+      margin-bottom: 15px;
+    }
+
+    .user-search input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .user-list,
+    .member-list {
+      max-height: 350px;
+      overflow-y: auto;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+    }
+
+    .user-item,
+    .member-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #2196f3;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .user-details strong {
+      display: block;
+      color: #333;
+    }
+
+    .user-details small {
+      color: #666;
+      font-size: 12px;
+    }
+
+    .user-roles {
+      display: flex;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .role-badge {
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 500;
+      color: white;
+    }
+
+    .role-badge.admin { background: #f44336; }
+    .role-badge.modeler { background: #2196f3; }
+    .role-badge.viewer { background: #4caf50; }
+    .role-badge.default { background: #666; }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary { background: #2196f3; color: white; }
+    .btn-outline { background: transparent; border: 1px solid #ddd; color: #666; }
+    .btn-danger { background: #f44336; color: white; }
+    .btn-sm { padding: 4px 8px; font-size: 12px; }
+
+    .btn:hover { opacity: 0.8; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255,255,255,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #e0e0e0;
+      border-top: 4px solid #2196f3;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }

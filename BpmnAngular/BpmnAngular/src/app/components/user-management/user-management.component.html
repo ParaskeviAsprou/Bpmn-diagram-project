@@ -1,301 +1,107 @@
-<div class="user-management-container">
-  <!-- Header -->
-  <div class="header-section">
-    <div class="page-header">
-      <h1>
-        <mat-icon>people</mat-icon>
-        User Management
-      </h1>
-      <p class="page-subtitle">Manage users and their role assignments</p>
+ <div class="user-management">
+  <div class="management-header">
+    <h2>User Management</h2>
+    <div class="header-actions">
+      <input
+        type="text"
+        placeholder="Search users..."
+        [(ngModel)]="searchTerm"
+        (input)="filterUsers()"
+        class="search-input">
+      <select [(ngModel)]="selectedRoleFilter" (change)="filterUsers()"
+        class="role-filter">
+        <option value>All Roles</option>
+        <option *ngFor="let role of roles"
+          [value]="role.name">{{role.displayName || role.name}}</option>
+      </select>
     </div>
   </div>
 
-  <!-- Filters Section -->
-  <mat-card class="filters-card">
-    <mat-card-content>
-      <div class="filters-container">
-        <!-- Search Filter -->
-        <mat-form-field appearance="outline" class="search-field">
-          <mat-label>Search users</mat-label>
-          <input
-            matInput
-            [(ngModel)]="filterText"
-            (input)="applyFilters()"
-            placeholder="Search by name or email"
-          />
-          <mat-icon matSuffix>search</mat-icon>
-        </mat-form-field>
-
-        <!-- Role Filter -->
-        <mat-form-field appearance="outline" class="role-filter">
-          <mat-label>Filter by Role</mat-label>
-          <mat-select [(value)]="selectedRoleFilter" (selectionChange)="applyFilters()">
-            <mat-option *ngFor="let filter of roleFilters" [value]="filter.value">
-              <div class="role-option">
-                <span>{{ filter.label }}</span>
-                <mat-chip color="primary" class="count-chip">{{ filter.count }}</mat-chip>
-              </div>
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-
-        <!-- Refresh Button -->
-        <div class="filter-actions">
-          <button mat-raised-button color="primary" (click)="loadData()" [disabled]="loading">
-            <mat-icon>refresh</mat-icon>
-            Refresh
-          </button>
+  <div class="users-grid">
+    <div *ngFor="let user of filteredUsers" class="user-card">
+      <div class="user-info">
+        <div class="user-avatar">
+          {{getUserInitials(user)}}
         </div>
-      </div>
-    </mat-card-content>
-  </mat-card>
-
-  <!-- Users Table -->
-  <mat-card class="table-card">
-    <mat-card-header>
-      <mat-card-title>
-        <mat-icon>table_chart</mat-icon>
-        Users ({{ dataSource.filteredData?.length || 0 }})
-      </mat-card-title>
-    </mat-card-header>
-
-    <mat-card-content>
-      <div class="table-container">
-        <table mat-table [dataSource]="dataSource" matSort class="users-table">
-
-          <!-- Name Column -->
-          <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
-            <td mat-cell *matCellDef="let user">
-              <div class="user-info">
-                <div class="user-avatar">
-                  <mat-icon>person</mat-icon>
-                </div>
-                <div class="user-details">
-                  <div class="user-name">{{ getUserDisplayName(user) }}</div>
-                  <div class="user-username" *ngIf="user.username">{{ '@' + user.username }}</div>
-                </div>
-              </div>
-            </td>
-          </ng-container>
-
-          <!-- Email Column -->
-          <ng-container matColumnDef="email">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Email</th>
-            <td mat-cell *matCellDef="let user">
-              <div class="email-info">
-                <mat-icon class="email-icon">email</mat-icon>
-                {{ user.email }}
-              </div>
-            </td>
-          </ng-container>
-
-          <!-- Roles Column -->
-          <ng-container matColumnDef="roles">
-            <th mat-header-cell *matHeaderCellDef>Roles</th>
-            <td mat-cell *matCellDef="let user">
-              <div class="roles-container">
-                <mat-chip
-                  *ngFor="let role of user.roles"
-                  [color]="getRoleColor(role.name)"
-                  selected
-                  class="role-chip"
-                >
-                  {{ role.displayName || role.name }}
-                  <button
-                    matChipRemove
-                    (click)="removeRole(user, role)"
-                    [disabled]="role.name === 'ROLE_ADMIN' && hasRole(user, 'ROLE_ADMIN')"
-                    matTooltip="Remove role"
-                  >
-                    <mat-icon>cancel</mat-icon>
-                  </button>
-                </mat-chip>
-
-                <button
-                  mat-mini-fab
-                  color="primary"
-                  (click)="openRoleAssignment(user)"
-                  matTooltip="Manage roles"
-                  class="add-role-button"
-                >
-                  <mat-icon>add</mat-icon>
-                </button>
-              </div>
-            </td>
-          </ng-container>
-
-          <!-- Status Column -->
-          <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef>Status</th>
-            <td mat-cell *matCellDef="let user">
-              <div class="status-info">
-                <mat-chip [color]="user.enabled ? 'primary' : 'warn'" selected class="status-chip">
-                  <mat-icon *ngIf="user.enabled">check_circle</mat-icon>
-                  <mat-icon *ngIf="!user.enabled">block</mat-icon>
-                  {{ user.enabled ? 'Active' : 'Disabled' }}
-                </mat-chip>
-              </div>
-            </td>
-          </ng-container>
-
-          <!-- Actions Column -->
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let user">
-              <div class="action-buttons">
-                <button
-                  mat-icon-button
-                  (click)="openRoleAssignment(user)"
-                  matTooltip="Edit roles"
-                  color="primary"
-                >
-                  <mat-icon>admin_panel_settings</mat-icon>
-                </button>
-
-                <button
-                  mat-icon-button
-                  [matMenuTriggerFor]="roleMenu"
-                  matTooltip="Quick assign role"
-                  color="accent"
-                >
-                  <mat-icon>add_circle</mat-icon>
-                </button>
-                <mat-menu #roleMenu="matMenu">
-                  <button
-                    mat-menu-item
-                    *ngFor="let role of allRoles"
-                    (click)="assignRole(user, role)"
-                    [disabled]="hasRole(user, role.name)"
-                  >
-                    <mat-icon>
-                      {{ getRoleIcon(role.name) }}
-                    </mat-icon>
-                    <span>{{ role.displayName || role.name }}</span>
-                  </button>
-                </mat-menu>
-
-                <button
-                  mat-icon-button
-                  (click)="deleteUser(user)"
-                  matTooltip="Delete user"
-                  color="warn"
-                  [disabled]="hasRole(user, 'ROLE_ADMIN')"
-                >
-                  <mat-icon>delete</mat-icon>
-                </button>
-              </div>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr
-            mat-row
-            *matRowDef="let row; columns: displayedColumns"
-            [class.admin-row]="hasRole(row, 'ROLE_ADMIN')"
-          ></tr>
-        </table>
-
-        <!-- Loading Spinner -->
-        <div class="loading-container" *ngIf="loading">
-          <mat-spinner diameter="40"></mat-spinner>
-          <p>Loading users...</p>
-        </div>
-
-        <!-- No Data Message -->
-        <div class="no-data-container" *ngIf="!loading && dataSource.filteredData?.length === 0">
-          <mat-icon>people_outline</mat-icon>
-          <h3>No Users Found</h3>
-          <p *ngIf="filterText || selectedRoleFilter !== 'all'">
-            Try adjusting your filters to see more results.
-          </p>
-          <p *ngIf="!filterText && selectedRoleFilter === 'all'">
-            No users found in the system.
-          </p>
-        </div>
-      </div>
-
-      <!-- Paginator -->
-      <div *ngIf="dataSource?.filteredData?.length && dataSource.filteredData.length > 0" class="paginator-container">
-        <mat-paginator
-          [pageSizeOptions]="[10, 25, 50, 100]"
-          [pageSize]="25"
-          showFirstLastButtons
-        ></mat-paginator>
-      </div>
-    </mat-card-content>
-  </mat-card>
-
-  <!-- Role Assignment Dialog -->
-  <div class="role-assignment-overlay" *ngIf="showRoleAssignment" (click)="closeRoleAssignment()">
-    <div class="role-assignment-dialog" (click)="$event.stopPropagation()">
-      <div class="dialog-header">
-        <h2><mat-icon>admin_panel_settings</mat-icon> Manage User Roles</h2>
-        <p class="dialog-subtitle">{{ roleAssignmentData?.userName }}</p>
-        <button mat-icon-button (click)="closeRoleAssignment()" class="close-button">
-          <mat-icon>close</mat-icon>
-        </button>
-      </div>
-
-      <div class="dialog-content" *ngIf="roleAssignmentData">
-        <div class="current-roles-section">
-          <h3>Current Roles</h3>
-          <div class="current-roles">
-            <mat-chip
-              *ngFor="let role of roleAssignmentData.currentRoles"
-              [color]="getRoleColor(role.name)"
-              selected
-              class="current-role-chip"
-            >
-              {{ role.displayName || role.name }}
-            </mat-chip>
-            <span *ngIf="roleAssignmentData.currentRoles.length === 0" class="no-roles">
-              No roles assigned
+        <div class="user-details">
+          <h4>{{user.firstname}} {{user.lastname}}</h4>
+          <p class="user-email">{{user.email}}</p>
+          <div class="user-roles">
+            <span
+              *ngFor="let role of user.roles"
+              class="role-badge"
+              [class]="getRoleBadgeClass(role.name)">
+              {{role.displayName || role.name}}
             </span>
           </div>
         </div>
+      </div>
+      <div class="user-actions">
+        <button class="btn btn-outline" (click)="editUserRoles(user)">
+          <i class="icon-edit"></i>
+          Edit Roles
+        </button>
+        <button class="btn btn-danger" (click)="deleteUser(user)">
+          <i class="icon-delete"></i>
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
 
-        <div class="selection-summary">
-          <mat-chip color="primary" class="selection-chip">
-            <mat-icon>admin_panel_settings</mat-icon>
-            {{ selectedRoleCount }} role{{ selectedRoleCount === 1 ? '' : 's' }} selected
-          </mat-chip>
-        </div>
-
-        <div class="available-roles-section">
-          <h3>Available Roles</h3>
-          <div class="roles-list">
-            <div
-              class="role-item"
-              *ngFor="let role of roleAssignmentData.availableRoles"
-              [class.selected]="isRoleSelected(role)"
-              (click)="toggleRoleSelection(role)"
-            >
-              <mat-checkbox
+  <!-- Edit User Roles Modal -->
+  <div class="modal" *ngIf="showEditRolesModal">
+    <div class="modal-backdrop" (click)="closeModal()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Edit Roles for {{selectedUser?.firstname}}
+          {{selectedUser?.lastname}}</h3>
+        <button class="modal-close" (click)="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="role-selection">
+          <h4>Available Roles:</h4>
+          <div class="role-checkboxes">
+            <label *ngFor="let role of roles" class="role-checkbox">
+              <input
+                type="checkbox"
                 [checked]="isRoleSelected(role)"
-                (change)="toggleRoleSelection(role)"
-                [color]="getRoleColor(role.name)"
-              ></mat-checkbox>
-              <div class="role-info">
-                <div class="role-name">
-                  <mat-chip [color]="getRoleColor(role.name)" selected class="role-name-chip">
-                    {{ role.displayName || role.name }}
-                  </mat-chip>
-                </div>
-                <div class="role-description">{{ role.description || 'No description' }}</div>
-              </div>
-            </div>
+                (change)="toggleRole(role, $event)">
+              <span class="role-label">
+                <span class="role-badge" [class]="getRoleBadgeClass(role.name)">
+                  {{role.displayName || role.name}}
+                </span>
+                <small>{{role.description}}</small>
+              </span>
+            </label>
+          </div>
+        </div>
+        <div class="current-roles" *ngIf="selectedUserRoles.length > 0">
+          <h4>Selected Roles:</h4>
+          <div class="selected-roles">
+            <span
+              *ngFor="let role of selectedUserRoles"
+              class="role-badge selected"
+              [class]="getRoleBadgeClass(role.name)">
+              {{role.displayName || role.name}}
+              <button class="remove-role" (click)="removeRole(role)">×</button>
+            </span>
           </div>
         </div>
       </div>
-
-      <div class="dialog-actions">
-        <button mat-button (click)="closeRoleAssignment()">Cancel</button>
-        <button mat-raised-button color="primary" (click)="saveRoleAssignment()">
-          <mat-icon>save</mat-icon>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" (click)="closeModal()">
+          Cancel
+        </button>
+        <button type="button" class="btn btn-primary" (click)="saveUserRoles()">
           Save Changes
         </button>
       </div>
     </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" *ngIf="loading">
+    <div class="spinner"></div>
   </div>
 </div>

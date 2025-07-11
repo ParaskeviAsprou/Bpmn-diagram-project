@@ -1,208 +1,180 @@
-.role-management-container {
-  padding: 16px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
+.role-management {
+      padding: 20px;
+    }
 
-.full-width-tabs {
-  width: 100%;
-}
+    .management-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
 
-.tab-content {
-  padding: 24px 0;
-}
+    .management-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
 
-.section-header {
-  margin-bottom: 24px;
-}
+    .hierarchy-section, .roles-section {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
 
-.section-header h3 {
-  margin: 0 0 8px 0;
-  color: #333;
-  font-weight: 500;
-}
+    .hierarchy-tree {
+      max-height: 500px;
+      overflow-y: auto;
+    }
 
-.section-description {
-  margin: 0;
-  color: #666;
-  font-size: 14px;
-}
+    .roles-list {
+      max-height: 500px;
+      overflow-y: auto;
+    }
 
-.form-card, .table-card, .tree-card {
-  margin-bottom: 24px;
-}
+    .role-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
 
-.role-form, .hierarchy-form {
-  padding: 16px 0;
-}
+    .role-info h4 {
+      margin: 0 0 5px 0;
+      color: #333;
+    }
 
-.form-row {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 16px;
-  align-items: flex-start;
-}
+    .role-info p {
+      margin: 0 0 5px 0;
+      color: #666;
+      font-size: 14px;
+    }
 
-.full-width {
-  width: 100%;
-}
+    .role-info small {
+      color: #888;
+      font-family: monospace;
+    }
 
-.half-width {
-  width: calc(50% - 8px);
-}
+    .role-actions {
+      display: flex;
+      gap: 5px;
+    }
 
-.quarter-width {
-  width: calc(25% - 12px);
-}
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-.form-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 24px;
-  align-items: center;
-}
+    .modal-backdrop {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+    }
 
-.form-actions button {
-  min-width: 120px;
-}
+    .modal-content {
+      background: white;
+      padding: 0;
+      border-radius: 8px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 90%;
+      overflow-y: auto;
+      position: relative;
+      z-index: 1001;
+    }
 
-.table-container {
-  width: 100%;
-  overflow-x: auto;
-}
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      border-bottom: 1px solid #e0e0e0;
+    }
 
-.full-width-table {
-  width: 100%;
-  min-width: 600px;
-}
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+    }
 
-.role-name {
-  display: flex;
-  align-items: center;
-}
+    .form-group {
+      margin-bottom: 20px;
+      padding: 0 20px;
+    }
 
-.no-data {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 48px 24px;
-  color: #666;
-  text-align: center;
-}
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #333;
+    }
 
-.no-data mat-icon {
-  font-size: 48px;
-  width: 48px;
-  height: 48px;
-  margin-bottom: 16px;
-  opacity: 0.5;
-}
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
 
-.hierarchy-tree {
-  padding: 16px;
-  background-color: #fafafa;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
-}
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 20px;
+      border-top: 1px solid #e0e0e0;
+    }
 
-.tree-node {
-  margin: 8px 0;
-}
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
 
-.level-field {
-  width: 80px;
-}
+    .btn-primary {
+      background: #2196f3;
+      color: white;
+    }
 
-.level-field .mat-mdc-form-field-wrapper {
-  padding-bottom: 0;
-}
+    .btn-outline {
+      background: transparent;
+      border: 1px solid #ddd;
+      color: #666;
+    }
 
-.level-field .mat-mdc-form-field-subscript-wrapper {
-  display: none;
-}
+    .btn-danger {
+      background: #f44336;
+      color: white;
+    }
 
-/* Responsive design */
-@media (max-width: 768px) {
-  .role-management-container {
-    padding: 8px;
-  }
-  
-  .form-row {
-    flex-direction: column;
-    gap: 8px;
-  }
-  
-  .half-width, .quarter-width {
-    width: 100%;
-  }
-  
-  .form-actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .form-actions button {
-    width: 100%;
-  }
-}
+    .btn-sm {
+      padding: 4px 8px;
+      font-size: 12px;
+    }
 
-/* Material Design enhancements */
-.mat-mdc-card {
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  border-radius: 8px;
-}
+    .btn:hover {
+      opacity: 0.8;
+    }
 
-.mat-mdc-card-header {
-  padding-bottom: 8px;
-}
-
-.mat-mdc-card-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.mat-mdc-card-title mat-icon {
-  color: #1976d2;
-}
-
-.mat-mdc-chip {
-  font-size: 12px;
-}
-
-.mat-mdc-table {
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.mat-mdc-table th {
-  background-color: #f5f5f5;
-  font-weight: 600;
-  color: #333;
-}
-
-.mat-mdc-table td {
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.mat-mdc-table tr:hover {
-  background-color: #f9f9f9;
-}
-
-/* Tab styling */
-.mat-mdc-tab-group {
-  --mdc-tab-indicator-active-indicator-color: #1976d2;
-}
-
-.mat-mdc-tab {
-  min-width: 120px;
-}
-
-/* Button styling */
-.mat-mdc-raised-button {
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-.mat-mdc-icon-button[disabled] {
-  opacity: 0.5;
-}
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }

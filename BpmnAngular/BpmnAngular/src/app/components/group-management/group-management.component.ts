@@ -1,344 +1,225 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatTable, MatTableDataSource } from '@angular/material/table';
-import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import {
-  GroupService,
-  Group,
-  GroupInfo,
-  CreateGroupRequest,
-  UpdateGroupRequest
-} from '../../services/group.service';
+// 
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subject, takeUntil, forkJoin } from 'rxjs';
+import { GroupService } from '../../services/group.service';
+import { UserService } from '../../services/user.service';
+import { Group } from '../../services/rbac.service';
+import { User } from '../../services/authentication.service';
+import { BrowserModule } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
-import { MatCard, MatCardContent, MatCardHeader, MatCardSubtitle, MatCardTitle } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatIcon } from '@angular/material/icon';
-import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
-import { User, UserService } from '../../services/user.service';
-import { materialize } from 'rxjs';
-import { MatSpinner } from '@angular/material/progress-spinner';
-;
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
-
-interface UserOption {
-  id: number;
-  name: string;
-  email: string;
-  selected?: boolean;
-}
 
 @Component({
   selector: 'app-group-management',
   standalone: true,
-  imports: [CommonModule,
-    MatCard, MatError, ReactiveFormsModule, MatSpinner, MatPaginator,
-    MatCardTitle,
-    MatCardHeader,
-    MatCardSubtitle,
-    MatCardContent,
-    MatChipsModule,
-    MatIcon,MatTable,
-    MatFormField,
-    MatLabel,
-    FormsModule],
+  imports: [ BrowserModule,CommonModule,ReactiveFormsModule,FormsModule],
   templateUrl: './group-management.component.html',
-  styleUrl: './group-management.component.css'
+  styleUrls: ['./group-management.component.css'],
+
 })
-export class GroupManagementComponent implements OnInit {
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
+export class GroupManagementComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
 
-  dataSource = new MatTableDataSource<GroupInfo>();
+  groups: Group[] = [];
+  users: User[] = [];
+  filteredAvailableUsers: User[] = [];
+  groupMembers: User[] = [];
+  
   loading = false;
-
-  // Forms
-  groupForm: FormGroup;
+  showCreateGroupModal = false;
+  showEditGroupModal = false;
+  showMembersModal = false;
+  
   editingGroup: Group | null = null;
-
-  // User management
-  availableUsers: UserOption[] = [];
-  selectedUsers: Set<number> = new Set();
-  userSearchText = '';
-
-  // Table columns
-  displayedColumns = ['name', 'description', 'userCount', 'createdBy', 'createdTime', 'actions'];
-
-  // Dialogs and selections
-  selectedGroupForUsers: Group | null = null;
-  showUserManagement = false;
+  selectedGroup: Group | null = null;
+  userSearchTerm = '';
+  
+  groupFormData = {
+    name: '',
+    description: ''
+  };
 
   constructor(
     private groupService: GroupService,
-    private userService: UserService,
-    private fb: FormBuilder,
-    private dialog: MatDialog,
-    private snackBar: MatSnackBar
-  ) {
-    this.groupForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(2)]],
-      description: ['', Validators.maxLength(500)]
-    });
-  }
+    private userService: UserService
+  ) {}
 
   ngOnInit(): void {
-    this.loadGroups();
-    this.loadUsers();
+    this.loadData();
   }
 
-  ngAfterViewInit(): void {
-    this.dataSource.paginator = this.paginator;
-    this.dataSource.sort = this.sort;
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
-  loadGroups(): void {
+  loadData(): void {
     this.loading = true;
-    this.groupService.getGroupsWithUserCount().subscribe({
-      next: (groups) => {
-        this.dataSource.data = groups;
+    
+    forkJoin({
+      groups: this.groupService.getGroupsWithUserCount(),
+      users: this.userService.getAllUsers()
+    }).pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: (data) => {
+        this.groups = data.groups.map(item => item.group);
+        this.users = data.users;
         this.loading = false;
       },
       error: (error) => {
-        this.showError('Failed to load groups');
+        console.error('Error loading data:', error);
         this.loading = false;
       }
     });
   }
 
-  loadUsers(): void {
-    this.userService.getAllUsers().subscribe({
-      next: (users: User[]) => {
-        this.availableUsers = users.map(user => ({
-          id: user.id,
-          name: `${user.firstName} ${user.lastName}`.trim() || user.email,
-          email: user.email,
-          selected: false
-        }));
-      },
-      error: (error: any) => {
-        this.showError('Failed to load users');
-      }
-    });
-  }
-
-  saveGroup(): void {
-    if (!this.groupForm.valid) return;
-
-    const formValue = this.groupForm.value;
-
-    if (this.editingGroup) {
-
-      const updateRequest: UpdateGroupRequest = {
-        name: formValue.name,
-        description: formValue.description
-      };
-
-      this.groupService.updateGroup(this.editingGroup.id, updateRequest).subscribe({
-        next: () => {
-          this.showSuccess('Group updated successfully');
-          this.resetGroupForm();
-          this.loadGroups();
-        },
-        error: (error) => {
-          this.showError(error.error?.message || 'Failed to update group');
-        }
-      });
-    } else {
-      // Create new group
-      const createRequest: CreateGroupRequest = {
-        name: formValue.name,
-        description: formValue.description
-      };
-
-      this.groupService.createGroup(createRequest).subscribe({
-        next: () => {
-          this.showSuccess('Group created successfully');
-          this.resetGroupForm();
-          this.loadGroups();
-        },
-        error: (error) => {
-          this.showError(error.error?.message || 'Failed to create group');
-        }
-      });
-    }
+  getUserCount(group: Group): number {
+    // This would come from the backend API in a real implementation
+    return Math.floor(Math.random() * 10) + 1;
   }
 
   editGroup(group: Group): void {
     this.editingGroup = group;
-    this.groupForm.patchValue({
+    this.groupFormData = {
       name: group.name,
-      description: group.description
-    });
-
-    // Scroll to form
-    setTimeout(() => {
-      document.querySelector('.group-form-card')?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      });
-    }, 100);
+      description: group.description || ''
+    };
+    this.showEditGroupModal = true;
   }
 
   deleteGroup(group: Group): void {
-    const confirmMessage = `Are you sure you want to delete the group "${group.name}"? This action cannot be undone.`;
+    if (confirm(`Are you sure you want to delete the group "${group.name}"?`)) {
+      this.groupService.deleteGroup(group.id)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.loadData();
+          },
+          error: (error) => {
+            console.error('Error deleting group:', error);
+            alert('Error deleting group: ' + error.message);
+          }
+        });
+    }
+  }
 
-    if (confirm(confirmMessage)) {
-      this.groupService.deleteGroup(group.id).subscribe({
+  manageMembers(group: Group): void {
+    this.selectedGroup = group;
+    this.loadGroupMembers(group.id);
+    this.filterUsers();
+    this.showMembersModal = true;
+  }
+
+  saveGroup(): void {
+    if (this.editingGroup) {
+      this.groupService.updateGroup(
+        this.editingGroup.id,
+        this.groupFormData.name,
+        this.groupFormData.description
+      ).pipe(takeUntil(this.destroy$))
+      .subscribe({
         next: () => {
-          this.showSuccess('Group deleted successfully');
-          this.loadGroups();
+          this.loadData();
+          this.closeModals();
         },
         error: (error) => {
-          this.showError(error.error?.message || 'Failed to delete group');
+          console.error('Error updating group:', error);
+          alert('Error updating group: ' + error.message);
         }
       });
-    }
-  }
-
-  resetGroupForm(): void {
-    this.groupForm.reset();
-    this.editingGroup = null;
-  }
-
-  // User management for groups
-  openUserManagement(group: Group): void {
-    this.selectedGroupForUsers = group;
-    this.showUserManagement = true;
-    this.loadGroupUsers(group);
-  }
-
-  closeUserManagement(): void {
-    this.showUserManagement = false;
-    this.selectedGroupForUsers = null;
-    this.selectedUsers.clear();
-    this.resetUserSelections();
-  }
-
-  loadGroupUsers(group: Group): void {
-    // Reset selections
-    this.resetUserSelections();
-
-    // Mark current group members as selected
-    if (group.users) {
-      group.users.forEach(user => {
-        this.selectedUsers.add(user.id);
-        const userOption = this.availableUsers.find(u => u.id === user.id);
-        if (userOption) {
-          userOption.selected = true;
-        }
-      });
-    }
-  }
-
-  resetUserSelections(): void {
-    this.availableUsers.forEach(user => user.selected = false);
-  }
-
-  toggleUserSelection(user: UserOption): void {
-    user.selected = !user.selected;
-
-    if (user.selected) {
-      this.selectedUsers.add(user.id);
     } else {
-      this.selectedUsers.delete(user.id);
+      this.groupService.createGroup(
+        this.groupFormData.name,
+        this.groupFormData.description
+      ).pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.loadData();
+          this.closeModals();
+        },
+        error: (error) => {
+          console.error('Error creating group:', error);
+          alert('Error creating group: ' + error.message);
+        }
+      });
     }
   }
 
-  saveGroupUsers(): void {
-    if (!this.selectedGroupForUsers) return;
+  loadGroupMembers(groupId: number): void {
+    // This would load actual group members from the API
+    // For now, we'll mock some members
+    this.groupMembers = this.users.slice(0, 3);
+  }
 
-    // Get current group members
-    const currentUserIds = new Set(this.selectedGroupForUsers.users?.map(u => u.id) || []);
-    const newUserIds = this.selectedUsers;
+  filterUsers(): void {
+    this.filteredAvailableUsers = this.users.filter(user => {
+      const matchesSearch = !this.userSearchTerm || 
+        user.firstName.toLowerCase().includes(this.userSearchTerm.toLowerCase()) ||
+        user.lastName.toLowerCase().includes(this.userSearchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(this.userSearchTerm.toLowerCase());
+      
+      return matchesSearch;
+    });
+  }
 
-    // Find users to add and remove
-    const usersToAdd = Array.from(newUserIds).filter(id => !currentUserIds.has(id));
-    const usersToRemove = Array.from(currentUserIds).filter(id => !newUserIds.has(id));
+  isUserInGroup(user: User): boolean {
+    return this.groupMembers.some(member => member.id === user.id);
+  }
 
-    const operations: any[] = [];
-
-    // Add users
-    if (usersToAdd.length > 0) {
-      operations.push(
-        this.groupService.addUsersToGroup(this.selectedGroupForUsers.id, usersToAdd)
-      );
+  addUserToGroup(user: User): void {
+    if (this.selectedGroup && !this.isUserInGroup(user)) {
+      this.groupService.addUserToGroup(this.selectedGroup.id, user.id)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.groupMembers.push(user);
+          },
+          error: (error) => {
+            console.error('Error adding user to group:', error);
+            alert('Error adding user to group: ' + error.message);
+          }
+        });
     }
+  }
 
-    // Remove users
-    usersToRemove.forEach(userId => {
-      operations.push(
-        this.groupService.removeUserFromGroup(this.selectedGroupForUsers!.id, userId)
-      );
-    });
-
-    if (operations.length === 0) {
-      this.showSuccess('No changes to save');
-      return;
+  removeUserFromGroup(user: User): void {
+    if (this.selectedGroup) {
+      this.groupService.removeUserFromGroup(this.selectedGroup.id, user.id)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.groupMembers = this.groupMembers.filter(member => member.id !== user.id);
+          },
+          error: (error) => {
+            console.error('Error removing user from group:', error);
+            alert('Error removing user from group: ' + error.message);
+          }
+        });
     }
-
-    // Execute all operations
-    Promise.all(operations).then(() => {
-      this.showSuccess('Group membership updated successfully');
-      this.loadGroups();
-      this.closeUserManagement();
-    }).catch(error => {
-      this.showError('Failed to update group membership');
-    });
   }
 
-  // Filtering and search
-  applyFilter(event: Event): void {
-    const filterValue = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = filterValue.trim().toLowerCase();
+  getUserInitials(user: User): string {
+    return (user.firstName?.charAt(0) || '') + (user.lastName?.charAt(0) || '');
   }
 
-  get filteredUsers(): UserOption[] {
-    if (!this.userSearchText) {
-      return this.availableUsers;
-    }
-
-    const searchTerm = this.userSearchText.toLowerCase();
-    return this.availableUsers.filter(user =>
-      user.name.toLowerCase().includes(searchTerm) ||
-      user.email.toLowerCase().includes(searchTerm)
-    );
+  getRoleBadgeClass(roleName: string): string {
+    if (roleName.includes('ADMIN')) return 'admin';
+    if (roleName.includes('MODELER')) return 'modeler';
+    if (roleName.includes('VIEWER')) return 'viewer';
+    return 'default';
   }
 
-  get selectedUserCount(): number {
-    return this.selectedUsers.size;
+  closeModals(): void {
+    this.showCreateGroupModal = false;
+    this.showEditGroupModal = false;
+    this.showMembersModal = false;
+    this.editingGroup = null;
+    this.selectedGroup = null;
+    this.groupFormData = {
+      name: '',
+      description: ''
+    };
+    this.userSearchTerm = '';
   }
-
-  // Utility methods
-  formatDate(date: string): string {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  }
-
-  showSuccess(message: string): void {
-    this.snackBar.open(message, 'Close', {
-      duration: 3000,
-      panelClass: 'success-snackbar'
-    });
-  }
-
-  showError(message: string): void {
-    this.snackBar.open(message, 'Close', {
-      duration: 5000,
-      panelClass: 'error-snackbar'
-    });
-  }
-  trackByUserId(index: number, user: any): string {
-    return user.id;
-  }
-  trackByGroupId(index: number, item: any): string {
-    return item.group.id;
-  }
-
 }

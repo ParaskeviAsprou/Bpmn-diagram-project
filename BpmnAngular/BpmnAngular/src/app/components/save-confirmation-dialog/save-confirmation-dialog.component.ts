@@ -1,31 +1,27 @@
-// save-confirmation-dialog.component.ts
 import { Component, Inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatCardModule } from '@angular/material/card';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { CommonModule } from '@angular/common';
 
 export interface SaveConfirmationData {
   fileName: string;
   isNewFile: boolean;
   hasChanges: boolean;
-  changeCount?: number;
+  changeCount: number;
   lastSaveTime?: Date;
-  fileExists?: boolean;
-  folderName?: string;
+  fileExists: boolean;
+  folderName: string;
 }
 
 export interface SaveConfirmationResult {
   action: 'save' | 'saveAs' | 'cancel';
   fileName?: string;
   overwrite?: boolean;
-  createBackup?: boolean;
 }
 
 @Component({
@@ -33,521 +29,311 @@ export interface SaveConfirmationResult {
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
+    ReactiveFormsModule,
     MatDialogModule,
-    MatButtonModule,
-    MatIconModule,
     MatFormFieldModule,
     MatInputModule,
-    MatCheckboxModule,
-    MatCardModule,
-    MatTooltipModule
+    MatButtonModule,
+    MatIconModule,
+    MatCheckboxModule
   ],
   template: `
     <div class="save-dialog">
-      <div mat-dialog-title class="dialog-header">
-        <div class="header-content">
-          <mat-icon class="header-icon" [ngClass]="getHeaderIconClass()">{{ getHeaderIcon() }}</mat-icon>
-          <div class="header-text">
-            <h2>{{ getDialogTitle() }}</h2>
-            <p class="file-info">
-              <span class="file-name">{{ data.fileName }}</span>
-              <span *ngIf="data.folderName" class="folder-info">in {{ data.folderName }}</span>
-            </p>
-          </div>
-        </div>
-      </div>
+      <h2 mat-dialog-title>
+        <mat-icon>save</mat-icon>
+        {{ data.isNewFile ? 'Save New Diagram' : 'Save Changes' }}
+      </h2>
 
-      <div mat-dialog-content class="dialog-content">
-        
-        <!-- Changes Summary -->
-        <mat-card *ngIf="data.hasChanges" class="changes-card">
-          <mat-card-header>
-            <mat-icon mat-card-avatar color="accent">edit</mat-icon>
-            <mat-card-title>Unsaved Changes</mat-card-title>
-            <mat-card-subtitle>Your diagram has been modified</mat-card-subtitle>
-          </mat-card-header>
-          <mat-card-content>
-            <div class="changes-info">
-              <div class="change-item" *ngIf="data.changeCount">
-                <mat-icon>timeline</mat-icon>
-                <span>{{ data.changeCount }} change(s) made</span>
-              </div>
-              <div class="change-item" *ngIf="data.lastSaveTime">
-                <mat-icon>schedule</mat-icon>
-                <span>Last saved: {{ formatTime(data.lastSaveTime) }}</span>
-              </div>
-              <div class="change-item" *ngIf="!data.lastSaveTime">
-                <mat-icon>new_releases</mat-icon>
-                <span>This is a new diagram</span>
-              </div>
-            </div>
-          </mat-card-content>
-        </mat-card>
-
-        <!-- File Exists Warning -->
-        <mat-card *ngIf="data.fileExists && !data.isNewFile" class="warning-card">
-          <mat-card-header>
-            <mat-icon mat-card-avatar color="warn">warning</mat-icon>
-            <mat-card-title>File Already Exists</mat-card-title>
-            <mat-card-subtitle>This will overwrite the existing file</mat-card-subtitle>
-          </mat-card-header>
-          <mat-card-content>
-            <div class="warning-content">
-              <p>A file with this name already exists. Choose how to proceed:</p>
-              <div class="backup-option">
-                <mat-checkbox [(ngModel)]="createBackup">
-                  <span class="checkbox-label">
-                    <mat-icon>backup</mat-icon>
-                    Create backup of existing file
-                  </span>
-                </mat-checkbox>
-              </div>
-            </div>
-          </mat-card-content>
-        </mat-card>
-
-        <!-- Save Options -->
-        <div class="save-options">
-          <h3>Save Options</h3>
+      <mat-dialog-content>
+        <div class="dialog-content">
           
-          <!-- Quick Save -->
-          <div class="option-card primary-option" (click)="quickSave()">
-            <div class="option-header">
-              <mat-icon color="primary">save</mat-icon>
-              <div class="option-content">
-                <h4>{{ data.isNewFile ? 'Save' : 'Save Changes' }}</h4>
-                <p>{{ data.isNewFile ? 'Save this diagram with the current name' : 'Update the existing file with your changes' }}</p>
-              </div>
+          <!-- File Information -->
+          <div class="file-info">
+            <div class="info-row">
+              <mat-icon>description</mat-icon>
+              <span class="label">File:</span>
+              <span class="value">{{ data.fileName }}</span>
             </div>
-            <mat-icon class="chevron">chevron_right</mat-icon>
-          </div>
-
-          <!-- Save As -->
-          <div class="option-card" (click)="saveAs()">
-            <div class="option-header">
-              <mat-icon color="accent">save_as</mat-icon>
-              <div class="option-content">
-                <h4>Save As</h4>
-                <p>Save with a different name or location</p>
-              </div>
-            </div>
-            <mat-icon class="chevron">chevron_right</mat-icon>
-          </div>
-
-          <!-- Save As Form -->
-          <div *ngIf="showSaveAsForm" class="save-as-form">
-            <mat-form-field appearance="outline" class="filename-field">
-              <mat-label>File Name</mat-label>
-              <input matInput 
-                [(ngModel)]="newFileName" 
-                placeholder="Enter new file name"
-                (keydown.enter)="confirmSaveAs()"
-                #fileNameInput>
-              <mat-hint>Include .bpmn extension or it will be added automatically</mat-hint>
-            </mat-form-field>
             
-            <div class="save-as-actions">
-              <button mat-raised-button color="primary" (click)="confirmSaveAs()" [disabled]="!isValidFileName()">
-                <mat-icon>save_as</mat-icon>
-                Save As
+            <div class="info-row">
+              <mat-icon>folder</mat-icon>
+              <span class="label">Location:</span>
+              <span class="value">{{ data.folderName || 'Root Folder' }}</span>
+            </div>
+            
+            <div class="info-row" *ngIf="data.hasChanges">
+              <mat-icon>edit</mat-icon>
+              <span class="label">Changes:</span>
+              <span class="value changes">{{ data.changeCount }} unsaved changes</span>
+            </div>
+            
+            <div class="info-row" *ngIf="data.lastSaveTime">
+              <mat-icon>schedule</mat-icon>
+              <span class="label">Last saved:</span>
+              <span class="value">{{ formatTime(data.lastSaveTime) }}</span>
+            </div>
+          </div>
+
+          <!-- File Name Input (for new files or save as) -->
+          <form [formGroup]="saveForm" *ngIf="showFileNameInput">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>File Name</mat-label>
+              <input matInput formControlName="fileName" 
+                     placeholder="Enter file name">
+              <mat-hint>File will be saved as .bpmn format</mat-hint>
+              <mat-error *ngIf="saveForm.get('fileName')?.hasError('required')">
+                File name is required
+              </mat-error>
+              <mat-error *ngIf="saveForm.get('fileName')?.hasError('pattern')">
+                Invalid file name format
+              </mat-error>
+            </mat-form-field>
+
+            <!-- Overwrite checkbox if file exists -->
+            <div class="overwrite-section" *ngIf="data.fileExists">
+              <mat-checkbox formControlName="overwrite" color="warn">
+                <strong>Overwrite existing file</strong>
+                <br>
+                <small class="warning-text">
+                  A file with this name already exists. Check this box to overwrite it.
+                </small>
+              </mat-checkbox>
+            </div>
+          </form>
+
+          <!-- Warning Messages -->
+          <div class="warnings" *ngIf="data.fileExists && !data.isNewFile">
+            <div class="warning-box">
+              <mat-icon>warning</mat-icon>
+              <span>This will overwrite the existing file. This action cannot be undone.</span>
+            </div>
+          </div>
+
+          <!-- Save Options -->
+          <div class="save-options" *ngIf="!data.isNewFile">
+            <h3>Save Options</h3>
+            <div class="option-buttons">
+              <button mat-stroked-button 
+                      (click)="setSaveAsMode()"
+                      class="option-button">
+                <mat-icon>content_copy</mat-icon>
+                <div class="option-content">
+                  <strong>Save As New File</strong>
+                  <small>Create a copy with a new name</small>
+                </div>
               </button>
-              <button mat-stroked-button (click)="cancelSaveAs()">
-                Cancel
+              
+              <button mat-stroked-button 
+                      (click)="setUpdateMode()"
+                      class="option-button">
+                <mat-icon>save</mat-icon>
+                <div class="option-content">
+                  <strong>Update Existing File</strong>
+                  <small>Save changes to current file</small>
+                </div>
               </button>
             </div>
           </div>
+
         </div>
+      </mat-dialog-content>
 
-        <!-- Tips Section -->
-        <div class="tips-section">
-          <mat-icon class="tips-icon">lightbulb</mat-icon>
-          <div class="tips-content">
-            <h4>Tips</h4>
-            <ul>
-              <li>Use <kbd>Ctrl+S</kbd> for quick save</li>
-              <li *ngIf="data.hasChanges">Your changes include element modifications and custom properties</li>
-              <li>BPMN files are saved in XML format</li>
-            </ul>
-          </div>
-        </div>
-
-      </div>
-
-      <div mat-dialog-actions class="dialog-actions">
-        <button mat-button (click)="onCancel()" class="cancel-btn">
+      <mat-dialog-actions align="end">
+        <button mat-button (click)="onCancel()">
           <mat-icon>close</mat-icon>
           Cancel
         </button>
         
-        <div class="primary-actions">
-          <button mat-stroked-button (click)="saveAs()" class="save-as-btn">
-            <mat-icon>save_as</mat-icon>
-            Save As
-          </button>
-          
-          <button mat-raised-button color="primary" (click)="quickSave()" class="save-btn">
-            <mat-icon>save</mat-icon>
-            {{ data.isNewFile ? 'Save' : 'Save Changes' }}
-          </button>
-        </div>
-      </div>
+        <button mat-raised-button color="primary" 
+                (click)="onSave()"
+                [disabled]="!canSave()">
+          <mat-icon>save</mat-icon>
+          {{ getSaveButtonText() }}
+        </button>
+      </mat-dialog-actions>
     </div>
   `,
   styles: [`
     .save-dialog {
-      min-width: 600px;
-      max-width: 800px;
+      min-width: 500px;
     }
-
-    .dialog-header {
-      border-bottom: 1px solid #e0e0e0;
-      margin-bottom: 0;
-      padding-bottom: 16px;
+    
+    .dialog-content {
+      padding: 16px 0;
     }
-
-    .header-content {
+    
+    .file-info {
+      background: #f5f5f5;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    
+    .info-row {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 8px;
+      margin-bottom: 8px;
     }
-
-    .header-icon {
-      font-size: 36px;
+    
+    .info-row:last-child {
+      margin-bottom: 0;
     }
-
-    .header-icon.save { color: #4caf50; }
-    .header-icon.new { color: #2196f3; }
-    .header-icon.warning { color: #ff9800; }
-
-    .header-text h2 {
-      margin: 0;
-      font-size: 24px;
+    
+    .label {
+      font-weight: 500;
+      min-width: 80px;
+    }
+    
+    .value {
+      color: #666;
+    }
+    
+    .value.changes {
+      color: #f57c00;
       font-weight: 500;
     }
-
-    .file-info {
-      margin: 8px 0 0 0;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    
+    .full-width {
+      width: 100%;
+      margin-bottom: 16px;
     }
-
-    .file-name {
-      font-family: monospace;
-      background: #f5f5f5;
-      padding: 4px 8px;
+    
+    .overwrite-section {
+      margin: 16px 0;
+      padding: 12px;
+      background: #fff3e0;
       border-radius: 4px;
-      font-size: 14px;
+      border-left: 4px solid #ff9800;
     }
-
-    .folder-info {
-      color: #666;
-      font-size: 14px;
+    
+    .warning-text {
+      color: #e65100;
     }
-
-    .dialog-content {
-      padding: 24px;
-      max-height: 70vh;
-      overflow-y: auto;
+    
+    .warnings {
+      margin: 16px 0;
     }
-
-    .changes-card, .warning-card {
-      margin-bottom: 24px;
-    }
-
-    .changes-info {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .change-item {
+    
+    .warning-box {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 14px;
+      padding: 12px;
+      background: #ffebee;
+      border-radius: 4px;
+      border-left: 4px solid #f44336;
+      color: #c62828;
     }
-
-    .change-item mat-icon {
-      font-size: 16px;
-      color: #666;
+    
+    .save-options {
+      margin: 24px 0;
     }
-
-    .warning-content p {
-      margin: 0 0 16px 0;
-    }
-
-    .backup-option {
-      display: flex;
-      align-items: center;
-    }
-
-    .checkbox-label {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 14px;
-    }
-
+    
     .save-options h3 {
       margin: 0 0 16px 0;
       color: #333;
     }
-
-    .option-card {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px;
-      border: 2px solid #e0e0e0;
-      border-radius: 12px;
-      margin-bottom: 12px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .option-card:hover {
-      border-color: #1976d2;
-      background: #f8f9fa;
-    }
-
-    .option-card.primary-option {
-      border-color: #4caf50;
-      background: #f1f8e9;
-    }
-
-    .option-card.primary-option:hover {
-      border-color: #388e3c;
-      background: #e8f5e8;
-    }
-
-    .option-header {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .option-content h4 {
-      margin: 0 0 4px 0;
-      font-size: 16px;
-      font-weight: 500;
-    }
-
-    .option-content p {
-      margin: 0;
-      font-size: 14px;
-      color: #666;
-    }
-
-    .chevron {
-      color: #999;
-    }
-
-    .save-as-form {
-      background: #f8f9fa;
-      border: 2px solid #1976d2;
-      border-radius: 12px;
-      padding: 20px;
-      margin-top: 16px;
-    }
-
-    .filename-field {
-      width: 100%;
-      margin-bottom: 16px;
-    }
-
-    .save-as-actions {
+    
+    .option-buttons {
       display: flex;
       gap: 12px;
-      justify-content: flex-end;
+      flex-direction: column;
     }
-
-    .tips-section {
+    
+    .option-button {
       display: flex;
-      gap: 16px;
-      margin-top: 24px;
-      padding: 16px;
-      background: #f8f9fa;
-      border-radius: 8px;
-      border-left: 4px solid #2196f3;
-    }
-
-    .tips-icon {
-      color: #2196f3;
-      font-size: 24px;
-      margin-top: 2px;
-    }
-
-    .tips-content h4 {
-      margin: 0 0 8px 0;
-      color: #333;
-    }
-
-    .tips-content ul {
-      margin: 0;
-      padding-left: 20px;
-    }
-
-    .tips-content li {
-      font-size: 14px;
-      color: #666;
-      margin-bottom: 4px;
-    }
-
-    kbd {
-      background: #f1f1f1;
-      border: 1px solid #ddd;
-      border-radius: 3px;
-      padding: 2px 6px;
-      font-size: 12px;
-      font-family: monospace;
-    }
-
-    .dialog-actions {
-      border-top: 1px solid #e0e0e0;
-      margin-top: 0;
-      padding: 16px 24px;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .primary-actions {
-      display: flex;
+      align-items: center;
       gap: 12px;
+      padding: 16px;
+      text-align: left;
+      justify-content: flex-start;
     }
-
-    .save-btn, .save-as-btn {
-      min-width: 120px;
+    
+    .option-content {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
     }
-
-    @media (max-width: 768px) {
-      .save-dialog {
-        min-width: 95vw;
-        max-width: 95vw;
-      }
-
-      .header-content {
-        gap: 12px;
-      }
-
-      .header-icon {
-        font-size: 28px;
-      }
-
-      .dialog-actions {
-        flex-direction: column;
-        gap: 12px;
-      }
-
-      .primary-actions {
-        order: -1;
-      }
-
-      .cancel-btn {
-        width: 100%;
-      }
-
-      .save-btn, .save-as-btn {
-        flex: 1;
-      }
+    
+    .option-content small {
+      color: #666;
     }
   `]
 })
 export class SaveConfirmationDialogComponent {
-  newFileName = '';
-  showSaveAsForm = false;
-  createBackup = false;
+  
+  saveForm: FormGroup;
+  showFileNameInput = false;
+  saveAsMode = false;
 
   constructor(
-    public dialogRef: MatDialogRef<SaveConfirmationDialogComponent>,
+    private fb: FormBuilder,
+    private dialogRef: MatDialogRef<SaveConfirmationDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: SaveConfirmationData
   ) {
-    this.newFileName = data.fileName || 'new_diagram.bpmn';
+    this.saveForm = this.fb.group({
+      fileName: [
+        this.data.fileName, 
+        [Validators.required, Validators.pattern(/^[^<>:"/\\|?*]+$/)]
+      ],
+      overwrite: [false]
+    });
+
+    // Show file name input for new files or if file exists
+    this.showFileNameInput = this.data.isNewFile || this.data.fileExists;
   }
 
-  getDialogTitle(): string {
+  setSaveAsMode() {
+    this.saveAsMode = true;
+    this.showFileNameInput = true;
+    // Clear the filename to force user to enter a new one
+    this.saveForm.get('fileName')?.setValue('');
+  }
+
+  setUpdateMode() {
+    this.saveAsMode = false;
+    this.showFileNameInput = false;
+  }
+
+  canSave(): boolean {
+    if (this.showFileNameInput) {
+      const isFormValid = this.saveForm.valid;
+      const hasOverwritePermission = !this.data.fileExists || this.saveForm.get('overwrite')?.value;
+      return isFormValid && hasOverwritePermission;
+    }
+    return true;
+  }
+
+  getSaveButtonText(): string {
     if (this.data.isNewFile) {
-      return 'Save New Diagram';
+      return 'Save New File';
     }
-    return this.data.hasChanges ? 'Save Changes' : 'Save Diagram';
-  }
-
-  getHeaderIcon(): string {
-    if (this.data.isNewFile) return 'note_add';
-    if (this.data.fileExists) return 'warning';
-    return 'save';
-  }
-
-  getHeaderIconClass(): string {
-    if (this.data.isNewFile) return 'new';
-    if (this.data.fileExists) return 'warning';
-    return 'save';
-  }
-
-  quickSave(): void {
-    const result: SaveConfirmationResult = {
-      action: 'save',
-      fileName: this.data.fileName,
-      overwrite: true,
-      createBackup: this.createBackup
-    };
-    this.dialogRef.close(result);
-  }
-
-  saveAs(): void {
-    if (this.showSaveAsForm) {
-      this.confirmSaveAs();
-    } else {
-      this.showSaveAsForm = true;
-      setTimeout(() => {
-        const input = document.querySelector('.filename-field input') as HTMLInputElement;
-        if (input) {
-          input.focus();
-          input.select();
-        }
-      }, 100);
+    if (this.saveAsMode) {
+      return 'Save As New File';
     }
-  }
-
-  confirmSaveAs(): void {
-    if (this.isValidFileName()) {
-      let fileName = this.newFileName.trim();
-      if (!fileName.endsWith('.bpmn') && !fileName.endsWith('.xml')) {
-        fileName += '.bpmn';
-      }
-
-      const result: SaveConfirmationResult = {
-        action: 'saveAs',
-        fileName: fileName,
-        overwrite: false,
-        createBackup: false
-      };
-      this.dialogRef.close(result);
-    }
-  }
-
-  cancelSaveAs(): void {
-    this.showSaveAsForm = false;
-    this.newFileName = this.data.fileName || 'new_diagram.bpmn';
-  }
-
-  isValidFileName(): boolean {
-    const fileName = this.newFileName.trim();
-    return fileName.length > 0 && 
-           fileName !== this.data.fileName &&
-           /^[^<>:"/\\|?*]+$/.test(fileName);
+    return 'Save Changes';
   }
 
   formatTime(date: Date): string {
-    return new Intl.RelativeTimeFormat('en', { numeric: 'auto' })
-      .format(Math.round((date.getTime() - Date.now()) / (1000 * 60)), 'minute');
+    return new Intl.DateTimeFormat('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    }).format(date);
   }
 
-  onCancel(): void {
+  onSave() {
     const result: SaveConfirmationResult = {
-      action: 'cancel'
+      action: this.saveAsMode ? 'saveAs' : 'save',
+      fileName: this.showFileNameInput ? this.saveForm.get('fileName')?.value : this.data.fileName,
+      overwrite: this.saveForm.get('overwrite')?.value || false
     };
+
     this.dialogRef.close(result);
+  }
+
+  onCancel() {
+    this.dialogRef.close({ action: 'cancel' });
   }
 }

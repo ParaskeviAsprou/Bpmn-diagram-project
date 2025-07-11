@@ -1,0 +1,93 @@
+    <div class="diagram-viewer" *ngIf="diagram">
+      <div class="viewer-header">
+        <div class="diagram-info">
+          <h2>{{diagram?.fileName}}</h2>
+          <p>{{diagram?.description || 'No description'}}</p>
+          <div class="diagram-meta">
+            <span>Created by: {{diagram?.createdBy}}</span>
+            <span>Updated: {{diagram?.updatedTime | date:'short'}}</span>
+            <span>Permission: {{userAccess?.permissionLevel || 'VIEW'}}</span>
+          </div>
+        </div>
+        <div class="viewer-actions">
+          <button 
+            class="btn btn-outline" 
+            (click)="goBack()">
+            <i class="icon-back"></i>
+            Back
+          </button>
+          <button 
+            *appHasPermission="'edit-diagrams'"
+            class="btn btn-primary" 
+            [disabled]="!canEdit"
+            (click)="editDiagram()">
+            <i class="icon-edit"></i>
+            Edit
+          </button>
+          <button 
+            *appHasPermission="'assign-diagrams'"
+            class="btn btn-outline" 
+            [disabled]="!canAssign"
+            (click)="manageDiagramAccess()">
+            <i class="icon-share"></i>
+            Manage Access
+          </button>
+          <div class="dropdown">
+            <button class="btn btn-outline dropdown-toggle" (click)="showExportMenu = !showExportMenu">
+              <i class="icon-download"></i>
+              Export
+            </button>
+            <div class="dropdown-menu" *ngIf="showExportMenu">
+              <a (click)="exportDiagram('xml')">XML</a>
+              <a (click)="exportDiagram('svg')">SVG</a>
+              <a (click)="exportDiagram('png')">PNG</a>
+              <a (click)="exportDiagram('pdf')">PDF</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="viewer-content">
+        <!-- BPMN Viewer Container -->
+        <div #bpmnContainer class="bpmn-container"></div>
+        
+        <!-- Properties Panel (if swimlanes with roles are detected) -->
+        <div class="properties-panel" *ngIf="swimlaneRoles.length > 0">
+          <h3>Role Assignments</h3>
+          <div class="role-assignments">
+            <div *ngFor="let roleAssignment of swimlaneRoles" class="role-assignment">
+              <div class="swimlane-info">
+                <strong>{{roleAssignment.swimlaneName}}</strong>
+              </div>
+              <div class="role-info">
+                <span class="role-badge" [class]="getRoleBadgeClass(roleAssignment.roleName)">
+                  {{roleAssignment.roleDisplayName || roleAssignment.roleName}}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Access Denied Overlay -->
+      <div class="access-denied-overlay" *ngIf="!hasAccess">
+        <div class="access-denied-message">
+          <i class="icon-lock"></i>
+          <h3>Access Denied</h3>
+          <p>You don't have permission to view this diagram.</p>
+          <button class="btn btn-primary" (click)="goBack()">Go Back</button>
+        </div>
+      </div>
+
+      <!-- Loading Overlay -->
+      <div class="loading-overlay" *ngIf="loading">
+        <div class="spinner"></div>
+      </div>
+    </div>
+
+    <!-- Error Message -->
+    <div class="error-message" *ngIf="error">
+      <h3>Error Loading Diagram</h3>
+      <p>{{error}}</p>
+      <button class="btn btn-primary" (click)="goBack()">Go Back</button>
+    </div>

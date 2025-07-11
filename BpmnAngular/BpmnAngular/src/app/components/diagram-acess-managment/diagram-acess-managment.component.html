@@ -1,0 +1,176 @@
+ <div class="diagram-access-management">
+      <div class="management-header">
+        <h2>Diagram Access Management</h2>
+        <div class="header-actions">
+          <select [(ngModel)]="selectedDiagramId" (change)="loadDiagramAssignments()" class="diagram-select">
+            <option value="">Select a diagram...</option>
+            <option *ngFor="let diagram of diagrams" [value]="diagram.id">
+              {{diagram.fileName}}
+            </option>
+          </select>
+          <button 
+            class="btn btn-primary" 
+            [disabled]="!selectedDiagramId"
+            (click)="showAssignmentModal = true">
+            <i class="icon-plus"></i>
+            Add Assignment
+          </button>
+        </div>
+      </div>
+
+      <div class="diagram-info" *ngIf="selectedDiagram">
+        <div class="diagram-card">
+          <div class="diagram-details">
+            <h3>{{selectedDiagram.fileName}}</h3>
+            <p>{{selectedDiagram.description || 'No description'}}</p>
+            <div class="diagram-meta">
+              <span>Created by: {{selectedDiagram.createdBy}}</span>
+              <span>Updated: {{selectedDiagram.updatedTime | date:'short'}}</span>
+              <span>Size: {{formatFileSize(selectedDiagram.fileSize)}}</span>
+            </div>
+          </div>
+          <div class="diagram-actions">
+            <button class="btn btn-outline" (click)="viewDiagram(selectedDiagram)">
+              <i class="icon-view"></i>
+              View
+            </button>
+            <button class="btn btn-outline" (click)="editDiagram(selectedDiagram)">
+              <i class="icon-edit"></i>
+              Edit
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="assignments-section" *ngIf="selectedDiagramId">
+        <h3>Current Assignments</h3>
+        <div class="assignments-list" *ngIf="assignments.length > 0; else noAssignments">
+          <div *ngFor="let assignment of assignments" class="assignment-card">
+            <div class="assignment-info">
+              <div class="assignment-type">
+                <span class="type-badge" [class]="assignment.assignmentType.toLowerCase()">
+                  {{assignment.assignmentType}}
+                </span>
+                <span class="assigned-to">{{assignment.assignedToName}}</span>
+              </div>
+              <div class="assignment-details">
+                <span class="permission-level" [class]="assignment.permissionLevel.toLowerCase()">
+                  {{assignment.permissionLevel}}
+                </span>
+                <span class="assigned-by">by {{assignment.assignedBy}}</span>
+                <span class="assigned-time">{{assignment.assignedTime | date:'short'}}</span>
+              </div>
+              <div class="assignment-notes" *ngIf="assignment.notes">
+                {{assignment.notes}}
+              </div>
+            </div>
+            <div class="assignment-actions">
+              <select 
+                [value]="assignment.permissionLevel"
+                (change)="updateAssignmentPermission(assignment, $event)"
+                class="permission-select">
+                <option value="VIEW">View</option>
+                <option value="EDIT">Edit</option>
+                <option value="ADMIN">Admin</option>
+              </select>
+              <button 
+                class="btn btn-sm btn-danger" 
+                (click)="removeAssignment(assignment)">
+                <i class="icon-delete"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <ng-template #noAssignments>
+          <div class="no-assignments">
+            <p>No assignments found for this diagram.</p>
+            <p>Click "Add Assignment" to grant access to users, roles, or groups.</p>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- Add Assignment Modal -->
+      <div class="modal" *ngIf="showAssignmentModal">
+        <div class="modal-backdrop" (click)="closeAssignmentModal()"></div>
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Add Diagram Assignment</h3>
+            <button class="modal-close" (click)="closeAssignmentModal()">&times;</button>
+          </div>
+          <form (ngSubmit)="addAssignment()">
+            <div class="form-group">
+              <label>Assignment Type</label>
+              <select [(ngModel)]="assignmentForm.type" name="type" required>
+                <option value="">Select type...</option>
+                <option value="USER">User</option>
+                <option value="ROLE">Role</option>
+                <option value="GROUP">Group</option>
+              </select>
+            </div>
+
+            <div class="form-group" *ngIf="assignmentForm.type === 'USER'">
+              <label>Select User</label>
+              <select [(ngModel)]="assignmentForm.targetId" name="targetId" required>
+                <option value="">Select user...</option>
+                <option *ngFor="let user of users" [value]="user.id">
+                  {{user.firstName}} {{user.lastName}} ({{user.email}})
+                </option>
+              </select>
+            </div>
+
+            <div class="form-group" *ngIf="assignmentForm.type === 'ROLE'">
+              <label>Select Role</label>
+              <select [(ngModel)]="assignmentForm.targetId" name="targetId" required>
+                <option value="">Select role...</option>
+                <option *ngFor="let role of roles" [value]="role.id">
+                  {{role.displayName || role.name}}
+                </option>
+              </select>
+            </div>
+
+            <div class="form-group" *ngIf="assignmentForm.type === 'GROUP'">
+              <label>Select Group</label>
+              <select [(ngModel)]="assignmentForm.targetId" name="targetId" required>
+                <option value="">Select group...</option>
+                <option *ngFor="let group of groups" [value]="group.id">
+                  {{group.name}}
+                </option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Permission Level</label>
+              <select [(ngModel)]="assignmentForm.permissionLevel" name="permissionLevel" required>
+                <option value="VIEW">View - Can view the diagram</option>
+                <option value="EDIT">Edit - Can view and edit the diagram</option>
+                <option value="ADMIN">Admin - Full control including assignments</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Notes (Optional)</label>
+              <textarea 
+                [(ngModel)]="assignmentForm.notes" 
+                name="notes"
+                rows="3"
+                placeholder="Add any notes about this assignment...">
+              </textarea>
+            </div>
+
+            <div class="modal-actions">
+              <button type="button" class="btn btn-outline" (click)="closeAssignmentModal()">
+                Cancel
+              </button>
+              <button type="submit" class="btn btn-primary">
+                Add Assignment
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Loading Overlay -->
+      <div class="loading-overlay" *ngIf="loading">
+        <div class="spinner"></div>
+      </div>
+    </div>

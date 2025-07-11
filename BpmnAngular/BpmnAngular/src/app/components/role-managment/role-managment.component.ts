@@ -1,7 +1,21 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
-import { Role, RoleService, RoleTreeNode } from '../../services/role.service';
 
+// Mock interfaces - replace with actual imports
+interface Role {
+  id: number;
+  name: string;
+  displayName?: string;
+  description?: string;
+}
+
+interface RoleTreeNode {
+  role: Role;
+  level: number;
+  children: RoleTreeNode[];
+}
 
 interface RoleFormData {
   name: string;
@@ -11,10 +25,10 @@ interface RoleFormData {
 
 @Component({
   selector: 'app-role-management',
-  standalone:true,
-  imports: [],
-  templateUrl: './role-management.component.html',
-  styleUrls: ['./role-management.component.css'],
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './role-managment.component.html',
+  styleUrls: ['./role-managment.component.css']
 })
 export class RoleManagementComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
@@ -38,11 +52,10 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
     description: ''
   };
 
-  constructor(private roleService: RoleService) {}
+  constructor() {}
 
   ngOnInit(): void {
-    this.loadRoles();
-    this.loadRoleHierarchy();
+    this.loadMockData();
   }
 
   ngOnDestroy(): void {
@@ -50,30 +63,49 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  loadRoles(): void {
-    this.roleService.getAllRoles()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (roles) => {
-          this.roles = roles;
-        },
-        error: (error) => {
-          console.error('Error loading roles:', error);
-        }
-      });
-  }
+  private loadMockData(): void {
+    // Mock roles data
+    this.roles = [
+      {
+        id: 1,
+        name: 'ROLE_ADMIN',
+        displayName: 'Administrator',
+        description: 'Full system access'
+      },
+      {
+        id: 2,
+        name: 'ROLE_MODELER',
+        displayName: 'Modeler',
+        description: 'Can create and edit diagrams'
+      },
+      {
+        id: 3,
+        name: 'ROLE_VIEWER',
+        displayName: 'Viewer',
+        description: 'Can view diagrams only'
+      }
+    ];
 
-  loadRoleHierarchy(): void {
-    this.roleService.getRoleHierarchyTree()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (tree) => {
-          this.roleTree = tree;
-        },
-        error: (error) => {
-          console.error('Error loading role hierarchy:', error);
-        }
-      });
+    // Mock role tree
+    this.roleTree = [
+      {
+        role: this.roles[0], // Admin
+        level: 1,
+        children: [
+          {
+            role: this.roles[1], // Modeler
+            level: 2,
+            children: [
+              {
+                role: this.roles[2], // Viewer
+                level: 3,
+                children: []
+              }
+            ]
+          }
+        ]
+      }
+    ];
   }
 
   editRole(role: Role): void {
@@ -88,83 +120,57 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
 
   deleteRole(role: Role): void {
     if (confirm(`Are you sure you want to delete the role "${role.displayName || role.name}"?`)) {
-      this.roleService.deleteRole(role.id)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: () => {
-            this.loadRoles();
-            this.loadRoleHierarchy();
-          },
-          error: (error) => {
-            console.error('Error deleting role:', error);
-            alert('Error deleting role: ' + error.message);
-          }
-        });
+      // Mock deletion - replace with actual service call
+      console.log('Deleting role:', role);
+      this.roles = this.roles.filter(r => r.id !== role.id);
+      this.loadMockData(); // Refresh hierarchy
     }
   }
 
   addChildRole(): void {
     if (this.selectedParentRole && this.selectedChildRoleId) {
-      this.roleService.createHierarchy(
-        this.selectedParentRole.id,
-        this.selectedChildRoleId,
-        this.hierarchyLevel
-      ).pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.loadRoleHierarchy();
-          this.closeModals();
-        },
-        error: (error) => {
-          console.error('Error adding child role:', error);
-          alert('Error adding child role: ' + error.message);
-        }
+      // Mock hierarchy creation - replace with actual service call
+      console.log('Adding child role:', {
+        parentId: this.selectedParentRole.id,
+        childId: this.selectedChildRoleId,
+        level: this.hierarchyLevel
       });
+      
+      this.closeModals();
+      this.loadMockData(); // Refresh hierarchy
     }
-  }
-
-  // addChildRole(parentRole: Role): void {
-  //   this.selectedParentRole = parentRole;
-  //   this.availableChildRoles = this.roles.filter(role => 
-  //     role.id !== parentRole.id && !this.isInHierarchy(role.id, parentRole.id)
-  //   );
-  //   this.showAddChildModal = true;
-  // }
-
-  private isInHierarchy(childId: number, parentId: number): boolean {
-    // Implementation to check if childId is already in the hierarchy under parentId
-    // This would require traversing the role tree
-    return false; // Simplified for now
   }
 
   saveRole(): void {
     if (this.editingRole) {
-      this.roleService.updateRole(this.editingRole.id, this.roleFormData)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: () => {
-            this.loadRoles();
-            this.closeModals();
-          },
-          error: (error) => {
-            console.error('Error updating role:', error);
-            alert('Error updating role: ' + error.message);
-          }
-        });
+      // Mock update - replace with actual service call
+      console.log('Updating role:', this.editingRole.id, this.roleFormData);
+      
+      const index = this.roles.findIndex(r => r.id === this.editingRole!.id);
+      if (index > -1) {
+        this.roles[index] = { ...this.roles[index], ...this.roleFormData };
+      }
     } else {
-      this.roleService.createRole(this.roleFormData)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: () => {
-            this.loadRoles();
-            this.closeModals();
-          },
-          error: (error) => {
-            console.error('Error creating role:', error);
-            alert('Error creating role: ' + error.message);
-          }
-        });
+      // Mock create - replace with actual service call
+      console.log('Creating role:', this.roleFormData);
+      
+      const newRole: Role = {
+        id: Math.max(...this.roles.map(r => r.id)) + 1,
+        ...this.roleFormData
+      };
+      this.roles.push(newRole);
     }
+    
+    this.closeModals();
+    this.loadMockData(); // Refresh data
+  }
+
+  getRoleBadgeClass(roleName: string): string {
+    if (roleName.includes('ADMIN')) return 'admin';
+    if (roleName.includes('MODELER')) return 'modeler';
+    if (roleName.includes('VIEWER')) return 'viewer';
+    if (roleName.includes('MANAGER')) return 'manager';
+    return 'default';
   }
 
   closeModals(): void {

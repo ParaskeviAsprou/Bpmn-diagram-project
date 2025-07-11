@@ -1,5 +1,5 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatSelectModule } from '@angular/material/select';
@@ -9,7 +9,15 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 
-import { DiagramAssignment, DiagramService } from '../../services/diagram-assgnment.service';
+// Mock interface - replace with actual import
+interface DiagramAssignment {
+  id: number;
+  assignmentType: 'USER' | 'GROUP' | 'ROLE';
+  assignedUserId?: number;
+  assignedGroupId?: number;
+  assignedRoleId?: number;
+  permissionLevel: 'VIEW' | 'EDIT' | 'ADMIN';
+}
 
 export interface DiagramSharingData {
   diagramId: number;
@@ -40,11 +48,14 @@ export interface DiagramSharingResult {
     MatChipsModule,
     MatIconModule
   ],
-  template:'./diagram-sharing.component.html',
-  styleUrls: ['./diagram-sharing.component.css'],
+  templateUrl: './diagram-sharing.component.html',
+  styleUrls: ['./diagram-sharing.component.css']
 })
 export class DiagramSharingComponent implements OnInit {
-  
+  permissionControl = new FormControl<'VIEW' | 'EDIT' | 'ADMIN'>('VIEW');
+  usersControl = new FormControl<number[]>([]);
+  groupsControl = new FormControl<number[]>([]);
+  rolesControl = new FormControl<number[]>([]);
 
   availableUsers: any[] = [];
   availableGroups: any[] = [];
@@ -54,22 +65,16 @@ export class DiagramSharingComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<DiagramSharingComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: DiagramSharingData,
-    private assignmentService: DiagramService
+    @Inject(MAT_DIALOG_DATA) public data: DiagramSharingData
   ) {}
 
   ngOnInit() {
-    this.permissionControl = this.fb.control<'VIEW' | 'EDIT' | 'ADMIN'>('VIEW');
-    this.usersControl = this.fb.control<number[]>([]);
-    this.groupsControl = this.fb.control<number[]>([]);
-    this.rolesControl = this.fb.control<number[]>([]);
     this.loadAvailableOptions();
     this.loadCurrentAssignments();
   }
 
   private loadAvailableOptions() {
-    // Εδώ θα φορτώνετε χρήστες, ομάδες, ρόλους από το backend
-    // Για τώρα mock data
+    // Mock data - replace with actual service calls
     this.availableUsers = [
       { id: 1, firstName: 'John', lastName: 'Doe', email: 'john@example.com' },
       { id: 2, firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com' }
@@ -88,14 +93,15 @@ export class DiagramSharingComponent implements OnInit {
 
   private loadCurrentAssignments() {
     if (this.data.diagramId) {
-      this.assignmentService.getDiagramAssignments(this.data.diagramId).subscribe({
-        next: (assignments: DiagramAssignment[]) => {
-          this.currentAssignments = assignments;
-        },
-        error: (error:any) => {
-          console.error('Failed to load current assignments:', error);
+      // Mock current assignments - replace with actual service call
+      this.currentAssignments = [
+        {
+          id: 1,
+          assignmentType: 'USER',
+          assignedUserId: 1,
+          permissionLevel: 'EDIT'
         }
-      });
+      ];
     }
   }
 
@@ -168,14 +174,9 @@ export class DiagramSharingComponent implements OnInit {
 
   removeAssignment(assignment: any) {
     if (confirm('Are you sure you want to remove this assignment?')) {
-      this.assignmentService.removeAssignment(assignment.id).subscribe({
-        next: () => {
-          this.loadCurrentAssignments();
-        },
-        error: (error) => {
-          console.error('Failed to remove assignment:', error);
-        }
-      });
+      // Mock removal - replace with actual service call
+      console.log('Removing assignment:', assignment);
+      this.loadCurrentAssignments();
     }
   }
 

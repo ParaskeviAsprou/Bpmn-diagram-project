@@ -1,180 +1,83 @@
-.role-management {
-      padding: 20px;
-    }
+/* Προσθέστε αυτά στο τέλος του role-managment.component.css */
 
-    .management-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 30px;
-    }
+/* Tree Node Styles */
+.node-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-left: 2px solid #e0e0e0;
+  background-color: #fafafa;
+  border-radius: 4px;
+  margin: 4px 0;
+}
 
-    .management-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 30px;
-    }
+.tree-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
 
-    .hierarchy-section, .roles-section {
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
+.role-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
+}
 
-    .hierarchy-tree {
-      max-height: 500px;
-      overflow-y: auto;
-    }
+.role-badge.admin {
+  background: #f44336;
+}
 
-    .roles-list {
-      max-height: 500px;
-      overflow-y: auto;
-    }
+.role-badge.modeler {
+  background: #2196f3;
+}
 
-    .role-card {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 15px;
-      border: 1px solid #e0e0e0;
-      border-radius: 6px;
-      margin-bottom: 10px;
-    }
+.role-badge.viewer {
+  background: #4caf50;
+}
 
-    .role-info h4 {
-      margin: 0 0 5px 0;
-      color: #333;
-    }
+.role-badge.manager {
+  background: #ff9800;
+}
 
-    .role-info p {
-      margin: 0 0 5px 0;
-      color: #666;
-      font-size: 14px;
-    }
+.role-badge.default {
+  background: #666;
+}
 
-    .role-info small {
-      color: #888;
-      font-family: monospace;
-    }
+.level-badge {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
 
-    .role-actions {
-      display: flex;
-      gap: 5px;
-    }
+.node-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+}
 
-    .modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 1000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+.children {
+  border-left: 1px dashed #ccc;
+  margin-left: 10px;
+}
 
-    .modal-backdrop {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-    }
-
-    .modal-content {
-      background: white;
-      padding: 0;
-      border-radius: 8px;
-      max-width: 500px;
-      width: 90%;
-      max-height: 90%;
-      overflow-y: auto;
-      position: relative;
-      z-index: 1001;
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20px;
-      border-bottom: 1px solid #e0e0e0;
-    }
-
-    .modal-close {
-      background: none;
-      border: none;
-      font-size: 24px;
-      cursor: pointer;
-      color: #666;
-    }
-
-    .form-group {
-      margin-bottom: 20px;
-      padding: 0 20px;
-    }
-
-    .form-group label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: 500;
-      color: #333;
-    }
-
-    .form-group input,
-    .form-group textarea,
-    .form-group select {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 14px;
-    }
-
-    .modal-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      padding: 20px;
-      border-top: 1px solid #e0e0e0;
-    }
-
-    .btn {
-      padding: 8px 16px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: all 0.3s ease;
-    }
-
-    .btn-primary {
-      background: #2196f3;
-      color: white;
-    }
-
-    .btn-outline {
-      background: transparent;
-      border: 1px solid #ddd;
-      color: #666;
-    }
-
-    .btn-danger {
-      background: #f44336;
-      color: white;
-    }
-
-    .btn-sm {
-      padding: 4px 8px;
-      font-size: 12px;
-    }
-
-    .btn:hover {
-      opacity: 0.8;
-    }
-
-    .btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .management-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .node-content {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  
+  .level-badge {
+    order: -1;
+  }
+}

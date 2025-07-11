@@ -534,7 +534,7 @@ export class FileListComponent implements OnInit, OnDestroy {
     switch (options.paperSize) {
       case 'a3': pdfWidth = 297; pdfHeight = 420; break;
       case 'letter': pdfWidth = 216; pdfHeight = 279; break;
-      case 'tabloid': pdfWidth = 279; pdfHeight = 432; break;
+      case 'a4': pdfWidth = 279; pdfHeight = 432; break;
       case 'auto':
         const aspectRatio = canvas.width / canvas.height;
         if (aspectRatio > 1) {

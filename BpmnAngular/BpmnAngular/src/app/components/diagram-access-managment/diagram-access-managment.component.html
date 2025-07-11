@@ -1,4 +1,5 @@
- <div class="diagram-access-management">
+<p>diagram-access-managment works!</p>
+   <div class="diagram-access-management">
       <div class="management-header">
         <h2>Diagram Access Management</h2>
         <div class="header-actions">
@@ -12,7 +13,6 @@
             class="btn btn-primary" 
             [disabled]="!selectedDiagramId"
             (click)="showAssignmentModal = true">
-            <i class="icon-plus"></i>
             Add Assignment
           </button>
         </div>
@@ -31,11 +31,9 @@
           </div>
           <div class="diagram-actions">
             <button class="btn btn-outline" (click)="viewDiagram(selectedDiagram)">
-              <i class="icon-view"></i>
               View
             </button>
             <button class="btn btn-outline" (click)="editDiagram(selectedDiagram)">
-              <i class="icon-edit"></i>
               Edit
             </button>
           </div>
@@ -76,7 +74,7 @@
               <button 
                 class="btn btn-sm btn-danger" 
                 (click)="removeAssignment(assignment)">
-                <i class="icon-delete"></i>
+                Delete
               </button>
             </div>
           </div>

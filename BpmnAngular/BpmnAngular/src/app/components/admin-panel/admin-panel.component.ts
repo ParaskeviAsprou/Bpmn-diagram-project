@@ -1,7 +1,11 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-admin-panel',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
   template: `
     <div class="admin-panel">
       <div class="admin-header">
@@ -41,10 +45,29 @@ import { Component, OnInit } from '@angular/core';
       </nav>
 
       <div class="admin-content">
-        <app-user-management *ngIf="activeTab === 'users'"></app-user-management>
-        <app-role-management *ngIf="activeTab === 'roles'"></app-role-management>
-        <app-group-management *ngIf="activeTab === 'groups'"></app-group-management>
-        <app-diagram-access-management *ngIf="activeTab === 'diagrams'"></app-diagram-access-management>
+        <div *ngIf="activeTab === 'users'" class="content-section">
+          <h2>User Management</h2>
+          <p>Manage system users and their permissions.</p>
+          <!-- User management content will go here -->
+        </div>
+        
+        <div *ngIf="activeTab === 'roles'" class="content-section">
+          <h2>Role Management</h2>
+          <p>Configure roles and hierarchy.</p>
+          <!-- Role management content will go here -->
+        </div>
+        
+        <div *ngIf="activeTab === 'groups'" class="content-section">
+          <h2>Group Management</h2>
+          <p>Manage user groups and assignments.</p>
+          <!-- Group management content will go here -->
+        </div>
+        
+        <div *ngIf="activeTab === 'diagrams'" class="content-section">
+          <h2>Diagram Access Management</h2>
+          <p>Control diagram access and permissions.</p>
+          <!-- Diagram access management content will go here -->
+        </div>
       </div>
     </div>
   `,
@@ -98,6 +121,22 @@ import { Component, OnInit } from '@angular/core';
 
     .admin-content {
       min-height: 600px;
+    }
+
+    .content-section {
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .content-section h2 {
+      margin-top: 0;
+      color: #333;
+    }
+
+    .content-section p {
+      color: #666;
     }
   `]
 })

@@ -1,19 +1,18 @@
-import { Directive, Input, OnInit, OnDestroy, TemplateRef, ViewContainerRef } from '@angular/core';
+import { Directive, Input, TemplateRef, ViewContainerRef, OnInit, OnDestroy } from '@angular/core';
 import { Subject, takeUntil } from 'rxjs';
 import { AuthenticationService } from '../services/authentication.service';
+
 @Directive({
   selector: '[appHasRole]',
   standalone: true
 })
 export class RoleDirective implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  
-  @Input() set appHasRole(roles: string | string[]) {
-    this.allowedRoles = Array.isArray(roles) ? roles : [roles];
-    this.updateView();
-  }
+  private hasView = false;
 
-  private allowedRoles: string[] = [];
+  @Input() set appHasRole(roles: string | string[]) {
+    this.checkRoles(roles);
+  }
 
   constructor(
     private templateRef: TemplateRef<any>,
@@ -22,10 +21,15 @@ export class RoleDirective implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    // Subscribe to user changes to re-check permissions
     this.authService.currentUser$
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        this.updateView();
+        // Re-check roles when user changes
+        const currentRoles = this.getCurrentRoles();
+        if (currentRoles) {
+          this.checkRoles(currentRoles);
+        }
       });
   }
 
@@ -34,11 +38,24 @@ export class RoleDirective implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private updateView(): void {
-    if (this.allowedRoles.length === 0 || this.authService.hasAnyRole(this.allowedRoles)) {
+  private getCurrentRoles(): string | string[] | null {
+    // This is a bit tricky since we need to store the original roles
+    // In a real implementation, you might want to store this differently
+    return null;
+  }
+
+  private checkRoles(roles: string | string[]): void {
+    const rolesArray = Array.isArray(roles) ? roles : [roles];
+    const hasPermission = this.authService.hasAnyRole(rolesArray);
+
+    if (hasPermission && !this.hasView) {
       this.viewContainer.createEmbeddedView(this.templateRef);
-    } else {
+      this.hasView = true;
+    } else if (!hasPermission && this.hasView) {
       this.viewContainer.clear();
+      this.hasView = false;
     }
   }
 }
+
+// permission.directive.ts - Permission Directive

@@ -99,7 +99,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
   canCreate: boolean = false;
   canDelete: boolean = false;
 
- editableProperties: any = {
+  editableProperties: any = {
     name: '',
     id: '',
     documentation: ''
@@ -135,7 +135,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     private customPropertyService: CustomPropertyService
   ) { }
 
-  
+
 
   @HostListener('document:keydown', ['$event'])
   onKeydown(event: KeyboardEvent): void {
@@ -195,16 +195,64 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       });
 
-    // Handle route parameters
+    // Handle route parameters - UPDATED
     this.route.queryParams.subscribe(params => {
       this.loadFolderContext(params);
 
       if (params['fileId']) {
         this.loadFileById(parseInt(params['fileId']));
-      } else if (params['new']) {
-        this.createNewDiagram();
+      } else if (params['new'] === 'true') {
+        // Create new diagram when 'new=true' parameter is present
+        console.log('Creating new diagram from route parameter');
+        this.createNewDiagramFromRoute();
+      } else if (params['openFile'] === 'true') {
+        // Handle uploaded file from navbar
+        this.handleUploadedFile();
       }
     });
+  } private createNewDiagramFromRoute(): void {
+    console.log('Creating new diagram from route...');
+
+    // Wait for modeler to be initialized if not already
+    if (!this.modeler) {
+      setTimeout(() => {
+        this.createNewDiagramFromRoute();
+      }, 100);
+      return;
+    }
+
+    this.resetToNewDiagram();
+    console.log('New diagram created successfully');
+  }
+
+  private handleUploadedFile(): void {
+    const fileContent = sessionStorage.getItem('uploadedFileContent');
+    const fileName = sessionStorage.getItem('uploadedFileName');
+
+    if (fileContent && fileName) {
+      console.log('Loading uploaded file:', fileName);
+
+      // Wait for modeler to be initialized if not already
+      if (!this.modeler) {
+        setTimeout(() => {
+          this.handleUploadedFile();
+        }, 100);
+        return;
+      }
+
+      // Load the diagram content
+      this.loadDiagram(fileContent);
+
+      // Mark as having changes since it's an uploaded file
+      this.hasUnsavedChanges = true;
+      this.changeCount = 1;
+
+      // Clear session storage
+      sessionStorage.removeItem('uploadedFileContent');
+      sessionStorage.removeItem('uploadedFileName');
+
+      this.showNotification(`File "${fileName}" loaded successfully. Remember to save it.`, 'success');
+    }
   }
 
   private restoreStateAfterLogin(): void {
@@ -359,7 +407,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     if (!this.isViewerOnly) {
-     this.modeler.on('element.changed', () => {
+      this.modeler.on('element.changed', () => {
         this.markAsChanged();
       });
 
@@ -426,7 +474,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
           return;
         }
 
-      
+
         this.performSave(result);
       },
       error: (error) => {
@@ -819,19 +867,19 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
- private processSVGForPDF(svgString: string): string {
-  let processedSVG = svgString
-    .replace(/data-element-id="[^"]*"/g, '')
-    //.replace(/class="[^"]*djs-outline[^"]*"/g, '')
-    //.replace(/<g[^>]*class="djs-outline"[^>]*>.*?<\/g>/gs, '') 
-    .replace(/stroke="none"/g, '')
-    .replace(/stroke-width="0"/g, '');
+  private processSVGForPDF(svgString: string): string {
+    let processedSVG = svgString
+      .replace(/data-element-id="[^"]*"/g, '')
+      //.replace(/class="[^"]*djs-outline[^"]*"/g, '')
+      //.replace(/<g[^>]*class="djs-outline"[^>]*>.*?<\/g>/gs, '') 
+      .replace(/stroke="none"/g, '')
+      .replace(/stroke-width="0"/g, '');
 
-  processedSVG = processedSVG.replace('<svg',
-    '<svg style="font-family: Arial, sans-serif; background: white;"');
+    processedSVG = processedSVG.replace('<svg',
+      '<svg style="font-family: Arial, sans-serif; background: white;"');
 
-  return processedSVG;
-}
+    return processedSVG;
+  }
 
 
   private enhanceSVGForPDF(svgElement: SVGSVGElement): void {
@@ -879,7 +927,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
       this.addPDFHeader(pdf, options.fileName);
     }
 
-  
+
     const margin = 15;
     const headerSpace = options.includeMetadata ? 45 : 15;
     const availableWidth = pdfWidth - (2 * margin);
@@ -1005,18 +1053,35 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.resetToNewDiagram();
   }
-
   private resetToNewDiagram(): void {
     this.currentFile = null;
     this.elementColors = {};
     this.changeCount = 0;
     this.lastSaveTime = null;
-    this.loadDiagram(this.defaultXml);
     this.selectedElement = null;
     this.isEditMode = false;
     this.hasUnsavedChanges = false;
-    this.showNotification('New diagram ready', 'success');
+
+    // Clear custom properties
+    this.customPropertyService.clearAllProperties();
+    this.elementCustomProperties = [];
+
+    // Load default diagram
+    if (this.modeler) {
+      this.loadDiagram(this.defaultXml);
+    }
   }
+  // private resetToNewDiagram(): void {
+  //   this.currentFile = null;
+  //   this.elementColors = {};
+  //   this.changeCount = 0;
+  //   this.lastSaveTime = null;
+  //   this.loadDiagram(this.defaultXml);
+  //   this.selectedElement = null;
+  //   this.isEditMode = false;
+  //   this.hasUnsavedChanges = false;
+  //   this.showNotification('New diagram ready', 'success');
+  // }
 
   private loadFolderContext(params: any): void {
     const folderId = params['folderId'];
@@ -1535,5 +1600,5 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
   get canEditProperties(): boolean {
     return this.canEdit && this.selectedElement && !this.isViewerOnly;
   }
-  
+
 }

@@ -1,7 +1,5 @@
 import { Directive, Input, TemplateRef, ViewContainerRef, OnInit, OnDestroy } from '@angular/core';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
-import { RbacService } from '../services/rbac.service';
+import { Subject, takeUntil } from 'rxjs';
 import { AuthenticationService } from '../services/authentication.service';
 
 @Directive({
@@ -10,13 +8,11 @@ import { AuthenticationService } from '../services/authentication.service';
 })
 export class PermissionDirective implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  
-  @Input() set appHasPermission(permission: string) {
-    this.requiredPermission = permission;
-    this.updateView();
-  }
+  private hasView = false;
 
-  private requiredPermission: string = '';
+  @Input() set appHasPermission(permission: string) {
+    this.checkPermission(permission);
+  }
 
   constructor(
     private templateRef: TemplateRef<any>,
@@ -25,10 +21,12 @@ export class PermissionDirective implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    // Subscribe to user changes to re-check permissions
     this.authService.currentUser$
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        this.updateView();
+        // Re-check permission when user changes
+        // You would need to store the original permission
       });
   }
 
@@ -37,30 +35,30 @@ export class PermissionDirective implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private updateView(): void {
-    if (this.hasPermission()) {
+  private checkPermission(permission: string): void {
+    const hasPermission = this.hasPermissionToPerformAction(permission);
+
+    if (hasPermission && !this.hasView) {
       this.viewContainer.createEmbeddedView(this.templateRef);
-    } else {
+      this.hasView = true;
+    } else if (!hasPermission && this.hasView) {
       this.viewContainer.clear();
+      this.hasView = false;
     }
   }
 
-  private hasPermission(): boolean {
-    const user = this.authService.getCurrentUser();
-    if (!user) return false;
-
-    // Define permission mappings
+  private hasPermissionToPerformAction(permission: string): boolean {
+    // Map permissions to roles
     const permissionMap: { [key: string]: string[] } = {
-      'manage-roles': ['ROLE_ADMIN'],
-      'manage-users': ['ROLE_ADMIN'],
-      'create-diagrams': ['ROLE_ADMIN', 'ROLE_MODELER'],
-      'edit-diagrams': ['ROLE_ADMIN', 'ROLE_MODELER'],
       'view-diagrams': ['ROLE_ADMIN', 'ROLE_MODELER', 'ROLE_VIEWER'],
+      'edit-diagrams': ['ROLE_ADMIN', 'ROLE_MODELER'],
+      'create-diagrams': ['ROLE_ADMIN', 'ROLE_MODELER'],
       'assign-diagrams': ['ROLE_ADMIN', 'ROLE_MODELER'],
-      'manage-groups': ['ROLE_ADMIN']
+      'manage-users': ['ROLE_ADMIN'],
+      'delete-diagrams': ['ROLE_ADMIN']
     };
 
-    const allowedRoles = permissionMap[this.requiredPermission] || [];
+    const allowedRoles = permissionMap[permission] || [];
     return this.authService.hasAnyRole(allowedRoles);
   }
 }

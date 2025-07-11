@@ -1,8 +1,7 @@
-
-// dashboard.component.ts
+// dashboard.component.ts - Updated with proper navigation
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { Subject, takeUntil, forkJoin } from 'rxjs';
 
 import { UserService } from '../../services/user.service';
@@ -26,14 +25,14 @@ interface DashboardStats {
     <div class="dashboard">
       <div class="dashboard-header">
         <div class="welcome-section">
-          <h1>Welcome back, {{currentUser?.firstName}}!</h1>
+          <h1>Welcome back, {{currentUser?.firstname}}!</h1>
           <p>Here's what's happening with your business processes today.</p>
         </div>
         <div class="header-actions">
           <button 
-            *appHasPermission="'create-diagrams'"
+            *ngIf="canCreateDiagrams"
             class="btn btn-primary" 
-            routerLink="/diagrams/create">
+            (click)="createNewDiagram()">
             <i class="icon-plus"></i>
             Create New Diagram
           </button>
@@ -52,7 +51,7 @@ interface DashboardStats {
           </div>
         </div>
         
-        <div class="stat-card" *appHasPermission="'create-diagrams'">
+        <div class="stat-card" *ngIf="canCreateDiagrams">
           <div class="stat-icon">
             <i class="icon-user"></i>
           </div>
@@ -72,7 +71,7 @@ interface DashboardStats {
           </div>
         </div>
         
-        <div class="stat-card" *appHasRole="'ROLE_ADMIN'">
+        <div class="stat-card" *ngIf="isAdmin">
           <div class="stat-icon">
             <i class="icon-users"></i>
           </div>
@@ -89,7 +88,7 @@ interface DashboardStats {
         <div class="dashboard-card">
           <div class="card-header">
             <h2>Recent Diagrams</h2>
-            <a routerLink="/diagrams" class="view-all">View All</a>
+            <a (click)="navigateToFiles()" class="view-all">View All</a>
           </div>
           <div class="card-content">
             <div class="diagram-list" *ngIf="recentDiagrams.length > 0; else noDiagrams">
@@ -103,13 +102,13 @@ interface DashboardStats {
                   </div>
                 </div>
                 <div class="diagram-actions">
-                  <button class="btn btn-sm btn-outline" [routerLink]="['/diagrams/view', diagram.id]">
+                  <button class="btn btn-sm btn-outline" (click)="viewDiagram(diagram.id)">
                     View
                   </button>
                   <button 
-                    *appHasPermission="'edit-diagrams'"
+                    *ngIf="canEditDiagrams"
                     class="btn btn-sm btn-primary" 
-                    [routerLink]="['/diagrams/edit', diagram.id]">
+                    (click)="editDiagram(diagram.id)">
                     Edit
                   </button>
                 </div>
@@ -121,9 +120,9 @@ interface DashboardStats {
                 <h3>No diagrams yet</h3>
                 <p>Start by creating your first BPMN diagram</p>
                 <button 
-                  *appHasPermission="'create-diagrams'"
+                  *ngIf="canCreateDiagrams"
                   class="btn btn-primary" 
-                  routerLink="/diagrams/create">
+                  (click)="createNewDiagram()">
                   Create Diagram
                 </button>
               </div>
@@ -139,24 +138,24 @@ interface DashboardStats {
           <div class="card-content">
             <div class="quick-actions">
               <a 
-                *appHasPermission="'create-diagrams'"
-                routerLink="/diagrams/create" 
+                *ngIf="canCreateDiagrams"
+                (click)="createNewDiagram()" 
                 class="quick-action-item">
                 <i class="icon-plus"></i>
                 <span>Create Diagram</span>
               </a>
-              <a routerLink="/diagrams" class="quick-action-item">
+              <a (click)="navigateToFiles()" class="quick-action-item">
                 <i class="icon-list"></i>
                 <span>Browse Diagrams</span>
               </a>
               <a 
-                *appHasRole="'ROLE_ADMIN'"
-                routerLink="/admin" 
+                *ngIf="isAdmin"
+                (click)="navigateToAdmin()" 
                 class="quick-action-item">
                 <i class="icon-admin"></i>
                 <span>Admin Panel</span>
               </a>
-              <a routerLink="/profile" class="quick-action-item">
+              <a (click)="navigateToSettings()" class="quick-action-item">
                 <i class="icon-settings"></i>
                 <span>Settings</span>
               </a>
@@ -319,6 +318,7 @@ interface DashboardStats {
       color: #667eea;
       text-decoration: none;
       font-size: 14px;
+      cursor: pointer;
     }
 
     .view-all:hover {
@@ -408,6 +408,7 @@ interface DashboardStats {
       text-decoration: none;
       color: #2c3e50;
       transition: all 0.3s ease;
+      cursor: pointer;
     }
 
     .quick-action-item:hover {
@@ -574,6 +575,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
   loading = false;
   
+  // Permission flags
+  canCreateDiagrams = false;
+  canEditDiagrams = false;
+  canViewDiagrams = false;
+  isAdmin = false;
+  
   stats: DashboardStats = {
     totalDiagrams: 0,
     myDiagrams: 0,
@@ -586,17 +593,40 @@ export class DashboardComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthenticationService,
     private diagramService: DiagramService,
-    private userService: UserService
+    private userService: UserService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUser();
+    this.initializePermissions();
     this.loadDashboardData();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private initializePermissions(): void {
+    this.canViewDiagrams = this.authService.hasRole('ROLE_VIEWER') ||
+                          this.authService.hasRole('ROLE_MODELER') ||
+                          this.authService.hasRole('ROLE_ADMIN');
+
+    this.canCreateDiagrams = this.authService.hasRole('ROLE_MODELER') ||
+                            this.authService.hasRole('ROLE_ADMIN');
+
+    this.canEditDiagrams = this.authService.hasRole('ROLE_MODELER') ||
+                          this.authService.hasRole('ROLE_ADMIN');
+
+    this.isAdmin = this.authService.hasRole('ROLE_ADMIN');
+
+    console.log('Dashboard permissions:', {
+      canView: this.canViewDiagrams,
+      canCreate: this.canCreateDiagrams,
+      canEdit: this.canEditDiagrams,
+      isAdmin: this.isAdmin
+    });
   }
 
   loadDashboardData(): void {
@@ -646,6 +676,39 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.loading = false;
         }
       });
+  }
+
+  // Navigation methods
+  createNewDiagram(): void {
+    if (this.canCreateDiagrams) {
+      this.router.navigate(['/modeler'], { queryParams: { new: 'true' } });
+    }
+  }
+
+  viewDiagram(diagramId: number): void {
+    if (this.canViewDiagrams) {
+      this.router.navigate(['/modeler', diagramId]);
+    }
+  }
+
+  editDiagram(diagramId: number): void {
+    if (this.canEditDiagrams) {
+      this.router.navigate(['/modeler'], { queryParams: { fileId: diagramId } });
+    }
+  }
+
+  navigateToFiles(): void {
+    this.router.navigate(['/files']);
+  }
+
+  navigateToAdmin(): void {
+    if (this.isAdmin) {
+      this.router.navigate(['/admin']);
+    }
+  }
+
+  navigateToSettings(): void {
+    this.router.navigate(['/settings']);
   }
 
   getRoleBadgeClass(roleName: string): string {

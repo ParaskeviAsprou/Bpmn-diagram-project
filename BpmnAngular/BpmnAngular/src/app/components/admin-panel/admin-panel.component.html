@@ -1,1 +1,132 @@
-<p>admin-panel works!</p>
+<div class="admin-panel">
+  <mat-card class="admin-card">
+    <mat-card-header>
+      <mat-card-title>
+        <h1>Admin Panel</h1>
+      </mat-card-title>
+      <mat-card-subtitle>System administration and management</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <mat-tab-group>
+        <!-- Dashboard Tab -->
+        <mat-tab label="Dashboard">
+          <div class="admin-dashboard">
+            <div class="stats-grid">
+              <mat-card class="stat-card">
+                <mat-card-header>
+                  <mat-card-title>Total Users</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <div class="stat-number">{{totalUsers || 0}}</div>
+                </mat-card-content>
+              </mat-card>
+
+              <mat-card class="stat-card">
+                <mat-card-header>
+                  <mat-card-title>Active Sessions</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <div class="stat-number">{{activeSessions || 0}}</div>
+                </mat-card-content>
+              </mat-card>
+
+              <mat-card class="stat-card">
+                <mat-card-header>
+                  <mat-card-title>Total Files</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <div class="stat-number">{{totalFiles || 0}}</div>
+                </mat-card-content>
+              </mat-card>
+
+              <mat-card class="stat-card">
+                <mat-card-header>
+                  <mat-card-title>System Status</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <div class="stat-status">
+                    <mat-icon [color]="systemStatus === 'healthy' ? 'primary' : 'warn'">
+                      {{systemStatus === 'healthy' ? 'check_circle' : 'warning'}}
+                    </mat-icon>
+                    {{systemStatus || 'Unknown'}}
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- User Management Tab -->
+        <mat-tab label="User Management">
+          <div class="user-management-section">
+            <button mat-raised-button color="primary" (click)="navigateToUserManagement()">
+              <mat-icon>people</mat-icon>
+              Manage Users
+            </button>
+          </div>
+        </mat-tab>
+
+        <!-- System Settings Tab -->
+        <mat-tab label="System Settings">
+          <div class="system-settings">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>System Name</mat-label>
+              <input matInput [(ngModel)]="systemName" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Maintenance Mode</mat-label>
+              <mat-select [(ngModel)]="maintenanceMode">
+                <mat-option [value]="false">Disabled</mat-option>
+                <mat-option [value]="true">Enabled</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <div class="button-group">
+              <button mat-raised-button color="primary" (click)="saveSystemSettings()">
+                <mat-icon>save</mat-icon>
+                Save Settings
+              </button>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- Logs Tab -->
+        <mat-tab label="System Logs">
+          <div class="logs-section">
+            <div class="logs-controls">
+              <mat-form-field appearance="outline">
+                <mat-label>Log Level</mat-label>
+                <mat-select [(ngModel)]="selectedLogLevel">
+                  <mat-option value="all">All</mat-option>
+                  <mat-option value="error">Error</mat-option>
+                  <mat-option value="warn">Warning</mat-option>
+                  <mat-option value="info">Info</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <button mat-button (click)="refreshLogs()">
+                <mat-icon>refresh</mat-icon>
+                Refresh
+              </button>
+
+              <button mat-button (click)="clearLogs()">
+                <mat-icon>clear</mat-icon>
+                Clear
+              </button>
+            </div>
+
+            <div class="logs-content">
+              <pre *ngIf="systemLogs.length > 0">{{systemLogs}}</pre>
+              <div *ngIf="systemLogs.length === 0" class="no-logs">
+                <mat-icon>info</mat-icon>
+                <p>No logs available</p>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </mat-card-content>
+  </mat-card>
+</div>

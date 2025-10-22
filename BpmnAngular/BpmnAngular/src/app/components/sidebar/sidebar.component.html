@@ -1,1 +1,59 @@
-<p>sidebar works!</p>
+<aside class="app-sidebar" [class.collapsed]="isCollapsed">
+  <div class="sidebar-header">
+    <h2 class="logo-text" *ngIf="!isCollapsed">MyApp</h2>
+    <button class="collapse-btn" (click)="toggleCollapse()">
+      <i [class]="isCollapsed ? 'icon-chevron-right' : 'icon-chevron-left'"></i>
+    </button>
+  </div>
+
+  <nav class="sidebar-nav">
+    <ul class="nav-list">
+      <li *ngFor="let item of menuItems" class="nav-item">
+        <div *ngIf="hasAccess(item)" class="nav-link-container">
+          <!-- Single menu item -->
+          <a *ngIf="!item.children"
+             class="nav-link"
+             [class.active]="isActive(item.route!)"
+             (click)="navigate(item.route!)">
+            <i [class]="item.icon"></i>
+            <span class="nav-text">{{ item.label }}</span>
+          </a>
+
+          <!-- Menu with children -->
+          <div *ngIf="item.children" class="nav-group">
+            <button class="nav-link nav-toggle"
+                    [class.expanded]="isExpanded(item.label)"
+                    (click)="toggleGroup(item.label)">
+              <i [class]="item.icon"></i>
+              <span class="nav-text">{{ item.label }}</span>
+              <i class="icon-chevron-right expand-icon"
+                 [class.rotated]="isExpanded(item.label)"></i>
+            </button>
+            <ul class="nav-submenu" [class.expanded]="isExpanded(item.label)">
+              <li *ngFor="let child of item.children" class="nav-subitem">
+                <a *ngIf="hasAccess(child)"
+                   class="nav-sublink"
+                   [class.active]="isActive(child.route!)"
+                   (click)="navigate(child.route!)">
+                  <i [class]="child.icon"></i>
+                  <span class="nav-text">{{ child.label }}</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </li>
+    </ul>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-info" *ngIf="currentUser && !isCollapsed">
+      <i class="icon-user-circle"></i>
+      <span>{{ currentUser.username }}</span>
+    </div>
+    <button class="logout-btn" (click)="logout()">
+      <i class="icon-logout"></i>
+      <span *ngIf="!isCollapsed">Logout</span>
+    </button>
+  </div>
+</aside>

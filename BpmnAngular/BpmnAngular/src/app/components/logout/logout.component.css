@@ -1,0 +1,63 @@
+/* logout.component.css - Improved minimal design */
+
+.logout-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: transparent;
+  color: #e53e3e;
+  border: 1.5px solid #feb2b2;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 40px;
+}
+
+.logout-btn:hover {
+  background: #fff5f5;
+  border-color: #fc8181;
+  color: #c53030;
+}
+
+.logout-btn mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Alternative solid style (uncomment if preferred) */
+/*
+.logout-btn {
+  background: #fff5f5;
+  border: none;
+  color: #e53e3e;
+}
+
+.logout-btn:hover {
+  background: #fed7d7;
+}
+*/
+
+/* Responsive */
+@media (max-width: 768px) {
+  .logout-container {
+    justify-content: center;
+  }
+  
+  .logout-btn {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+}

@@ -1,0 +1,122 @@
+<header class="app-header">
+  <div class="header-left">
+    <button class="menu-toggle" (click)="toggleSidebar()">
+      <i class="bx bx-menu"></i>
+    </button>
+    <div class="logo">
+      <h2>BPMN Manager</h2>
+    </div>
+  </div>
+
+  <div class="header-center">
+    <div class="search-container">
+      <input 
+        type="text" 
+        placeholder="Search diagrams..." 
+        class="search-input"
+        [(ngModel)]="searchTerm"
+        (keyup.enter)="search()">
+      <button class="search-btn" (click)="search()">
+        <i class="bx bx-search"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="header-right">
+    <!-- Notifications -->
+    <div class="notification-bell">
+      <button class="icon-btn" (click)="toggleNotifications()">
+        <i class="bx bx-bell"></i>
+        <span class="notification-count" *ngIf="unreadCount > 0">{{unreadCount}}</span>
+      </button>
+      <div class="notifications-dropdown" *ngIf="showNotifications">
+        <div class="notifications-header">
+          <h4>Notifications</h4>
+          <button class="clear-all" (click)="clearAllNotifications()">Clear All</button>
+        </div>
+        <div class="notifications-list">
+          <div *ngIf="headerNotifications.length === 0" class="no-notifications">
+            <i class="bx bx-bell-off"></i>
+            <p>No new notifications</p>
+          </div>
+          <div *ngFor="let notification of headerNotifications" 
+               class="notification-item"
+               [class.unread]="!notification.read"
+               (click)="markAsRead(notification.id)">
+            <div class="notification-icon" [class]="'type-' + (notification.type || 'info')">
+              <i class="bx" 
+                 [class.bx-info-circle]="notification.type === 'info' || !notification.type"
+                 [class.bx-check-circle]="notification.type === 'success'"
+                 [class.bx-error-circle]="notification.type === 'error'"
+                 [class.bx-error-alt]="notification.type === 'warning'"></i>
+            </div>
+            <div class="notification-content">
+              <p>{{notification.message}}</p>
+              <small>{{notification.time | date:'short'}}</small>
+            </div>
+            <button class="remove-notification" 
+                    (click)="removeHeaderNotification(notification.id); $event.stopPropagation()">
+              <i class="bx bx-x"></i>
+            </button>
+          </div>
+        </div>
+        <div class="notifications-footer" *ngIf="headerNotifications.length > 0">
+          <button class="mark-all-read" (click)="markAllAsRead()">
+            Mark all as read
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Menu -->
+    <div class="user-menu">
+      <button class="user-avatar" (click)="toggleUserMenu()">
+        <div class="avatar-circle">
+          {{getUserInitials()}}
+        </div>
+        <span class="user-name">{{currentUser?.firstname}} {{currentUser?.lastname}}</span>
+        <i class="bx bx-chevron-down" [class.rotated]="showUserMenu"></i>
+      </button>
+      
+      <div class="user-dropdown" *ngIf="showUserMenu">
+        <div class="user-info">
+          <div class="user-details">
+            <strong>{{currentUser?.firstname}} {{currentUser?.lastname}}</strong>
+            <small>{{currentUser?.email}}</small>
+            <div class="user-roles">
+              <span *ngFor="let role of currentUser?.roles" 
+                    class="role-badge" 
+                    [class]="getRoleBadgeClass(role.name)">
+                {{role.displayName || role.name}}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="menu-divider"></div>
+        <a class="menu-item" (click)="navigateToProfile()">
+          <i class="bx bx-user"></i>
+          Profile
+        </a>
+        <a class="menu-item" (click)="navigateToSettings()">
+          <i class="bx bx-cog"></i>
+          Settings
+        </a>
+        <div class="menu-divider" *appHasRole="'ROLE_ADMIN'"></div>
+        <a class="menu-item" *appHasRole="'ROLE_ADMIN'" (click)="navigateToAdmin()">
+          <i class="bx bx-shield"></i>
+          Admin Panel
+        </a>
+        <div class="menu-divider"></div>
+        <a class="menu-item" (click)="testNotifications()">
+          <i class="bx bx-test-tube"></i>
+          Test Notifications
+        </a>
+        <div class="menu-divider"></div>
+        <a class="menu-item logout" (click)="logout()">
+          <i class="bx bx-log-out"></i>
+          Logout
+        </a>
+      </div>
+    </div>
+  </div>
+</header>

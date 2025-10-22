@@ -88,6 +88,9 @@ export class AuthenticationService {
   ) {
     // ΔΕΝ κάνουμε πια αυτόματο έλεγχο που μπορεί να κάνει logout
     console.log('AuthenticationService initialized');
+    
+    // Initialize user from storage if available
+    this.initializeUserFromStorage();
   }
 
   private get http(): HttpClient {
@@ -99,10 +102,33 @@ export class AuthenticationService {
 
   private getUserFromStorage(): User | null {
     if (typeof window !== 'undefined') {
-      const userData = localStorage.getItem(this.USER_KEY);
-      return userData ? JSON.parse(userData) : null;
+      // Try both possible keys for user data
+      const userData = localStorage.getItem(this.USER_KEY) || localStorage.getItem('currentUser');
+      if (userData) {
+        try {
+          const user = JSON.parse(userData);
+          console.log('User loaded from storage:', user);
+          return user;
+        } catch (error) {
+          console.error('Error parsing user data from storage:', error);
+          return null;
+        }
+      }
     }
     return null;
+  }
+
+  private initializeUserFromStorage(): void {
+    const user = this.getUserFromStorage();
+    const token = this.getToken();
+    
+    if (user && token) {
+      console.log('Initializing user from storage:', user);
+      this.currentUserSubject.next(user);
+      this.tokenSubject.next(token);
+    } else {
+      console.log('No user or token found in storage');
+    }
   }
 
   // =================== AUTHENTICATION METHODS ===================
@@ -157,9 +183,19 @@ export class AuthenticationService {
     }).pipe(
       tap(response => {
         if (response.access_token) {
+          // Store token with consistent key
           localStorage.setItem('access_token', response.access_token);
+          localStorage.setItem('token', response.access_token); // Also store with 'token' key for interceptor
           localStorage.setItem('token_type', response.token_type);
+          
+          // Store user data in localStorage for persistence
+          localStorage.setItem('currentUser', JSON.stringify(response.user));
+          
+          // Update subjects
+          this.tokenSubject.next(response.access_token);
           this.currentUserSubject.next(response.user);
+          
+          console.log('Login successful, user stored:', response.user);
         }
       })
     );
@@ -172,12 +208,26 @@ export class AuthenticationService {
   logout(): Observable<any> {
     return this.http.post(`${this.API_URL}/logout`, {}).pipe(
       tap(() => {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('token_type');
-        this.currentUserSubject.next(null);
+        this.clearSession();
         this.router.navigate(['/login']);
+      }),
+      catchError((error) => {
+        // Even if backend logout fails, clear local session
+        console.warn('Backend logout failed, clearing local session:', error);
+        this.clearSession();
+        this.router.navigate(['/login']);
+        return throwError(() => error);
       })
     );
+  }
+
+  // Simple logout method that doesn't require backend communication
+  logoutLocal(): void {
+    console.log('logoutLocal() called - clearing session');
+    this.clearSession();
+    console.log('Session cleared, navigating to login');
+    this.router.navigate(['/login']);
+    console.log('Navigation to login completed');
   }
   validateToken(): Observable<{ valid: boolean }> {
     return this.http.get<{ valid: boolean }>(`${this.API_URL}/validate`);
@@ -234,10 +284,26 @@ export class AuthenticationService {
     if (typeof window !== 'undefined') {
       localStorage.removeItem(this.TOKEN_KEY);
       localStorage.removeItem(this.USER_KEY);
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('token'); // Clear both token keys
+      localStorage.removeItem('token_type');
+      localStorage.removeItem('currentUser'); // Clear user data
       sessionStorage.removeItem(this.TOKEN_KEY);
       sessionStorage.removeItem(this.USER_KEY);
+      sessionStorage.removeItem('access_token');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('token_type');
+      sessionStorage.removeItem('currentUser');
       localStorage.removeItem('auth_token');
       sessionStorage.removeItem('auth_token');
+      
+      // Verify all tokens are cleared
+      console.log('Session cleared. Remaining tokens:', {
+        access_token: localStorage.getItem('access_token'),
+        token: localStorage.getItem('token'),
+        currentUser: localStorage.getItem('currentUser'),
+        auth_token: localStorage.getItem('auth_token')
+      });
     }
 
     this.tokenSubject.next(null);
@@ -245,7 +311,8 @@ export class AuthenticationService {
   }
 
   getToken(): string | null {
-    return localStorage.getItem('access_token');
+    // Try both keys for backward compatibility
+    return localStorage.getItem('access_token') || localStorage.getItem('token');
   }
   // getToken(): string | null {
   //   if (typeof window !== 'undefined') {
@@ -256,7 +323,10 @@ export class AuthenticationService {
 
   // =================== VALIDATION METHODS ===================
   isAuthenticated(): boolean {
-    return !!this.getToken();
+    const token = this.getToken();
+    const isAuth = !!token;
+    console.log('isAuthenticated() check:', { token: token ? 'exists' : 'null', isAuth });
+    return isAuth;
   }
 
 
@@ -424,7 +494,16 @@ export class AuthenticationService {
   // }
   hasRole(roleName: string): boolean {
     const user = this.currentUserSubject.value;
-    return user?.roles?.some(role => role.name === roleName) || false;
+    const hasRole = user?.roles?.some(role => role.name === roleName) || false;
+    
+    // Debug logging to track role changes
+    console.log(`Checking role ${roleName}:`, {
+      user: user?.firstname,
+      roles: user?.roles?.map(r => r.name),
+      hasRole
+    });
+    
+    return hasRole;
   }
 
   // hasAnyRole(roleNames: string[]): boolean {

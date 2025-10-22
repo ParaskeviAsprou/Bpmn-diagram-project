@@ -1,43 +1,51 @@
 <div class="parent">
-  <div class="container">
-    <form [formGroup]="userForm" (ngSubmit)="login()">
-      <h1>Login</h1>
+  <mat-card class="container">
+    <mat-card-header>
+      <mat-card-title>
+        <h1>Login</h1>
+      </mat-card-title>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Username</mat-label>
+          <input matInput type="text" formControlName="username" />
+          <mat-icon matSuffix>person</mat-icon>
+          <mat-error *ngIf="loginForm.get('username')?.touched && loginForm.get('username')?.hasError('required')">
+            Username is required
+          </mat-error>
+        </mat-form-field>
 
-      <div class="input-box">
-        <input type="text" formControlName="username" placeholder="Username" />
-        <i class='bx bx-envelope'></i>
-        <div class="text-danger" *ngIf="userForm.get('username')?.touched && userForm.get('username')?.hasError('required')">
-          <span>This is required</span>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Password</mat-label>
+          <input matInput type="password" formControlName="password" />
+          <mat-icon matSuffix>lock</mat-icon>
+          <mat-error *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.errors">
+            <span *ngIf="loginForm.get('password')?.hasError('required')">Password is required</span>
+            <span *ngIf="loginForm.get('password')?.hasError('minlength')">Minimum 6 characters required</span>
+          </mat-error>
+        </mat-form-field>
+
+        <div *ngIf="errorMessage" class="error-message">
+          {{ errorMessage }}
         </div>
-      </div>
 
-      <div class="input-box">
-        <input type="password" formControlName="password" placeholder="Password" />
-        <i class='bx bx-lock-alt'></i>
-        <div class="text-danger" *ngIf="userForm.get('password')?.touched && userForm.get('password')?.errors">
-          <span *ngIf="userForm.get('password')?.hasError('required')">This is required</span>
-          <span *ngIf="userForm.get('password')?.hasError('minlength')">Minimum 4 characters required</span>
+        <div class="remember">
+          <mat-checkbox formControlName="rememberMe">Remember me</mat-checkbox>
+          <a routerLink="/forgot-password" class="forgot-link">Forgot password?</a>
         </div>
-      </div>
 
-      <div *ngIf="loginError" class="error-message">
-        {{ loginError }}
-      </div>
+        <button mat-raised-button color="primary" type="submit" class="login-btn" [disabled]="loginForm.invalid || loading">
+          {{loading ? 'Signing in...' : 'Login'}}
+        </button>
 
-      <div class="remember">
-        <label>
-          <input type="checkbox" formControlName="rememberMe" /> Remember me
-        </label>
-        <a routerLink="/forgot-password">Forgot password?</a>
-      </div>
-
-      <button class="btn" type="submit">Login</button>
-
-      <div class="register">
-        <p>Don't have an account? <br />
-          <a routerLink="/register">Register</a>
-        </p>
-      </div>
-    </form>
-  </div>
+        <div class="register">
+          <p>Don't have an account? <br />
+            <a routerLink="/register">Register</a>
+          </p>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
 </div>

@@ -1,33 +1,187 @@
-<!-- 
-<div class="dashboard-container">
-      <div class="welcome-section">
-        <h1>Welcome to AKON-KORIMVOS</h1>
-        <p>Your BPMN modeling platform</p>
+<div class="dashboard">
+  <div class="dashboard-header">
+    <div class="welcome-section">
+      <h1>Welcome back, {{currentUser?.firstname}}!</h1>
+      <p>Here's what's happening with your business processes today.</p>
+    </div>
+    <div class="header-actions">
+      <button 
+        *ngIf="canCreateDiagrams"
+        class="btn btn-primary" 
+        (click)="createNewDiagram()">
+        <i class="icon-plus"></i>
+        Create New Diagram
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="icon-diagrams"></i>
       </div>
-      
-      <div class="dashboard-cards">
-        <div class="card" (click)="navigateToModeler()">
-          <div class="card-icon">
-            <i class="bx bx-edit"></i>
+      <div class="stat-content">
+        <h3>{{stats.totalDiagrams}}</h3>
+        <p>Total Diagrams</p>
+      </div>
+    </div>
+    
+    <div class="stat-card" *ngIf="canCreateDiagrams">
+      <div class="stat-icon">
+        <i class="icon-user"></i>
+      </div>
+      <div class="stat-content">
+        <h3>{{stats.myDiagrams}}</h3>
+        <p>My Diagrams</p>
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="icon-share"></i>
+      </div>
+      <div class="stat-content">
+        <h3>{{stats.sharedWithMe}}</h3>
+        <p>Shared with Me</p>
+      </div>
+    </div>
+    
+    <div class="stat-card" *ngIf="isAdmin">
+      <div class="stat-icon">
+        <i class="icon-users"></i>
+      </div>
+      <div class="stat-content">
+        <h3>{{stats.totalUsers}}</h3>
+        <p>Total Users</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="dashboard-grid">
+    <!-- Recent Diagrams -->
+    <div class="dashboard-card">
+      <div class="card-header">
+        <h2>Recent Diagrams</h2>
+        <a (click)="navigateToFiles()" class="view-all">View All</a>
+      </div>
+      <div class="card-content">
+        <div class="diagram-list" *ngIf="recentDiagrams.length > 0; else noDiagrams">
+          <div *ngFor="let diagram of recentDiagrams" class="diagram-item">
+            <div class="diagram-info">
+              <h4>{{diagram.fileName}}</h4>
+              <p>{{diagram.description || 'No description'}}</p>
+              <div class="diagram-meta">
+                <span>Updated {{diagram.updatedTime | date:'short'}}</span>
+                <span>by {{diagram.updatedBy || diagram.createdBy}}</span>
+              </div>
+            </div>
+            <div class="diagram-actions">
+              <button class="btn btn-sm btn-outline" (click)="viewDiagram(diagram.id)">
+                View
+              </button>
+              <button 
+                *ngIf="canEditDiagrams"
+                class="btn btn-sm btn-primary" 
+                (click)="editDiagram(diagram.id)">
+                Edit
+              </button>
+            </div>
           </div>
-          <h3>BPMN Modeler</h3>
-           <p><a routerLink="/modeler">Create and edit BPMN diagrams</a></p>
         </div>
-        
-         <div class="card" (click)="navigateToFileList()">
-          <div class="card-icon">
-            <i class="bx bx-folder-open"></i>
+        <ng-template #noDiagrams>
+          <div class="empty-state">
+            <i class="icon-diagrams"></i>
+            <h3>No diagrams yet</h3>
+            <p>Start by creating your first BPMN diagram</p>
+            <button 
+              *ngIf="canCreateDiagrams"
+              class="btn btn-primary" 
+              (click)="createNewDiagram()">
+              Create Diagram
+            </button>
           </div>
-          <h3>Recent Files</h3>
-             <p><a routerLink="/list">Access your recent projects</a></p>
-        </div>
-        
-        <div class="card" (click)="navigateToSettings()">
-          <div class="card-icon">
-            <i class="bx bx-cog"></i>
-          </div>
-          <h3>Settings</h3>
-          <p><a routerLink="/settings">Configure your preferences</a></p>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="dashboard-card">
+      <div class="card-header">
+        <h2>Quick Actions</h2>
+      </div>
+      <div class="card-content">
+        <div class="quick-actions">
+          <a 
+            *ngIf="canCreateDiagrams"
+            (click)="createNewDiagram()" 
+            class="quick-action-item">
+            <i class="icon-plus"></i>
+            <span>Create Diagram</span>
+          </a>
+          <a (click)="navigateToFiles()" class="quick-action-item">
+            <i class="icon-list"></i>
+            <span>Browse Diagrams</span>
+          </a>
+          <a 
+            *ngIf="isAdmin"
+            (click)="navigateToAdmin()" 
+            class="quick-action-item">
+            <i class="icon-admin"></i>
+            <span>Admin Panel</span>
+          </a>
+          <a (click)="navigateToSettings()" class="quick-action-item">
+            <i class="icon-settings"></i>
+            <span>Settings</span>
+          </a>
         </div>
       </div>
-    </div> -->
+    </div>
+
+    <!-- Role Information -->
+    <div class="dashboard-card">
+      <div class="card-header">
+        <h2>Your Roles</h2>
+      </div>
+      <div class="card-content">
+        <div class="role-info">
+          <div class="role-badges">
+            <span 
+              *ngFor="let role of currentUser?.roles" 
+              class="role-badge"
+              [class]="getRoleBadgeClass(role.name)">
+              {{role.displayName || role.name}}
+            </span>
+          </div>
+          <div class="role-permissions">
+            <h4>Your Permissions:</h4>
+            <ul class="permission-list">
+              <li *ngIf="hasPermission('view-diagrams')">
+                <i class="icon-check"></i>
+                View diagrams
+              </li>
+              <li *ngIf="hasPermission('edit-diagrams')">
+                <i class="icon-check"></i>
+                Create and edit diagrams
+              </li>
+              <li *ngIf="hasPermission('assign-diagrams')">
+                <i class="icon-check"></i>
+                Manage diagram access
+              </li>
+              <li *ngIf="hasPermission('manage-users')">
+                <i class="icon-check"></i>
+                Manage users and roles
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" *ngIf="loading">
+    <div class="spinner"></div>
+  </div>
+</div>

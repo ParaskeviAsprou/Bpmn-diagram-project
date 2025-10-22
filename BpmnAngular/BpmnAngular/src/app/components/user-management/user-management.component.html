@@ -1,107 +1,111 @@
- <div class="user-management">
-  <div class="management-header">
-    <h2>User Management</h2>
-    <div class="header-actions">
-      <input
-        type="text"
-        placeholder="Search users..."
-        [(ngModel)]="searchTerm"
-        (input)="filterUsers()"
-        class="search-input">
-      <select [(ngModel)]="selectedRoleFilter" (change)="filterUsers()"
-        class="role-filter">
-        <option value>All Roles</option>
-        <option *ngFor="let role of roles"
-          [value]="role.name">{{role.displayName || role.name}}</option>
-      </select>
-    </div>
-  </div>
+<div class="user-management">
+  <mat-card class="management-card">
+    <mat-card-header>
+      <mat-card-title>
+        <h2>User Management</h2>
+      </mat-card-title>
+    </mat-card-header>
 
-  <div class="users-grid">
-    <div *ngFor="let user of filteredUsers" class="user-card">
-      <div class="user-info">
-        <div class="user-avatar">
-          {{getUserInitials(user)}}
-        </div>
-        <div class="user-details">
-          <h4>{{user.firstname}} {{user.lastname}}</h4>
-          <p class="user-email">{{user.email}}</p>
-          <div class="user-roles">
-            <span
-              *ngFor="let role of user.roles"
-              class="role-badge"
-              [class]="getRoleBadgeClass(role.name)">
+    <mat-card-content>
+      <div class="header-actions">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search users...</mat-label>
+          <input matInput [(ngModel)]="searchTerm" (input)="filterUsers()" />
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Filter by Role</mat-label>
+          <mat-select [(ngModel)]="selectedRoleFilter" (selectionChange)="filterUsers()">
+            <mat-option value="">All Roles</mat-option>
+            <mat-option *ngFor="let role of roles" [value]="role.name">
               {{role.displayName || role.name}}
-            </span>
-          </div>
-        </div>
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
       </div>
-      <div class="user-actions">
-        <button class="btn btn-outline" (click)="editUserRoles(user)">
-          <i class="icon-edit"></i>
-          Edit Roles
-        </button>
-        <button class="btn btn-danger" (click)="deleteUser(user)">
-          <i class="icon-delete"></i>
-          Delete
-        </button>
-      </div>
-    </div>
-  </div>
 
-  <!-- Edit User Roles Modal -->
-  <div class="modal" *ngIf="showEditRolesModal">
-    <div class="modal-backdrop" (click)="closeModal()"></div>
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Edit Roles for {{selectedUser?.firstname}}
-          {{selectedUser?.lastname}}</h3>
-        <button class="modal-close" (click)="closeModal()">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="role-selection">
-          <h4>Available Roles:</h4>
-          <div class="role-checkboxes">
-            <label *ngFor="let role of roles" class="role-checkbox">
-              <input
-                type="checkbox"
-                [checked]="isRoleSelected(role)"
-                (change)="toggleRole(role, $event)">
-              <span class="role-label">
-                <span class="role-badge" [class]="getRoleBadgeClass(role.name)">
+      <div class="users-grid">
+        <mat-card *ngFor="let user of filteredUsers" class="user-card">
+          <mat-card-header>
+            <div mat-card-avatar class="user-avatar">
+              {{getUserInitials(user)}}
+            </div>
+            <mat-card-title>{{user.firstname}} {{user.lastname}}</mat-card-title>
+            <mat-card-subtitle>{{user.email}}</mat-card-subtitle>
+          </mat-card-header>
+
+          <mat-card-content>
+            <div class="user-roles">
+              <mat-chip-set>
+                <mat-chip *ngFor="let role of user.roles" [class]="getRoleBadgeClass(role.name)">
                   {{role.displayName || role.name}}
-                </span>
-                <small>{{role.description}}</small>
-              </span>
-            </label>
-          </div>
-        </div>
-        <div class="current-roles" *ngIf="selectedUserRoles.length > 0">
-          <h4>Selected Roles:</h4>
-          <div class="selected-roles">
-            <span
-              *ngFor="let role of selectedUserRoles"
-              class="role-badge selected"
-              [class]="getRoleBadgeClass(role.name)">
-              {{role.displayName || role.name}}
-              <button class="remove-role" (click)="removeRole(role)">×</button>
-            </span>
-          </div>
+                </mat-chip>
+              </mat-chip-set>
+            </div>
+          </mat-card-content>
+
+          <mat-card-actions>
+            <button mat-button color="primary" (click)="editUserRoles(user)">
+              <mat-icon>edit</mat-icon>
+              Edit Roles
+            </button>
+            <button mat-button color="warn" (click)="deleteUser(user)">
+              <mat-icon>delete</mat-icon>
+              Delete
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Edit User Roles Dialog -->
+  <mat-dialog-content *ngIf="showEditRolesModal">
+    <div class="role-selection">
+      <h3>Edit Roles for {{selectedUser?.firstname}} {{selectedUser?.lastname}}</h3>
+      
+      <div class="available-roles">
+        <h4>Available Roles:</h4>
+        <div class="role-checkboxes">
+          <mat-checkbox *ngFor="let role of roles" 
+            [checked]="isRoleSelected(role)"
+            (change)="toggleRole(role, $event)">
+            <div class="role-content">
+              <mat-chip [class]="getRoleBadgeClass(role.name)">
+                {{role.displayName || role.name}}
+              </mat-chip>
+              <small>{{role.description}}</small>
+            </div>
+          </mat-checkbox>
         </div>
       </div>
-      <div class="modal-actions">
-        <button type="button" class="btn btn-outline" (click)="closeModal()">
-          Cancel
-        </button>
-        <button type="button" class="btn btn-primary" (click)="saveUserRoles()">
-          Save Changes
-        </button>
+
+      <div class="selected-roles" *ngIf="selectedUserRoles.length > 0">
+        <h4>Selected Roles:</h4>
+        <mat-chip-set>
+          <mat-chip *ngFor="let role of selectedUserRoles" 
+            [class]="getRoleBadgeClass(role.name)"
+            (removed)="removeRole(role)">
+            {{role.displayName || role.name}}
+            <button matChipRemove>
+              <mat-icon>cancel</mat-icon>
+            </button>
+          </mat-chip>
+        </mat-chip-set>
       </div>
     </div>
-  </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions *ngIf="showEditRolesModal">
+    <button mat-button (click)="closeModal()">Cancel</button>
+    <button mat-raised-button color="primary" (click)="saveUserRoles()">
+      Save Changes
+    </button>
+  </mat-dialog-actions>
 
   <!-- Loading Overlay -->
   <div class="loading-overlay" *ngIf="loading">
-    <div class="spinner"></div>
+    <mat-progress-spinner diameter="50"></mat-progress-spinner>
   </div>
 </div>

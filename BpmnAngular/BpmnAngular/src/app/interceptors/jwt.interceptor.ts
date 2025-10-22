@@ -77,8 +77,9 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
  */
 function getTokenFromStorage(): string | null {
   if (typeof window !== 'undefined') {
-    // ΣΗΜΑΝΤΙΚΟ: Χρησιμοποιούμε το ίδιο key με το AuthenticationService
-    return localStorage.getItem('token') || sessionStorage.getItem('token');
+    // Try both keys for consistency with AuthenticationService
+    return localStorage.getItem('access_token') || localStorage.getItem('token') || 
+           sessionStorage.getItem('access_token') || sessionStorage.getItem('token');
   }
   return null;
 }
@@ -88,13 +89,15 @@ function getTokenFromStorage(): string | null {
  */
 function clearTokenFromStorage(): void {
   if (typeof window !== 'undefined') {
-    // Καθαρισμός όλων των πιθανών token keys
+    // Clear all possible token keys
     localStorage.removeItem('token');
+    localStorage.removeItem('access_token');
     localStorage.removeItem('currentUser');
     sessionStorage.removeItem('token');
+    sessionStorage.removeItem('access_token');
     sessionStorage.removeItem('currentUser');
     
-    // Καθαρισμός παλιών keys για backwards compatibility
+    // Clear old keys for backwards compatibility
     localStorage.removeItem('auth_token');
     sessionStorage.removeItem('auth_token');
   }

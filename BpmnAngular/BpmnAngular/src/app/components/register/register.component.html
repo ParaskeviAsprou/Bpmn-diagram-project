@@ -1,61 +1,103 @@
-<div class="signup-card">
-  <!-- Display message if exists -->
-  <h1 *ngIf="msg">
-    {{ msg }}
-  </h1>
+<div class="parent">
+  <mat-card class="container">
+    <mat-card-header>
+      <mat-card-title>
+        <h1>Create Account</h1>
+      </mat-card-title>
+      <mat-card-subtitle>
+        Already have an account? <a routerLink="/login">Sign In</a>
+      </mat-card-subtitle>
+    </mat-card-header>
+    
+    <!-- Display message if exists -->
+    <mat-card-content *ngIf="msg">
+      <div class="message-alert">
+        <mat-icon color="primary">info</mat-icon>
+        <span>{{ msg }}</span>
+      </div>
+    </mat-card-content>
 
-  <div class="card-title">
-    <h1>Create Account</h1>
-    <span>Already have an account? <a routerLink="/login">Sign In</a></span>
-  </div>
+    <mat-card-content>
+      <form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>First Name</mat-label>
+            <input matInput type="text" formControlName="firstName" />
+            <mat-icon matSuffix>person</mat-icon>
+            <mat-error *ngIf="signupForm.controls['firstName'].touched && signupForm.controls['firstName'].hasError('required')">
+              First name is required
+            </mat-error>
+          </mat-form-field>
 
-  <form class="form-group" [formGroup]="signupForm" (ngSubmit)="onSubmit()">
-    <!-- First Name -->
-    <input type="text" name="firstName" placeholder="First Name" formControlName="firstName" />
-    <div class="text-danger" *ngIf="signupForm.controls['firstName'].touched && signupForm.controls['firstName'].hasError('required')">
-      <span>First name is required</span>
-    </div>
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>Last Name</mat-label>
+            <input matInput type="text" formControlName="lastName" />
+            <mat-icon matSuffix>person</mat-icon>
+            <mat-error *ngIf="signupForm.controls['lastName'].touched && signupForm.controls['lastName'].hasError('required')">
+              Last name is required
+            </mat-error>
+          </mat-form-field>
+        </div>
 
-    <!-- Last Name -->
-    <input type="text" name="lastName" placeholder="Last Name" formControlName="lastName" />
-    <div class="text-danger" *ngIf="signupForm.controls['lastName'].touched && signupForm.controls['lastName'].hasError('required')">
-      <span>Last name is required</span>
-    </div>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Username</mat-label>
+          <input matInput type="text" formControlName="username" />
+          <mat-icon matSuffix>account_circle</mat-icon>
+          <mat-error *ngIf="signupForm.controls['username'].touched && signupForm.controls['username'].hasError('required')">
+            Username is required
+          </mat-error>
+        </mat-form-field>
 
-    <!-- Username -->
-    <input type="text" name="username" placeholder="Username" formControlName="username" />
-    <div class="text-danger" *ngIf="signupForm.controls['username'].touched && signupForm.controls['username'].hasError('required')">
-      <span>Username is required</span>
-    </div>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Email</mat-label>
+          <input matInput type="email" formControlName="email" />
+          <mat-icon matSuffix>email</mat-icon>
+          <mat-error *ngIf="signupForm.controls['email'].touched">
+            <span *ngIf="signupForm.controls['email'].hasError('required')">Email is required</span>
+            <span *ngIf="signupForm.controls['email'].hasError('email')">Please enter a valid email address</span>
+          </mat-error>
+        </mat-form-field>
 
-    <!-- Email -->
-    <input type="email" name="email" placeholder="Email" formControlName="email" />
-    <div class="text-danger" *ngIf="signupForm.controls['email'].touched">
-      <span *ngIf="signupForm.controls['email'].hasError('required')">Email is required</span>
-      <span *ngIf="signupForm.controls['email'].hasError('email')">Please enter a valid email address</span>
-    </div>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Password</mat-label>
+          <input matInput type="password" formControlName="password" />
+          <mat-icon matSuffix>lock</mat-icon>
+          <mat-error *ngIf="signupForm.controls['password'].touched">
+            <span *ngIf="signupForm.controls['password'].hasError('required')">Password is required</span>
+            <span *ngIf="signupForm.controls['password'].hasError('minlength')">Password must be at least 8 characters long</span>
+          </mat-error>
+        </mat-form-field>
 
-    <!-- Password -->
-    <input type="password" name="password" placeholder="Password" formControlName="password" />
-    <div class="text-danger" *ngIf="signupForm.controls['password'].touched">
-      <span *ngIf="signupForm.controls['password'].hasError('required')">Password is required</span>
-      <span *ngIf="signupForm.controls['password'].hasError('minlength')">Password must be at least 8 characters long</span>
-    </div>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Address (Optional)</mat-label>
+          <input matInput type="text" formControlName="address" />
+          <mat-icon matSuffix>home</mat-icon>
+        </mat-form-field>
 
-    <!-- Optional Fields -->
-    <input type="text" name="address" placeholder="Address (Optional)" formControlName="address" />
-    <input type="text" name="mobileno" placeholder="Mobile No (Optional)" formControlName="mobileno" />
-    <input type="text" name="age" placeholder="Age (Optional)" formControlName="age" />
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>Mobile No (Optional)</mat-label>
+            <input matInput type="text" formControlName="mobileno" />
+            <mat-icon matSuffix>phone</mat-icon>
+          </mat-form-field>
 
-    <!-- Submit Button -->
-    <input type="submit" [disabled]="!signupForm.valid" value="Signup" />
-  </form>
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>Age (Optional)</mat-label>
+            <input matInput type="number" formControlName="age" />
+            <mat-icon matSuffix>cake</mat-icon>
+          </mat-form-field>
+        </div>
 
-  <!-- Terms of Service -->
-  <div class="card-terms">
-    <input type="checkbox" id="terms" />
-    <label for="terms">
-      I have read and agree to the <a href="#">Terms of Service</a>
-    </label>
-  </div>
+        <div class="terms-section">
+          <mat-checkbox formControlName="termsAccepted">
+            I have read and agree to the <a href="#">Terms of Service</a>
+          </mat-checkbox>
+        </div>
+
+        <button mat-raised-button color="primary" type="submit" class="signup-btn" [disabled]="!signupForm.valid">
+          Signup
+        </button>
+      </form>
+    </mat-card-content>
+  </mat-card>
 </div>

@@ -1,1 +1,83 @@
-<p>color-dialog works!</p>
+<div class="color-dialog">
+  <h2 mat-dialog-title>
+    <mat-icon>palette</mat-icon>
+    Choose Color
+  </h2>
+
+  <mat-dialog-content>
+    <div class="color-picker-section">
+      <div class="color-preview">
+        <div class="preview-circle" [style.background-color]="selectedColor"></div>
+        <span class="color-value">{{ selectedColor }}</span>
+      </div>
+
+      <div class="color-options">
+        <h3>Preset Colors</h3>
+        <div class="preset-colors">
+          <button 
+            *ngFor="let color of presetColors" 
+            mat-mini-fab 
+            [style.background-color]="color"
+            [class.selected]="selectedColor === color"
+            (click)="selectColor(color)"
+            class="color-button">
+          </button>
+        </div>
+
+        <h3>Custom Color</h3>
+        <mat-form-field appearance="outline" class="color-input">
+          <mat-label>Hex Color</mat-label>
+          <input 
+            matInput 
+            [(ngModel)]="customColor" 
+            placeholder="#000000"
+            (input)="onCustomColorChange()"
+            maxlength="7">
+          <mat-icon matSuffix>color_lens</mat-icon>
+        </mat-form-field>
+
+        <div class="color-sliders">
+          <mat-slider 
+            min="0" 
+            max="255" 
+            [(ngModel)]="rgbColor.r" 
+            (change)="updateColorFromRGB()"
+            class="color-slider">
+            <input matSliderThumb>
+          </mat-slider>
+          <label>Red: {{ rgbColor.r }}</label>
+
+          <mat-slider 
+            min="0" 
+            max="255" 
+            [(ngModel)]="rgbColor.g" 
+            (change)="updateColorFromRGB()"
+            class="color-slider">
+            <input matSliderThumb>
+          </mat-slider>
+          <label>Green: {{ rgbColor.g }}</label>
+
+          <mat-slider 
+            min="0" 
+            max="255" 
+            [(ngModel)]="rgbColor.b" 
+            (change)="updateColorFromRGB()"
+            class="color-slider">
+            <input matSliderThumb>
+          </mat-slider>
+          <label>Blue: {{ rgbColor.b }}</label>
+        </div>
+      </div>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()">
+      Cancel
+    </button>
+    <button mat-raised-button color="primary" (click)="onConfirm()">
+      <mat-icon>check</mat-icon>
+      Apply Color
+    </button>
+  </mat-dialog-actions>
+</div>

@@ -1,484 +1,218 @@
-<div class="files-container" >
-  <mat-toolbar color="primary" class="user-info-section">
-    <div class="user-details">
-      <h1 class="mat-h1">Your BPMN Files</h1>
-      <div class="user-badge">
-        <mat-chip-set>
-          <mat-chip class="user-name-chip">{{ currentUserFullName }}</mat-chip>
-          <mat-chip
-            [class.admin]="authenticationService.hasRole('ROLE_ADMIN')"
-            [class.modeler]="authenticationService.hasRole('ROLE_MODELER')"
-            [class.viewer]="authenticationService.hasRole('ROLE_VIEWER')"
-            class="user-role-chip">
-            {{ currentUserRole }}
-          </mat-chip>
-        </mat-chip-set>
+<div class="container">
+  <!-- Header -->
+  <div class="header-section">
+    <div class="header-content">
+      <div class="header-title">
+        <h1>Your BPMN Files</h1>
+        <div class="user-badge">
+          <span class="badge">{{ currentUserFullName }}</span>
+          <span class="badge">{{ currentUserRole }}</span>
+        </div>
+      </div>
+      <div class="permissions">
+        <div style="display: flex; gap: 0.5rem;">
+          <span class="badge" *ngIf="canView">View</span>
+          <span class="badge" *ngIf="canEdit">Edit</span>
+          <span class="badge" *ngIf="canCreate">Create</span>
+        </div>
       </div>
     </div>
-    <span class="spacer"></span>
-    <div class="permissions-info">
-      <mat-chip-set>
-        <mat-chip *ngIf="canView" matTooltip="Can view files">
-          View
-        </mat-chip>
-        <mat-chip *ngIf="canEdit" matTooltip="Can edit files">
-          Edit
-        </mat-chip>
-        <mat-chip *ngIf="canCreate" matTooltip="Can create files">
-          Create
-        </mat-chip>
-        <mat-chip *ngIf="canDelete" matTooltip="Can delete files">
-          Delete
-        </mat-chip>
-      </mat-chip-set>
-    </div>
-  </mat-toolbar>
+  </div>
 
-  <div class="files-container">
-    <!-- Simplified Navigation -->
-    <mat-card *ngIf="canView && currentFolderName" class="breadcrumb-section"
-      style="margin-bottom: 16px;">
-      <mat-card-content>
-        <div class="breadcrumb-nav">
-          <button mat-button class="breadcrumb-link" (click)="navigateToRoot()"
-            matTooltip="Navigate to Root">
-            <mat-icon>home</mat-icon>
-            Root
+  <!-- Breadcrumb Navigation -->
+  <div class="breadcrumb-container" *ngIf="hasFolderSupport()">
+    <div class="breadcrumb">
+      <button class="breadcrumb-item" (click)="navigateToRoot()" [class.active]="!isInFolder()">
+        <span class="material-icons">home</span>
+        All Files
+      </button>
+      <span class="breadcrumb-separator" *ngIf="isInFolder()">
+        <span class="material-icons">chevron_right</span>
+      </span>
+      <span class="breadcrumb-item current" *ngIf="isInFolder()">
+        <span class="material-icons">folder</span>
+        {{ currentFolderName }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Search & Actions -->
+  <div class="search-container">
+    <div class="search-wrapper">
+      <input type="text" class="search-input" placeholder="Search files..." [(ngModel)]="searchTerm" (input)="filterFiles()">
+      <div class="action-buttons">
+        <button class="btn btn-primary" (click)="navigateToModeler()" *ngIf="canCreate">
+          <span class="material-icons">add</span>
+          New Diagram
+        </button>
+        <button class="btn btn-secondary" (click)="uploadFile()" *ngIf="canCreate">
+          <span class="material-icons">upload</span>
+          Upload
+        </button>
+        <button class="btn btn-secondary" (click)="openCreateFolderDialog()" *ngIf="shouldShowCreateFolderButton()">
+          <span class="material-icons">create_new_folder</span>
+          New Folder
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Folders Section -->
+  <div class="folders-section" *ngIf="shouldShowFolders()">
+    <h3 class="section-title">
+      <span class="material-icons">folder</span>
+      Folders
+    </h3>
+    <div class="folders-grid">
+      <div class="folder-card" *ngFor="let folder of folders; trackBy: trackByFolderId">
+        <div class="folder-header">
+          <div class="folder-icon">
+            <span class="material-icons">folder</span>
+          </div>
+          <div class="folder-actions">
+            <button class="icon-btn" (click)="renameFolder(folder)" *ngIf="canEdit" title="Rename">
+              <span class="material-icons">edit</span>
+            </button>
+            <button class="icon-btn delete" (click)="deleteFolder(folder)" *ngIf="canDelete" title="Delete">
+              <span class="material-icons">delete</span>
+            </button>
+          </div>
+        </div>
+        
+        <div class="folder-content" (click)="navigateToFolder(folder)">
+          <h4 class="folder-name">{{ folder.folderName }}</h4>
+          <p class="folder-description">{{ folder.description || 'No description' }}</p>
+          
+          <div class="folder-meta">
+            <div class="meta-item">
+              <span class="material-icons">schedule</span>
+              <span>{{ formatDate(folder.createdTime) }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="material-icons">person</span>
+              <span>{{ folder.createdBy || 'Unknown' }}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="folder-footer">
+          <button class="btn btn-primary" (click)="navigateToFolder(folder)">
+            <span class="material-icons">folder_open</span>
+            Open
           </button>
-          <mat-icon class="breadcrumb-separator">chevron_right</mat-icon>
-          <span class="breadcrumb-current">
-            <mat-icon>folder_open</mat-icon>
-            {{ currentFolderName }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Files Grid -->
+  <div class="files-grid" *ngIf="!isLoading && appFile.length > 0">
+    <div class="file-card" *ngFor="let file of appFile; trackBy: trackByFileId">
+      <div class="file-header">
+        <div class="file-icon-wrapper">
+          <div class="file-icon">
+            <span class="material-icons">description</span>
+          </div>
+          <span class="file-type">{{ getFileTypeLabel(file) }}</span>
+        </div>
+        <div class="file-actions">
+          <button class="icon-btn edit" (click)="openFile(file)" *ngIf="canEditFile(file)" title="Edit">
+            <span class="material-icons">edit</span>
+          </button>
+          <button class="icon-btn" (click)="downloadFile(file)" *ngIf="canDownloadFile(file)" title="Download Original">
+            <span class="material-icons">download</span>
+          </button>
+          <button class="icon-btn" (click)="downloadFile(file, 'pdf')" *ngIf="canExportFile(file)" title="Export as PDF">
+            <span class="material-icons">picture_as_pdf</span>
+          </button>
+          <button class="icon-btn" (click)="downloadFile(file, 'png')" *ngIf="canExportFile(file)" title="Export as PNG">
+            <span class="material-icons">image</span>
+          </button>
+          <button class="icon-btn" (click)="openVersionHistory(file)" *ngIf="canView" title="Version History">
+            <span class="material-icons">history</span>
+          </button>
+          <button class="icon-btn delete" (click)="deleteFile(file.id!)" *ngIf="canDeleteFile(file)" title="Delete">
+            <span class="material-icons">delete</span>
+          </button>
+        </div>
+      </div>
+      
+      <div class="file-content">
+        <h3 class="file-name">{{ file.fileName || 'Untitled' }}</h3>
+        <p class="file-description">{{ file.description || 'No description available' }}</p>
+        
+        <div class="file-meta">
+          <div class="meta-item">
+            <span class="material-icons">storage</span>
+            <span>{{ formatFileSize(file.fileSize || 0) }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="material-icons">schedule</span>
+            <span>{{ formatDate(file.uploadTime || file.updatedTime) }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="material-icons">person</span>
+            <span>{{ file.createdBy || 'Unknown' }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="material-icons">bookmark</span>
+            <span>v{{ file.currentVersion || 1 }}</span>
+          </div>
+        </div>
+
+        <div class="file-permissions">
+          <span class="permission-badge view" *ngIf="canView">
+            <span class="material-icons">visibility</span>
+            View
+          </span>
+          <span class="permission-badge edit" *ngIf="canEditFile(file)">
+            <span class="material-icons">edit</span>
+            Edit
           </span>
         </div>
-      </mat-card-content>
-    </mat-card>
+      </div>
 
-    <!-- Enhanced Action Bar -->
-    <mat-card class="action-bar" *ngIf="canView">
-      <mat-card-content>
-        <div class="action-bar-content">
-          <div class="action-group">
-            <h2 class="section-title">
-              <mat-icon>{{ currentFolderName ? 'folder_open' : 'home'
-                }}</mat-icon>
-              {{ currentFolderName }}
-            </h2>
-            <span class="item-count">{{ getItemCount() }} items</span>
-          </div>
-
-          <div class="action-buttons">
-            <button mat-raised-button
-              color="primary"
-              *ngIf="canCreate"
-              (click)="navigateToModeler()"
-              class="primary-action">
-              <mat-icon>add</mat-icon>
-              New Diagram
-            </button>
-
-            <button mat-raised-button
-              *ngIf="canCreate"
-              (click)="openCreateFolderDialog()"
-              class="secondary-action">
-              <mat-icon>create_new_folder</mat-icon>
-              New Folder
-            </button>
-
-            <button mat-raised-button
-              *ngIf="canCreate"
-              (click)="uploadFile()"
-              class="secondary-action">
-              <mat-icon>upload</mat-icon>
-              Upload
-            </button>
-
-            <!-- <button mat-raised-button
-              (click)="loadContent()"
-              class="secondary-action">
-              <mat-icon>refresh</mat-icon>
-            </button> -->
-
-            <button mat-icon-button
-              *ngIf="currentFolderName"
-              (click)="navigateToRoot()"
-              matTooltip="Go to Root">
-              <mat-icon>home</mat-icon>
-            </button>
-          </div>
-        </div>
-
-      </mat-card-content>
-
-    </mat-card>
-    <div class="search-container">
-      <mat-form-field class="search-field" appearance="outline">
-        <mat-label>Search files</mat-label>
-        <input matInput [(ngModel)]="searchTerm" (keyup)="filterFiles()" />
-
-        <button *ngIf="searchTerm" matSuffix mat-icon-button
-          (click)="clearSearch()">
-          <mat-icon>close</mat-icon>
+      <div class="file-footer">
+        <button class="btn btn-primary" (click)="openFile(file)">
+          <span class="material-icons">edit</span>
+          Open
         </button>
-      </mat-form-field>
+        <button class="btn btn-secondary" (click)="downloadFile(file, 'pdf')" *ngIf="canExportFile(file)" title="Export as PDF">
+          <span class="material-icons">picture_as_pdf</span>
+        </button>
+        <button class="btn btn-secondary" (click)="downloadFile(file, 'png')" *ngIf="canExportFile(file)" title="Export as PNG">
+          <span class="material-icons">image</span>
+        </button>
+      </div>
     </div>
-
-    <!-- Hidden file input for uploads -->
-    <input #fileInput
-      type="file"
-      style="display: none"
-      accept=".bpmn,.xml,.json"
-      (change)="onFileSelected($event)">
-
-    <!-- No permissions state -->
-    <mat-card *ngIf="!canView" class="no-permission-state">
-      <mat-card-content>
-        <div class="no-permission-content">
-          <mat-icon class="no-permission-icon">lock</mat-icon>
-          <h2>Access Restricted</h2>
-          <p>You do not have permission to view files. Please contact your
-            administrator for access.</p>
-
-          <div class="permission-info">
-            <div class="info-item">
-              <span class="label">Your role:</span>
-              <span class="value">{{ currentUserRole }}</span>
-            </div>
-            <div class="info-item">
-              <span class="label">Required permission:</span>
-              <span class="value">View Files</span>
-            </div>
-          </div>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <!-- Loading state -->
-    <mat-card *ngIf="isLoading && canView" class="loading-state">
-      <mat-card-content>
-        <div class="loading-content">
-          <mat-spinner diameter="50"></mat-spinner>
-          <h3>Loading your files...</h3>
-          <p>Please wait while we fetch your content</p>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <!-- Content Area -->
-    <div *ngIf="!isLoading && canView" class="content-area">
-
-      <!-- Simplified Folders Section (Only when in Root) -->
-      <mat-card *ngIf="!currentFolderName && folders && folders.length > 0"
-        class="folders-section">
-        <mat-card-header>
-          <mat-card-title>
-            <mat-icon>folder</mat-icon>
-            Folders
-          </mat-card-title>
-          <mat-card-subtitle>{{ folders.length }} folder(s)</mat-card-subtitle>
-        </mat-card-header>
-
-        <mat-card-content>
-          <div class="folders-grid">
-            <div *ngFor="let folder of folders" class="folder-card"
-              (click)="navigateToFolder(folder.id)">
-              <div class="folder-header">
-                <mat-icon class="folder-icon">folder</mat-icon>
-                <div class="folder-actions">
-                  <button mat-icon-button
-                    (click)="$event.stopPropagation(); deleteFolder(folder.id, folder)"
-                    *ngIf="canDelete"
-                    matTooltip="Delete folder">
-                    <mat-icon>delete</mat-icon>
-                  </button>
-                </div>
-              </div>
-
-              <div class="folder-content">
-                <h4 class="folder-name">{{ folder.folderName }}</h4>
-                <p class="folder-description">{{ folder.description ||
-                  'No description' }}</p>
-
-                <div class="folder-stats">
-                  <div class="stat-item">
-                    <mat-icon>description</mat-icon>
-                    <span>{{ folder.fileCount || 0 }} files</span>
-                  </div>
-                  <div class="stat-item" *ngIf="folder.createdTime">
-                    <mat-icon>schedule</mat-icon>
-                    <span>{{ formatDate(folder.createdTime) }}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="folder-footer">
-                <button mat-button color="primary"
-                  (click)="$event.stopPropagation(); navigateToFolder(folder.id)">
-                  <mat-icon>folder_open</mat-icon>
-                  Open
-                </button>
-              </div>
-            </div>
-          </div>
-        </mat-card-content>
-      </mat-card>
-
-      <!-- Enhanced Files Section -->
-      <mat-card *ngIf="appFile && appFile.length > 0" class="files-section">
-        <mat-card-header>
-          <mat-card-title>
-            <mat-icon>description</mat-icon>
-            BPMN Diagrams
-          </mat-card-title>
-          <mat-card-subtitle>{{ appFile.length }} file(s)</mat-card-subtitle>
-        </mat-card-header>
-
-        <mat-card-content>
-          <div class="files-grid">
-            <div *ngFor="let file of appFile" class="file-card">
-              <div class="file-header">
-                <div class="file-icon-container">
-                  <mat-icon class="file-icon">description</mat-icon>
-                  <div class="file-type-badge">{{ getFileTypeLabel(file)
-                    }}</div>
-                </div>
-
-                <div class="file-actions">
-                  <!-- Quick actions -->
-                  <button mat-icon-button
-                    *ngIf="canEditFile(file)"
-                    (click)="openFile(file)"
-                    color="primary"
-                    matTooltip="Edit diagram">
-                    <mat-icon>edit</mat-icon>
-                  </button>
-
-                  <button mat-icon-button
-                    *ngIf="!canEditFile(file) && canView"
-                    (click)="openFile(file)"
-                    matTooltip="View diagram (read-only)">
-                    <mat-icon>visibility</mat-icon>
-                  </button>
-
-                  <!-- Export menu -->
-                  <!-- <button mat-icon-button
-                    *ngIf="canExportFile(file)"
-                    [matMenuTriggerFor]="fileExportMenu"
-                    matTooltip="Export options">
-                    <mat-icon>file_download</mat-icon>
-                  </button>
-                  <mat-menu #fileExportMenu="matMenu">
-                    <button mat-menu-item (click)="openExportDialog()">
-                      <mat-icon>tune</mat-icon>
-                      <span>Export Options...</span>
-                    </button> -->
-                    <mat-divider></mat-divider>
-                    <!-- <button mat-menu-item (click)="quickExport(file, 'pdf')">
-                      <mat-icon>picture_as_pdf</mat-icon>
-                      <span>Quick PDF</span>
-                    </button>
-                    <button mat-menu-item (click)="quickExport(file, 'svg')">
-                      <mat-icon>image</mat-icon>
-                      <span>Quick SVG</span>
-                    </button>
-                    <button mat-menu-item (click)="quickExport(file, 'png')">
-                      <mat-icon>photo</mat-icon>
-                      <span>Quick PNG</span>
-                    </button>
-                    <button mat-menu-item (click)="quickExport(file, 'xml')">
-                      <mat-icon>code</mat-icon>
-                      <span>XML Source</span>
-                    </button>
-                    <button mat-menu-item (click)="exportToPdf()">
-                      <mat-icon>archive</mat-icon>
-                      <span>Complete Archive (ZIP)</span>
-                    </button> -->
-                  <!-- </mat-menu> -->
-
-                  <!-- More actions menu -->
-                  <button mat-icon-button [matMenuTriggerFor]="fileActionsMenu"
-                    matTooltip="More actions">
-                    <mat-icon>more_vert</mat-icon>
-                  </button>
-                  <mat-menu #fileActionsMenu="matMenu">
-                    <button mat-menu-item (click)="downloadFile(file)"
-                      *ngIf="canDownloadFile(file)">
-                      <mat-icon>download</mat-icon>
-                      <span>Download</span>
-                    </button>
-                    <button mat-menu-item
-                      *ngIf="canDeleteFile(file) && file.id !== undefined"
-                      (click)="deleteFile(file.id!)">
-                      <mat-icon>delete</mat-icon>
-                      <span>Delete</span>
-                    </button>
-                  </mat-menu>
-                </div>
-              </div>
-
-              <div class="file-content">
-                <h4 class="file-name" [matTooltip]="file.fileName">{{
-                  file.fileName || 'Untitled' }}</h4>
-                <p class="file-description" *ngIf="file.description">{{
-                  file.description }}</p>
-
-                <div class="file-metadata">
-                  <div class="metadata-grid">
-                    <div class="metadata-item" *ngIf="file.fileSize">
-                      <mat-icon>storage</mat-icon>
-                      <span>{{ formatFileSize(file.fileSize) }}</span>
-                    </div>
-                    <div class="metadata-item" *ngIf="file.uploadTime">
-                      <mat-icon>schedule</mat-icon>
-                      <span>{{ formatDate(file.uploadTime) }}</span>
-                    </div>
-                    <div class="metadata-item" *ngIf="file.createdBy">
-                      <mat-icon>person</mat-icon>
-                      <span>{{ file.createdBy }}</span>
-                    </div>
-                    <div class="metadata-item" *ngIf="file.currentVersion">
-                      <mat-icon>bookmark</mat-icon>
-                      <span>v{{ file.currentVersion }}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Enhanced permission indicators -->
-                <div class="file-permissions">
-                  <mat-chip-set>
-                    <mat-chip class="permission-chip view"
-                      matTooltip="You can view this file">
-                      <mat-icon matChipAvatar>visibility</mat-icon>
-                      View
-                    </mat-chip>
-                    <mat-chip *ngIf="canEditFile(file)"
-                      class="permission-chip edit"
-                      matTooltip="You can edit this file">
-                      <mat-icon matChipAvatar>edit</mat-icon>
-                      Edit
-                    </mat-chip>
-                    <mat-chip *ngIf="!canEditFile(file)"
-                      class="permission-chip readonly"
-                      matTooltip="Read-only access">
-                      <mat-icon matChipAvatar>lock</mat-icon>
-                      Read-only
-                    </mat-chip>
-                    <mat-chip *ngIf="canExportFile(file)"
-                      class="permission-chip export"
-                      matTooltip="You can export this file">
-                      <mat-icon matChipAvatar>file_download</mat-icon>
-                      Export
-                    </mat-chip>
-                  </mat-chip-set>
-                </div>
-              </div>
-
-              <!-- Enhanced file footer -->
-              <div class="file-footer">
-                <div class="primary-actions">
-                  <button mat-raised-button
-                    color="primary"
-                    (click)="openFile(file)"
-                    class="open-button">
-                    <mat-icon>{{ isViewerOnly ? 'visibility' : 'edit'
-                      }}</mat-icon>
-                    {{ isViewerOnly ? 'View' : 'Open' }}
-                  </button>
-                </div>
-
-                <div class="secondary-actions">
-                  <!-- <button mat-menu-item (click)="openExportDialog()">
-                    <mat-icon>tune</mat-icon>
-                    <span>Export Options...</span>
-                  </button> -->
-                  <!-- <button mat-icon-button
-                    *ngIf="canExportFile(file)"
-                    (click)="quickExport(file, 'pdf')"
-                    matTooltip="Quick PDF export">
-                    <mat-icon>picture_as_pdf</mat-icon>
-                  </button> -->
-                  <!-- <button mat-icon-button
-                    *ngIf="canExportFile(file)"
-                    (click)="exportAsArchive(file)"
-                    matTooltip="Export as Archive">
-                    <mat-icon>archive</mat-icon>
-                  </button> -->
-                  <button mat-icon-button
-                    *ngIf="canDownloadFile(file)"
-                    (click)="downloadFile(file)"
-                    matTooltip="Download file">
-                    <mat-icon>download</mat-icon>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </mat-card-content>
-      </mat-card>
-
-      <!-- Enhanced Empty State -->
-      <mat-card
-        *ngIf="(!folders || folders.length === 0) && (!appFile || appFile.length === 0)"
-        class="empty-state">
-        <mat-card-content>
-          <div class="empty-content">
-            <div class="empty-illustration">
-              <mat-icon class="empty-icon">folder_open</mat-icon>
-              <div class="empty-sparkles">
-                <mat-icon>auto_awesome</mat-icon>
-                <mat-icon>auto_awesome</mat-icon>
-                <mat-icon>auto_awesome</mat-icon>
-              </div>
-            </div>
-
-            <h2>{{ getEmptyStateTitle() }}</h2>
-            <p>{{ getEmptyStateMessage() }}</p>
-
-            <div class="empty-actions" *ngIf="canCreate">
-              <button mat-raised-button
-                color="primary"
-                (click)="navigateToModeler()"
-                class="create-first-btn">
-                <mat-icon>add</mat-icon>
-                Create Your First Diagram
-              </button>
-
-              <div class="secondary-empty-actions">
-                <button mat-stroked-button (click)="openCreateFolderDialog()">
-                  <mat-icon>create_new_folder</mat-icon>
-                  Create Folder
-                </button>
-                <button mat-stroked-button (click)="uploadFile()">
-                  <mat-icon>upload</mat-icon>
-                  Upload File
-                </button>
-              </div>
-            </div>
-
-            <div *ngIf="!canCreate" class="no-create-info">
-              <mat-icon>info</mat-icon>
-              <p>Contact your administrator to get permissions for creating new
-                content.</p>
-            </div>
-          </div>
-        </mat-card-content>
-      </mat-card>
-    </div>
-
-    <!-- Enhanced Footer -->
-    <div class="footer-section">
-      <mat-card class="footer-card">
-        <mat-card-content>
-          <div class="footer-content">
-            <button mat-stroked-button (click)="navigateToDashboard()"
-              class="back-button">
-              <mat-icon>arrow_back</mat-icon>
-              Back to Dashboard
-            </button>
-          </div>
-        </mat-card-content>
-      </mat-card>
-    </div>
-
   </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="loading-spinner"></div>
+    <h3>Loading files...</h3>
+    <p>Please wait while we fetch your BPMN diagrams.</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && appFile.length === 0" class="empty-state">
+    <div class="empty-icon">
+      <span class="material-icons">folder_open</span>
+    </div>
+    <h3>{{ getEmptyStateTitle() }}</h3>
+    <p>{{ getEmptyStateMessage() }}</p>
+    <div class="action-buttons">
+      <button class="btn btn-primary" (click)="navigateToModeler()" *ngIf="canCreate">
+        <span class="material-icons">add</span>
+        Create New Diagram
+      </button>
+      <button class="btn btn-secondary" (click)="uploadFile()" *ngIf="canCreate">
+        <span class="material-icons">upload</span>
+        Upload File
+      </button>
+    </div>
+  </div>
+
+  <!-- Hidden file input for uploads -->
+  <input #fileInput type="file" accept=".bpmn,.xml" (change)="onFileSelected($event)" style="display: none;">
 </div>

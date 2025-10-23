@@ -1,7 +1,7 @@
-.version-history-dialog {
-  min-width: 600px;
-  max-width: 800px;
-  max-height: 80vh;
+.folder-selection-dialog {
+  min-width: 500px;
+  max-width: 600px;
+  max-height: 70vh;
 }
 
 .dialog-header {
@@ -26,15 +26,15 @@
   height: 1.5rem;
 }
 
-.file-info {
+.dialog-message {
   margin: 0.5rem 0 0 0;
   color: #666;
   font-size: 0.9rem;
-  font-weight: 500;
+  line-height: 1.4;
 }
 
 .dialog-content {
-  max-height: 60vh;
+  max-height: 50vh;
   overflow-y: auto;
   padding: 1rem 0;
 }
@@ -53,105 +53,110 @@
   color: #666;
 }
 
-.version-list {
+.folder-list {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.version-item {
+.folder-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
-  padding: 1rem;
   cursor: pointer;
   transition: all 0.2s ease;
   background: white;
 }
 
-.version-item:hover {
+.folder-item:hover {
   border-color: #1976d2;
   box-shadow: 0 2px 8px rgba(25, 118, 210, 0.1);
 }
 
-.version-item.selected {
+.folder-item.selected {
   border-color: #1976d2;
   background-color: #f3f8ff;
   box-shadow: 0 2px 8px rgba(25, 118, 210, 0.15);
 }
 
-.version-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
+.folder-item.root-folder {
+  border-color: #ff9800;
+  background-color: #fff8e1;
 }
 
-.version-info {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  flex: 1;
+.folder-item.root-folder:hover {
+  border-color: #f57c00;
+  background-color: #fff3e0;
 }
 
-.version-info mat-icon {
+.folder-item.root-folder.selected {
+  border-color: #f57c00;
+  background-color: #fff3e0;
+}
+
+.folder-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #e3f2fd;
+  border-radius: 8px;
+  color: #1976d2;
+}
+
+.folder-item.root-folder .folder-icon {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.folder-icon mat-icon {
   font-size: 1.5rem;
   width: 1.5rem;
   height: 1.5rem;
-  color: #1976d2;
-  margin-top: 0.25rem;
 }
 
-.version-info mat-icon.star {
-  color: #ff9800;
-}
-
-.version-details {
+.folder-info {
   flex: 1;
 }
 
-.version-title {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.5rem;
-}
-
-.version-number {
+.folder-name {
   font-size: 1.1rem;
   font-weight: 600;
   color: #333;
+  margin-bottom: 0.25rem;
 }
 
-.version-meta {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  font-size: 0.85rem;
+.folder-description {
   color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.folder-meta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.8rem;
+  color: #999;
 }
 
 .created-by {
   font-weight: 500;
 }
 
-.created-time {
-  color: #999;
+.folder-badge {
+  display: flex;
+  align-items: center;
 }
 
-.file-size {
-  color: #999;
-}
-
-.version-notes {
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid #f0f0f0;
-}
-
-.version-notes p {
-  margin: 0;
-  color: #666;
-  font-style: italic;
-  font-size: 0.9rem;
+.root-badge {
+  background-color: #fff3e0;
+  color: #f57c00;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
 .empty-state {
@@ -202,81 +207,22 @@
   margin-right: 0.25rem;
 }
 
-.action-btn {
-  color: #1976d2;
-}
-
-.action-btn:disabled {
-  color: #ccc;
-}
-
-.action-btn mat-icon {
-  font-size: 1.2rem;
-  width: 1.2rem;
-  height: 1.2rem;
-  margin-right: 0.25rem;
-}
-
-.restore-btn {
-  background-color: #ff9800;
+.confirm-btn {
+  background-color: #1976d2;
   color: white;
   font-weight: 500;
 }
 
-.restore-btn:disabled {
+.confirm-btn:disabled {
   background-color: #ccc;
   color: #666;
 }
 
-.restore-btn mat-icon {
+.confirm-btn mat-icon {
   font-size: 1.2rem;
   width: 1.2rem;
   height: 1.2rem;
   margin-right: 0.25rem;
-}
-
-/* Version badge styling */
-.version-badge {
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 12px;
-  font-weight: 500;
-}
-
-.version-badge.current {
-  background-color: #e8f5e8;
-  color: #2e7d32;
-}
-
-.version-badge:not(.current) {
-  background-color: #f5f5f5;
-  color: #666;
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-  .version-history-dialog {
-    min-width: 300px;
-    max-width: 100%;
-  }
-  
-  .version-item {
-    padding: 0.75rem;
-  }
-  
-  .version-meta {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.25rem;
-  }
-  
-  .dialog-actions {
-    flex-direction: column;
-  }
-  
-  .dialog-actions button {
-    width: 100%;
-  }
 }
 
 /* Scrollbar styling */
@@ -296,4 +242,29 @@
 
 .dialog-content::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .folder-selection-dialog {
+    min-width: 300px;
+    max-width: 100%;
+  }
+  
+  .folder-item {
+    padding: 0.75rem;
+  }
+  
+  .folder-meta {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .dialog-actions {
+    flex-direction: column;
+  }
+  
+  .dialog-actions button {
+    width: 100%;
+  }
 }

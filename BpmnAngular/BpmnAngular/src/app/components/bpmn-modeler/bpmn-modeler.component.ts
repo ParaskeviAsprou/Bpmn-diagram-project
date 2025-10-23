@@ -14,6 +14,9 @@ import { CustomPropertyDialogComponent, CustomPropertyDialogData, CustomProperty
 import { SaveConfirmationDialogComponent, SaveConfirmationData, SaveConfirmationResult } from '../save-confirmation-dialog/save-confirmation-dialog.component';
 import { ColorDialogComponent, ColorDialogData, ColorDialogResult } from '../color-dialog/color-dialog.component';
 import { ExportDialogComponent, ExportDialogData, ExportDialogResult } from '../export-dialog-result/export-dialog-result.component';
+import { FolderSelectionDialogComponent, FolderSelectionDialogData, FolderSelectionDialogResult } from '../folder-selection-dialog/folder-selection-dialog.component';
+import { FolderService } from '../../services/folder.service';
+import { Folder } from '../../models/Folder';
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import BpmnViewer from 'bpmn-js/lib/Viewer';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -72,7 +75,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
   showExportDropdown: boolean = false;
 
 
-  private currentFolderContext = {
+  currentFolderContext = {
     folderId: undefined as number | undefined,
     folderName: 'Root',
     path: '/'
@@ -132,7 +135,9 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     private fileService: FileService,
     private route: ActivatedRoute,
     private router: Router,
-    private customPropertyService: CustomPropertyService
+    private customPropertyService: CustomPropertyService,
+    private folderService: FolderService,
+    private dialog: MatDialog
   ) { }
 
 
@@ -521,6 +526,39 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    // Show folder selection dialog for new files
+    this.showFolderSelectionDialog(xml, fileName, customProperties, elementColors);
+  }
+
+  private showFolderSelectionDialog(xml: string, fileName: string, customProperties: any, elementColors: any): void {
+    const dialogData: FolderSelectionDialogData = {
+      title: 'Select Save Location',
+      message: `Choose where to save "${fileName}"`,
+      currentFolderId: this.currentFolderContext.folderId
+    };
+
+    const dialogRef = this.dialog.open(FolderSelectionDialogComponent, {
+      width: '600px',
+      maxHeight: '70vh',
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe((result: FolderSelectionDialogResult) => {
+      if (result && result.action === 'select' && result.selectedFolder) {
+        this.currentFolderContext = {
+          folderId: result.selectedFolder.isRoot ? undefined : result.selectedFolder.id,
+          folderName: result.selectedFolder.isRoot ? 'Root' : result.selectedFolder.folderName,
+          path: result.selectedFolder.isRoot ? '/' : `/${result.selectedFolder.folderName}`
+        };
+        this.performFileSave(xml, fileName, customProperties, elementColors);
+      } else {
+        this.isSaving = false;
+        this.showNotification('Save cancelled', 'warning');
+      }
+    });
+  }
+
+  private performFileSave(xml: string, fileName: string, customProperties: any, elementColors: any): void {
     this.isSaving = true;
 
     this.fileService.saveBpmnDiagramWithOverwrite(
@@ -537,8 +575,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
         this.changeCount = 0;
         this.lastSaveTime = new Date();
         this.isSaving = false;
-        this.showNotification('Diagram saved successfully as ' + fileName, 'success');
-
+        this.showNotification(`Diagram saved successfully as ${fileName} in ${this.currentFolderContext.folderName}`, 'success');
 
         if (savedFile.id) {
           this.updateUrlWithoutReload(savedFile.id);

@@ -1,1 +1,99 @@
-<p>version-history-dialog works!</p>
+<div class="version-history-dialog">
+  <div class="dialog-header">
+    <h2 mat-dialog-title>
+      <mat-icon>history</mat-icon>
+      Version History
+    </h2>
+    <p class="file-info">{{ data.fileName }}</p>
+  </div>
+
+  <div class="dialog-content" mat-dialog-content>
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-state">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Loading version history...</p>
+    </div>
+
+    <!-- Version List -->
+    <div *ngIf="!isLoading" class="version-list">
+      <div 
+        *ngFor="let version of versions; trackBy: trackByVersionId" 
+        class="version-item"
+        [class.selected]="selectedVersion?.id === version.id"
+        (click)="selectVersion(version)"
+      >
+        <div class="version-header">
+          <div class="version-info">
+            <mat-icon [class]="getVersionIcon(version)">{{ getVersionIcon(version) }}</mat-icon>
+            <div class="version-details">
+              <div class="version-title">
+                <span class="version-number">v{{ version.version }}</span>
+                <mat-chip [class]="getVersionBadgeClass(version)">
+                  {{ version.isCurrent ? 'Current' : 'Previous' }}
+                </mat-chip>
+              </div>
+              <div class="version-meta">
+                <span class="created-by">{{ version.createdBy }}</span>
+                <span class="created-time">{{ formatDate(version.createdTime) }}</span>
+                <span class="file-size">{{ formatFileSize(version.fileSize) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="version-notes" *ngIf="version.notes">
+          <p>{{ version.notes }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && versions.length === 0" class="empty-state">
+      <mat-icon>history</mat-icon>
+      <h3>No Version History</h3>
+      <p>This file doesn't have any version history yet.</p>
+    </div>
+  </div>
+
+  <div class="dialog-actions" mat-dialog-actions>
+    <button 
+      mat-button 
+      (click)="onClose()" 
+      class="cancel-btn"
+    >
+      <mat-icon>close</mat-icon>
+      Close
+    </button>
+    
+    <button 
+      mat-button 
+      (click)="onDownloadVersion()" 
+      [disabled]="!selectedVersion"
+      class="action-btn"
+    >
+      <mat-icon>download</mat-icon>
+      Download
+    </button>
+    
+    <button 
+      mat-button 
+      (click)="onCompareVersions()" 
+      [disabled]="!selectedVersion"
+      class="action-btn"
+    >
+      <mat-icon>compare</mat-icon>
+      Compare
+    </button>
+    
+    <button 
+      mat-raised-button 
+      color="primary" 
+      (click)="onRestoreVersion()" 
+      [disabled]="!selectedVersion || selectedVersion?.isCurrent"
+      class="restore-btn"
+    >
+      <mat-icon>restore</mat-icon>
+      Restore Version
+    </button>
+  </div>
+</div>

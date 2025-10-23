@@ -22,13 +22,16 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ExportDialogComponent, ExportDialogData, ExportDialogResult } from '../export-dialog-result/export-dialog-result.component';
 import { CustomProperty, CustomPropertyService } from '../../services/custom-properties.service';
+import { CreateFolderDialogComponent, CreateFolderDialogData, CreateFolderDialogResult } from '../create-folder-dialog/create-folder-dialog.component';
+import { VersionHistoryDialogComponent, VersionHistoryDialogData } from '../version-history-dialog/version-history-dialog.component';
+import { FolderService } from '../../services/folder.service';
+import { Folder } from '../../models/Folder';
 
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import BpmnViewer from 'bpmn-js/lib/Viewer';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { FormsModule } from '@angular/forms';
-import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 
 @Component({
@@ -46,7 +49,7 @@ import { MatInputModule } from '@angular/material/input';
     MatToolbarModule,
     MatCardModule,
     MatMenuModule,
-    MatBadgeModule,FormsModule,MatLabel,MatFormField,MatInputModule,MatIconModule
+    MatBadgeModule,FormsModule,MatInputModule,MatIconModule
   ],
   templateUrl: './file-list.component.html',
   styleUrl: './file-list.component.css'
@@ -60,7 +63,8 @@ export class FileListComponent implements OnInit, OnDestroy {
   private elementColors: { [elementId: string]: { fill?: string; stroke?: string } } = {};
 
   appFile: AppFile[] = [];
-  folders: any[] = [];
+  folders: Folder[] = [];
+  currentFolder: Folder | null = null;
 
   isLoading = true;
   currentUser: User | null = null;
@@ -84,7 +88,8 @@ export class FileListComponent implements OnInit, OnDestroy {
     public authenticationService: AuthenticationService,
     private customPropertyService: CustomPropertyService,
     private authService: AuthenticationService,
-    private router: Router
+    private router: Router,
+    private folderService: FolderService
   ) { }
 
   ngOnInit() {
@@ -111,7 +116,7 @@ export class FileListComponent implements OnInit, OnDestroy {
     }
 
     console.log('User authenticated, loading files...');
-    this.loadFilesOnly();
+    this.loadFilesAndFolders();
     this.originalAppFile = [...this.appFile];
   }
 
@@ -146,7 +151,50 @@ export class FileListComponent implements OnInit, OnDestroy {
     });
   }
 
-  // =================== SIMPLIFIED LOADING ===================
+  // =================== LOADING METHODS ===================
+
+  private loadFilesAndFolders(): void {
+    console.log('Loading files and folders...');
+    this.isLoading = true;
+
+    // Load files
+    this.fileService.getRootFiles().subscribe({
+      next: (files: AppFile[]) => {
+        console.log('Loaded files successfully:', files.length);
+        this.appFile = files;
+        this.originalAppFile = [...files];
+        this.loadFolders();
+      },
+      error: (error: any) => {
+        console.error('Error loading files:', error);
+        this.appFile = [];
+        this.loadFolders();
+
+        if (error.status === 401) {
+          this.router.navigate(['/login']);
+        } else {
+          this.showNotification('Error loading files: ' + (error.message || 'Unknown error'), 'error');
+        }
+      }
+    });
+  }
+
+  private loadFolders(): void {
+    this.folderService.getAllSimpleFolders().subscribe({
+      next: (folders: Folder[]) => {
+        console.log('Loaded folders successfully:', folders.length);
+        this.folders = folders;
+        this.isLoading = false;
+        this.showNotification(`Loaded ${this.appFile.length} files and ${folders.length} folders successfully`, 'success');
+      },
+      error: (error: any) => {
+        console.error('Error loading folders:', error);
+        this.folders = [];
+        this.isLoading = false;
+        this.showNotification('Error loading folders: ' + (error.message || 'Unknown error'), 'error');
+      }
+    });
+  }
 
   private loadFilesOnly(): void {
     console.log('Loading files only...');
@@ -228,21 +276,247 @@ export class FileListComponent implements OnInit, OnDestroy {
     });
   }
 
-  downloadFile(file: AppFile): void {
+  downloadFile(file: AppFile, format?: 'pdf' | 'svg' | 'png' | 'xml'): void {
     if (!this.canView || !file.id) {
       this.showNotification('Cannot download this file.', 'error');
       return;
     }
 
-    this.fileService.downloadFile(file.id).subscribe({
-      next: (blob: Blob) => {
-        this.downloadBlob(blob, file.fileName || 'downloaded_file');
-        this.showNotification('File downloaded successfully', 'success');
+    // If no format specified, download the original file
+    if (!format) {
+      this.fileService.downloadFile(file.id).subscribe({
+        next: (blob: Blob) => {
+          this.downloadBlob(blob, file.fileName || 'downloaded_file');
+          this.showNotification('File downloaded successfully', 'success');
+        },
+        error: (error: any) => {
+          this.showNotification('Error downloading file: ' + error.message, 'error');
+        }
+      });
+      return;
+    }
+
+    // For export formats, we need to load the file and create a temporary modeler
+    this.exportFileInFormat(file, format);
+  }
+
+  private exportFileInFormat(file: AppFile, format: 'pdf' | 'svg' | 'png' | 'xml'): void {
+    this.isExporting = true;
+    
+    // Load the file with content using getFileById
+    this.fileService.getFileById(file.id!).subscribe({
+      next: (fileWithContent: AppFile) => {
+        // Use xml or fileData property
+        const fileContent = fileWithContent.xml || fileWithContent.fileData || '';
+        if (!fileContent) {
+          this.showNotification('File content is empty or not available', 'error');
+          this.isExporting = false;
+          return;
+        }
+        this.createTemporaryModelerAndExport(file, fileContent, format);
       },
       error: (error: any) => {
-        this.showNotification('Error downloading file: ' + error.message, 'error');
+        this.showNotification('Error loading file: ' + error.message, 'error');
+        this.isExporting = false;
       }
     });
+  }
+
+  private createTemporaryModelerAndExport(file: AppFile, xmlContent: string, format: 'pdf' | 'svg' | 'png' | 'xml'): void {
+    // Create a temporary container for the modeler
+    const tempContainer = document.createElement('div');
+    tempContainer.style.cssText = `
+      position: absolute;
+      top: -10000px;
+      left: -10000px;
+      width: 800px;
+      height: 600px;
+      z-index: -1000;
+    `;
+    document.body.appendChild(tempContainer);
+
+    // Create a temporary modeler
+    const tempModeler = new BpmnModeler({
+      container: tempContainer,
+      width: '100%',
+      height: '100%'
+    });
+
+    // Import the XML content
+    tempModeler.importXML(xmlContent).then(() => {
+      // Export based on format
+      switch (format) {
+        case 'pdf':
+          this.exportToPdfFromModeler(tempModeler, file);
+          break;
+        case 'svg':
+          this.exportToSvgFromModeler(tempModeler, file);
+          break;
+        case 'png':
+          this.exportToPngFromModeler(tempModeler, file);
+          break;
+        case 'xml':
+          this.exportToXmlFromModeler(tempModeler, file);
+          break;
+      }
+    }).catch((error: any) => {
+      this.showNotification('Error loading diagram: ' + error.message, 'error');
+      this.cleanupTempModeler(tempContainer, tempModeler);
+    });
+  }
+
+  private exportToPdfFromModeler(modeler: BpmnModeler, file: AppFile): void {
+    modeler.saveSVG({ format: true }).then((result: any) => {
+      const svgString = result.svg;
+      this.convertSvgToPdf(svgString, file);
+      this.cleanupTempModeler(document.querySelector('[style*="top: -10000px"]') as HTMLElement, modeler);
+    }).catch((error: any) => {
+      this.showNotification('Error exporting to PDF: ' + error.message, 'error');
+      this.cleanupTempModeler(document.querySelector('[style*="top: -10000px"]') as HTMLElement, modeler);
+    });
+  }
+
+  private exportToSvgFromModeler(modeler: BpmnModeler, file: AppFile): void {
+    modeler.saveSVG({ format: true }).then((result: any) => {
+      const svgBlob = new Blob([result.svg], { type: 'image/svg+xml' });
+      const fileName = this.getExportFileName(file, 'svg');
+      this.downloadBlob(svgBlob, fileName);
+      this.showNotification('Diagram exported to SVG successfully', 'success');
+      this.cleanupTempModeler(document.querySelector('[style*="top: -10000px"]') as HTMLElement, modeler);
+    }).catch((error: any) => {
+      this.showNotification('Error exporting to SVG: ' + error.message, 'error');
+      this.cleanupTempModeler(document.querySelector('[style*="top: -10000px"]') as HTMLElement, modeler);
+    });
+  }
+
+  private exportToPngFromModeler(modeler: BpmnModeler, file: AppFile): void {
+    modeler.saveSVG({ format: true }).then((result: any) => {
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = result.svg;
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.top = '-10000px';
+      tempDiv.style.backgroundColor = '#ffffff';
+      document.body.appendChild(tempDiv);
+
+      html2canvas(tempDiv, {
+        useCORS: true
+      }).then(canvas => {
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const fileName = this.getExportFileName(file, 'png');
+            this.downloadBlob(blob, fileName);
+            this.showNotification('Diagram exported to PNG successfully', 'success');
+          }
+        }, 'image/png', 1.0);
+
+        document.body.removeChild(tempDiv);
+        this.cleanupTempModeler(document.querySelector('[style*="top: -10000px"]') as HTMLElement, modeler);
+      }).catch(error => {
+        this.showNotification('Error exporting PNG: ' + error.message, 'error');
+        document.body.removeChild(tempDiv);
+        this.cleanupTempModeler(document.querySelector('[style*="top: -10000px"]') as HTMLElement, modeler);
+      });
+    });
+  }
+
+  private exportToXmlFromModeler(modeler: BpmnModeler, file: AppFile): void {
+    modeler.saveXML({ format: true }).then((result: any) => {
+      const xmlBlob = new Blob([result.xml], { type: 'application/xml' });
+      const fileName = this.getExportFileName(file, 'xml');
+      this.downloadBlob(xmlBlob, fileName);
+      this.showNotification('Diagram exported to XML successfully', 'success');
+      this.cleanupTempModeler(document.querySelector('[style*="top: -10000px"]') as HTMLElement, modeler);
+    }).catch((error: any) => {
+      this.showNotification('Error exporting to XML: ' + error.message, 'error');
+      this.cleanupTempModeler(document.querySelector('[style*="top: -10000px"]') as HTMLElement, modeler);
+    });
+  }
+
+  private convertSvgToPdf(svgString: string, file: AppFile): void {
+    const tempContainer = document.createElement('div');
+    tempContainer.style.cssText = `
+      position: absolute;
+      top: -10000px;
+      left: -10000px;
+      background: white;
+      padding: 20px;
+      width: auto;
+      height: auto;
+      z-index: -1000;
+    `;
+
+    const processedSVG = this.processSVGForPDF(svgString);
+    tempContainer.innerHTML = processedSVG;
+    document.body.appendChild(tempContainer);
+
+    const svgElement = tempContainer.querySelector('svg');
+    if (!svgElement) {
+      this.showNotification('Could not extract diagram SVG', 'error');
+      document.body.removeChild(tempContainer);
+      this.isExporting = false;
+      return;
+    }
+
+    this.enhanceSVGForPDF(svgElement);
+
+    html2canvas(tempContainer, {
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+    }).then(canvas => {
+      try {
+        this.generatePDF(canvas, file);
+        this.showNotification('Diagram exported to PDF successfully', 'success');
+      } catch (error: any) {
+        this.showNotification('Error creating PDF: ' + error.message, 'error');
+      }
+
+      document.body.removeChild(tempContainer);
+      this.isExporting = false;
+    }).catch(error => {
+      this.showNotification('Error converting to PDF: ' + error.message, 'error');
+      document.body.removeChild(tempContainer);
+      this.isExporting = false;
+    });
+  }
+
+  private generatePDF(canvas: HTMLCanvasElement, file: AppFile): void {
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const imgData = canvas.toDataURL('image/png');
+    const imgWidth = 210;
+    const pageHeight = 295;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    let heightLeft = imgHeight;
+
+    let position = 0;
+
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft >= 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    const fileName = this.getExportFileName(file, 'pdf');
+    pdf.save(fileName);
+  }
+
+  private getExportFileName(file: AppFile, format: string): string {
+    const baseName = file.fileName?.replace(/\.(bpmn|xml)$/, '') || 'diagram';
+    return `${baseName}.${format}`;
+  }
+
+  private cleanupTempModeler(container: HTMLElement | null, modeler: BpmnModeler): void {
+    if (container) {
+      document.body.removeChild(container);
+    }
+    if (modeler) {
+      modeler.destroy();
+    }
+    this.isExporting = false;
   }
 
   // =================== ENHANCED EXPORT FUNCTIONALITY - ALL THROUGH DIALOG ===================
@@ -739,7 +1013,10 @@ export class FileListComponent implements OnInit, OnDestroy {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 
-  formatDate(dateString: string | Date): string {
+  formatDate(dateString: string | Date | undefined): string {
+    if (!dateString) {
+      return 'Unknown';
+    }
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
@@ -816,42 +1093,175 @@ export class FileListComponent implements OnInit, OnDestroy {
   }
 
   get currentFolderName(): string {
-    return 'All Files';
+    return this.currentFolder ? this.currentFolder.folderName : 'All Files';
   }
 
   isInFolder(): boolean {
-    return false;
+    return this.currentFolder !== null;
   }
 
   hasFolderSupport(): boolean {
-    return false;
+    return true;
   }
 
   shouldShowFolders(): boolean {
-    return false;
+    return this.canView && this.folders.length > 0;
   }
 
   shouldShowCreateFolderButton(): boolean {
-    return false;
+    return this.canCreate;
   }
+
+  // =================== FOLDER MANAGEMENT ===================
 
   openCreateFolderDialog(): void {
-    this.showNotification('Folder functionality is temporarily disabled.', 'info');
+    if (!this.canCreate) {
+      this.showNotification('You do not have permission to create folders.', 'error');
+      return;
+    }
+
+    const dialogData: CreateFolderDialogData = {
+      title: 'Create New Folder',
+      message: 'Create a new folder to organize your BPMN diagrams'
+    };
+
+    const dialogRef = this.popup.open(CreateFolderDialogComponent, {
+      width: '500px',
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe((result: CreateFolderDialogResult) => {
+      if (result && result.success) {
+        this.showNotification('Folder created successfully', 'success');
+        this.loadFolders();
+      }
+    });
   }
 
-  navigateToFolder(folderId: number): void {
-    this.showNotification('Folder navigation is temporarily disabled.', 'info');
+  navigateToFolder(folder: Folder): void {
+    if (!this.canView) {
+      this.showNotification('You do not have permission to view folders.', 'error');
+      return;
+    }
+
+    console.log('Navigating to folder:', folder.folderName);
+    this.currentFolder = folder;
+    this.isLoading = true;
+
+    this.folderService.getFilesInFolder(folder.id).subscribe({
+      next: (files: AppFile[]) => {
+        console.log('Loaded files in folder successfully:', files.length);
+        this.appFile = files;
+        this.originalAppFile = [...files];
+        this.isLoading = false;
+        this.showNotification(`Loaded ${files.length} files from "${folder.folderName}"`, 'success');
+      },
+      error: (error: any) => {
+        console.error('Error loading files in folder:', error);
+        this.appFile = [];
+        this.isLoading = false;
+        this.showNotification('Error loading folder contents: ' + (error.message || 'Unknown error'), 'error');
+      }
+    });
   }
 
   navigateToRoot(): void {
     if (!this.authService.isAuthenticated()) {
       console.error('Dashboard: User not authenticated for modeler access');
-      this.router.navigate(['/dashoard']);
+      this.router.navigate(['/dashboard']);
+      return;
+    }
+
+    console.log('Navigating to root folder');
+    this.currentFolder = null;
+    this.loadFilesAndFolders();
+  }
+
+  deleteFolder(folder: Folder): void {
+    if (!this.canDelete) {
+      this.showNotification('You do not have permission to delete folders.', 'error');
+      return;
+    }
+
+    const dialogRef = this.popup.open(DialogBoxComponent, {
+      width: '400px',
+      data: {
+        title: 'Delete Folder',
+        message: `Are you sure you want to delete the folder "${folder.folderName}"?`,
+        warning: 'This action cannot be undone and will delete all files in the folder.',
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+        type: 'warning'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.folderService.deleteFolder(folder.id).subscribe({
+          next: () => {
+            this.showNotification('Folder deleted successfully', 'success');
+            this.loadFolders();
+            if (this.currentFolder?.id === folder.id) {
+              this.navigateToRoot();
+            }
+          },
+          error: (error: any) => {
+            this.showNotification('Error deleting folder: ' + error.message, 'error');
+          }
+        });
+      }
+    });
+  }
+
+  renameFolder(folder: Folder): void {
+    if (!this.canEdit) {
+      this.showNotification('You do not have permission to rename folders.', 'error');
+      return;
+    }
+
+    const newName = prompt('Enter new folder name:', folder.folderName);
+    if (newName && newName.trim() && newName.trim() !== folder.folderName) {
+      this.folderService.renameFolder(folder.id, newName.trim()).subscribe({
+        next: (updatedFolder) => {
+          this.showNotification('Folder renamed successfully', 'success');
+          this.loadFolders();
+          if (this.currentFolder?.id === folder.id) {
+            this.currentFolder = updatedFolder;
+          }
+        },
+        error: (error: any) => {
+          this.showNotification('Error renaming folder: ' + error.message, 'error');
+        }
+      });
     }
   }
 
-  deleteFolder(id: number, folder: any): void {
-    this.showNotification('Folder operations are temporarily disabled.', 'info');
+  // =================== VERSION MANAGEMENT ===================
+
+  openVersionHistory(file: AppFile): void {
+    if (!this.canView || !file.id) {
+      this.showNotification('Cannot view version history for this file.', 'error');
+      return;
+    }
+
+    const dialogData: VersionHistoryDialogData = {
+      fileId: file.id,
+      fileName: file.fileName || 'Untitled',
+      currentVersion: file.currentVersion
+    };
+
+    const dialogRef = this.popup.open(VersionHistoryDialogComponent, {
+      width: '800px',
+      maxHeight: '80vh',
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result && result.action === 'restore') {
+        this.showNotification('Version restore functionality will be implemented', 'info');
+        // TODO: Implement version restore
+      }
+    });
   }
   searchTerm: string = '';
   originalAppFile: any[] = [];
@@ -871,5 +1281,13 @@ export class FileListComponent implements OnInit, OnDestroy {
   clearSearch(): void {
     this.searchTerm = '';
     this.filterFiles();
+  }
+
+  trackByFileId(index: number, file: AppFile): any {
+    return file.id || index;
+  }
+
+  trackByFolderId(index: number, folder: Folder): any {
+    return folder.id || index;
   }
 }

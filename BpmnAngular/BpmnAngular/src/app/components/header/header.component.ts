@@ -52,6 +52,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
   showNotifications = false;
   showUserMenu = false;
   
+  isCollapsed = false;
+  
   headerNotifications: HeaderNotification[] = [
     { 
       id: '1', 
@@ -188,15 +190,16 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   logout(): void {
-    this.showUserMenu = false;
-    
-    if (confirm('Are you sure you want to logout?')) {
-      this.notificationService.showInfo('Logging out...', 'Goodbye');
-      
-      setTimeout(() => {
-        this.authService.logout();
+    // Καθαρίζει το session (αν υπάρχει service auth)
+    this.authService.logout().subscribe({
+      next: () => {
+        console.log('Logout successful');
+      },
+      error: (error) => {
+        console.error('Logout error:', error);
+        // Even if backend logout fails, navigate to login
         this.router.navigate(['/login']);
-      }, 1000);
-    }
+      }
+    });
   }
 }

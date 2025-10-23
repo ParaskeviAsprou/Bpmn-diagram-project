@@ -67,6 +67,15 @@
                 <span *ngIf="hasUnsavedChanges" class="unsaved-indicator">*</span>
             </button>
 
+            <!-- Folder Context Indicator -->
+            <div class="folder-context" *ngIf="currentFolderContext">
+                <div class="folder-indicator">
+                    <mat-icon>folder</mat-icon>
+                    <span class="folder-name">{{ currentFolderContext.folderName }}</span>
+                    <span class="folder-path">{{ currentFolderContext.path }}</span>
+                </div>
+            </div>
+
             <!-- Enhanced Export Button - Now always opens dialog -->
             <button class="toolbar-btn"
                 *ngIf="canView"

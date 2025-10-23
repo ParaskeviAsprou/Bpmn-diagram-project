@@ -112,10 +112,10 @@
           Test Notifications
         </a>
         <div class="menu-divider"></div>
-        <a class="menu-item logout" (click)="logout()">
-          <i class="bx bx-log-out"></i>
-          Logout
-        </a>
+        <button class="logout-btn" (click)="logout()">
+          <i class="icon-logout"></i>
+          <span *ngIf="!isCollapsed">Logout</span>
+        </button>
       </div>
     </div>
   </div>

@@ -16,7 +16,7 @@ interface CreateFolderPayload {
   providedIn: 'root'
 })
 export class FolderService {
-  private apiUrl = 'http://localhost:8080/api/v1/file';
+  private apiUrl = 'http://localhost:8080/api/v1/folders';
 
   constructor(
     private http: HttpClient,
@@ -35,7 +35,7 @@ export class FolderService {
       createdBy: createdBy
     };
 
-    return this.http.post<Folder>(`${this.apiUrl}/create-folder`, payload, {
+    return this.http.post<Folder>(`${this.apiUrl}/create`, payload, {
       headers: this.getAuthHeaders()
     }).pipe(
       tap(folder => {
@@ -51,7 +51,7 @@ export class FolderService {
   getAllSimpleFolders(): Observable<Folder[]> {
     console.log('FolderService: Getting all folders...');
     
-    return this.http.get<Folder[]>(`${this.apiUrl}/all/folders`, {
+    return this.http.get<Folder[]>(`${this.apiUrl}/all`, {
       headers: this.getAuthHeaders()
     }).pipe(
       tap(folders => {
@@ -67,7 +67,7 @@ export class FolderService {
   getFolderById(folderId: number): Observable<Folder> {
     console.log('FolderService: Getting folder by ID:', folderId);
     
-    return this.http.get<Folder>(`${this.apiUrl}/folders/${folderId}`, {
+    return this.http.get<Folder>(`${this.apiUrl}/${folderId}`, {
       headers: this.getAuthHeaders()
     }).pipe(
       tap(folder => {
@@ -83,7 +83,7 @@ export class FolderService {
   getFilesInFolder(folderId: number): Observable<any[]> {
     console.log('FolderService: Getting files in folder:', folderId);
     
-    return this.http.get<any[]>(`${this.apiUrl}/folders/${folderId}/files`, {
+    return this.http.get<any[]>(`${this.apiUrl}/${folderId}/files`, {
       headers: this.getAuthHeaders()
     }).pipe(
       tap(files => {
@@ -99,7 +99,7 @@ export class FolderService {
   deleteFolder(folderId: number): Observable<any> {
     console.log('FolderService: Deleting folder:', folderId);
     
-    return this.http.delete(`${this.apiUrl}/folders/delete/${folderId}`, {
+    return this.http.delete(`${this.apiUrl}/delete/${folderId}`, {
       headers: this.getAuthHeaders()
     }).pipe(
       tap(() => {
@@ -114,13 +114,12 @@ export class FolderService {
    */
   renameFolder(folderId: number, newName: string): Observable<Folder> {
     const payload = {
-      folderName: newName,
-      updatedBy: this.authService.getCurrentUser()?.username || 'unknown'
+      folderName: newName
     };
 
     console.log('FolderService: Renaming folder:', folderId, 'to:', newName);
 
-    return this.http.put<Folder>(`${this.apiUrl}/folders/${folderId}`, payload, {
+    return this.http.put<Folder>(`${this.apiUrl}/${folderId}/rename`, payload, {
       headers: this.getAuthHeaders()
     }).pipe(
       tap(folder => {
@@ -155,17 +154,32 @@ export class FolderService {
    */
   updateFolderDescription(folderId: number, description: string): Observable<Folder> {
     const payload = {
-      description: description,
-      updatedBy: this.authService.getCurrentUser()?.username || 'unknown'
+      description: description
     };
 
     console.log('FolderService: Updating folder description:', folderId);
 
-    return this.http.put<Folder>(`${this.apiUrl}/folders/${folderId}/description`, payload, {
+    return this.http.put<Folder>(`${this.apiUrl}/${folderId}/description`, payload, {
       headers: this.getAuthHeaders()
     }).pipe(
       tap(folder => {
         console.log('FolderService: Folder description updated successfully:', folder);
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Get folder statistics
+   */
+  getFolderStats(folderId: number): Observable<any> {
+    console.log('FolderService: Getting folder stats:', folderId);
+    
+    return this.http.get<any>(`${this.apiUrl}/${folderId}/stats`, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      tap(stats => {
+        console.log('FolderService: Successfully loaded folder stats:', stats);
       }),
       catchError(this.handleError)
     );

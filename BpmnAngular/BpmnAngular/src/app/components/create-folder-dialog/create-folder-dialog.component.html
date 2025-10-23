@@ -1,83 +1,68 @@
 <div class="create-folder-dialog">
-  <h2 mat-dialog-title>
-    <mat-icon>create_new_folder</mat-icon>
-    {{ dialogTitle }}
-  </h2>
+  <div class="dialog-header">
+    <h2 mat-dialog-title>
+      <mat-icon>folder</mat-icon>
+      {{ data.title || 'Create New Folder' }}
+    </h2>
+    <p class="dialog-message" *ngIf="data.message">{{ data.message }}</p>
+  </div>
 
-  <mat-dialog-content>
-    <form [formGroup]="folderForm" (keydown)="onKeyDown($event)">
-      <!-- Folder Name Field -->
-      <mat-form-field appearance="fill" class="full-width">
+  <div class="dialog-content" mat-dialog-content>
+    <form class="create-folder-form">
+      <mat-form-field appearance="outline" class="full-width">
         <mat-label>Folder Name</mat-label>
         <input 
           matInput 
-          formControlName="name" 
+          id="folderName"
+          [(ngModel)]="folderName" 
+          name="folderName"
           placeholder="Enter folder name"
           maxlength="100"
-          (input)="clearError()"
-          autocomplete="off">
-        <mat-icon matSuffix>folder</mat-icon>
-        <mat-hint>Required (1-100 characters)</mat-hint>
-        <mat-error *ngIf="nameControl?.invalid && (nameControl?.dirty || nameControl?.touched)">
-          {{ getNameErrorMessage() }}
+          required
+          #nameInput="ngModel"
+        />
+        <mat-hint>Choose a descriptive name for your folder</mat-hint>
+        <mat-error *ngIf="nameInput.invalid && nameInput.touched">
+          {{ getFolderNameError() }}
         </mat-error>
       </mat-form-field>
 
-      <!-- Description Field -->
-      <mat-form-field appearance="fill" class="full-width">
+      <mat-form-field appearance="outline" class="full-width">
         <mat-label>Description (Optional)</mat-label>
         <textarea 
           matInput 
-          formControlName="description" 
+          [(ngModel)]="description" 
+          name="description"
           placeholder="Enter folder description"
           maxlength="500"
           rows="3"
-          (input)="clearError()"></textarea>
-        <mat-icon matSuffix>description</mat-icon>
-        <mat-hint>Optional (max 500 characters)</mat-hint>
-        <mat-error *ngIf="descriptionControl?.invalid && (descriptionControl?.dirty || descriptionControl?.touched)">
-          {{ getDescriptionErrorMessage() }}
-        </mat-error>
+        ></textarea>
+        <mat-hint>Add a description to help identify this folder's purpose</mat-hint>
       </mat-form-field>
-
-      <!-- Error Message Display -->
-      <div *ngIf="errorMessage" class="error-message">
-        <mat-icon color="warn">error</mat-icon>
-        <span>{{ errorMessage }}</span>
-      </div>
-
-      <!-- Loading Indicator -->
-      <div *ngIf="isCreating" class="loading-indicator">
-        <mat-spinner diameter="24"></mat-spinner>
-        <span>Creating folder...</span>
-      </div>
-
-      <!-- Parent Folder Info -->
-      <div class="parent-info" *ngIf="data.parentFolderId">
-        <mat-icon>info</mat-icon>
-        <span>This folder will be created inside <strong>{{ data.parentFolderName }}</strong></span>
-      </div>
     </form>
-  </mat-dialog-content>
+  </div>
 
-  <mat-dialog-actions align="end">
+  <div class="dialog-actions" mat-dialog-actions>
     <button 
       mat-button 
-      (click)="onCancel()"
+      (click)="onCancel()" 
       [disabled]="isCreating"
-      color="primary">
+      class="cancel-btn"
+    >
+      <mat-icon>close</mat-icon>
       Cancel
     </button>
     
     <button 
       mat-raised-button 
-      color="primary"
-      (click)="onSubmit()"
-      [disabled]="!canSubmit"
-      class="create-button">
-      <mat-icon *ngIf="!isCreating">add</mat-icon>
-      <mat-spinner *ngIf="isCreating" diameter="16"></mat-spinner>
-      {{ submitButtonText }}
+      color="primary" 
+      (click)="onCreateFolder()" 
+      [disabled]="!canCreate()"
+      class="create-btn"
+    >
+      <mat-icon *ngIf="!isCreating">folder</mat-icon>
+      <mat-icon *ngIf="isCreating" class="spinning">refresh</mat-icon>
+      {{ isCreating ? 'Creating...' : 'Create Folder' }}
     </button>
-  </mat-dialog-actions>
+  </div>
 </div>

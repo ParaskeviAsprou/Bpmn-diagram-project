@@ -102,17 +102,17 @@ export class SidebarComponent {
     this.router.navigate([path], { queryParams });
   }
 
-  logout(): void {
-    // Καθαρίζει το session (αν υπάρχει service auth)
-    this.authService.logout().subscribe({
-      next: () => {
-        console.log('Logout successful');
-      },
-      error: (error) => {
-        console.error('Logout error:', error);
-        // Even if backend logout fails, navigate to login
-        this.router.navigate(['/login']);
-      }
-    });
-  }
+  // logout(): void {
+  //   // Καθαρίζει το session (αν υπάρχει service auth)
+  //   this.authService.logout().subscribe({
+  //     next: () => {
+  //       console.log('Logout successful');
+  //     },
+  //     error: (error) => {
+  //       console.error('Logout error:', error);
+  //       // Even if backend logout fails, navigate to login
+  //       this.router.navigate(['/login']);
+  //     }
+  //   });
+  //}
 }

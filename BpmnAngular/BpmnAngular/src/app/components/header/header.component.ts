@@ -2,9 +2,11 @@ import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { AuthenticationService, User } from '../../services/authentication.service';
 import { NotificationService } from '../../services/notification.service';
 import { RoleDirective } from '../../directives/role.directive';
+import { LanguageSelectorComponent } from '../language-selector/language-selector.component';
 import { Subject, takeUntil } from 'rxjs';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
@@ -30,7 +32,9 @@ interface HeaderNotification {
     CommonModule, 
     FormsModule, 
     RouterModule, 
+    TranslateModule,
     RoleDirective,
+    LanguageSelectorComponent,
     MatToolbarModule,
     MatButtonModule,
     MatIconModule,
@@ -190,16 +194,24 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   logout(): void {
-    // Καθαρίζει το session (αν υπάρχει service auth)
-    this.authService.logout().subscribe({
-      next: () => {
-        console.log('Logout successful');
-      },
-      error: (error) => {
-        console.error('Logout error:', error);
-        // Even if backend logout fails, navigate to login
-        this.router.navigate(['/login']);
-      }
-    });
+    // Show confirmation dialog
+    if (confirm('Are you sure you want to logout?')) {
+      console.log('Logging out user...');
+      this.showUserMenu = false;
+      
+      this.authService.logout().subscribe({
+        next: () => {
+          console.log('Logout successful');
+          this.notificationService.showSuccess('Successfully logged out');
+          this.router.navigate(['/login']);
+        },
+        error: (error) => {
+          console.error('Logout error:', error);
+          // Even if backend logout fails, navigate to login
+          this.notificationService.showInfo('Logged out locally');
+          this.router.navigate(['/login']);
+        }
+      });
+    }
   }
 }

@@ -1,6 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { AuthenticationService, User } from '../../services/authentication.service';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
@@ -22,6 +23,7 @@ interface MenuItem {
   standalone: true,
   imports: [
     CommonModule,
+    TranslateModule,
     MatSidenavModule,
     MatListModule,
     MatIconModule,
@@ -38,28 +40,28 @@ export class SidebarComponent {
   expandedGroups: Set<string> = new Set();
 
   menuItems: MenuItem[] = [
-    { label: 'Dashboard', icon: 'icon-dashboard', route: '/dashboard' },
+    { label: 'sidebar.dashboard', icon: 'icon-dashboard', route: '/dashboard' },
     {
-      label: 'Diagrams',
+      label: 'sidebar.diagrams',
       icon: 'icon-diagrams',
       children: [
-        { label: 'All Diagrams', icon: 'icon-list', route: '/files' },
-        { label: 'Create New', icon: 'icon-plus', route: '/modeler?new=true', roles: ['ROLE_MODELER', 'ROLE_ADMIN'] },
-        { label: 'My Diagrams', icon: 'icon-user', route: '/files?filter=my' }
+        { label: 'sidebar.allDiagrams', icon: 'icon-list', route: '/files' },
+        { label: 'sidebar.createDiagram', icon: 'icon-plus', route: '/modeler?new=true', roles: ['ROLE_MODELER', 'ROLE_ADMIN'] },
+        { label: 'sidebar.myDiagrams', icon: 'icon-user', route: '/files?filter=my' }
       ]
     },
     {
-      label: 'Administration',
+      label: 'sidebar.administration',
       icon: 'icon-admin',
       roles: ['ROLE_ADMIN'],
       children: [
-        { label: 'User Management', icon: 'icon-users', route: '/admin?tab=users' },
-        { label: 'Role Management', icon: 'icon-roles', route: '/admin?tab=roles' },
-        { label: 'Group Management', icon: 'icon-groups', route: '/admin?tab=groups' },
-        { label: 'Diagram Access', icon: 'icon-lock', route: '/admin?tab=diagrams' }
+        { label: 'sidebar.userManagement', icon: 'icon-users', route: '/admin?tab=users' },
+        { label: 'sidebar.roleManagement', icon: 'icon-roles', route: '/admin?tab=roles' },
+        { label: 'sidebar.groupManagement', icon: 'icon-groups', route: '/admin?tab=groups' },
+        { label: 'sidebar.diagramAccess', icon: 'icon-lock', route: '/admin?tab=diagrams' }
       ]
     },
-    { label: 'Profile', icon: 'icon-user', route: '/settings?tab=profile' }
+    { label: 'sidebar.profile', icon: 'icon-user', route: '/settings?tab=profile' }
   ];
 
   constructor(private router: Router, private authService: AuthenticationService) {}

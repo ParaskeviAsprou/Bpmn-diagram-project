@@ -1,0 +1,106 @@
+{
+  "common": {
+    "dashboard": "Πίνακας Ελέγχου",
+    "logout": "Αποσύνδεση",
+    "login": "Σύνδεση",
+    "register": "Εγγραφή",
+    "save": "Αποθήκευση",
+    "cancel": "Ακύρωση",
+    "delete": "Διαγραφή",
+    "edit": "Επεξεργασία",
+    "create": "Δημιουργία",
+    "search": "Αναζήτηση",
+    "profile": "Προφίλ",
+    "settings": "Ρυθμίσεις",
+    "admin": "Πίνακας Διαχείρισης",
+    "notifications": "Ειδοποιήσεις",
+    "clearAll": "Εκκαθάριση Όλων",
+    "markAllAsRead": "Σήμανση Όλων ως Διαβασμένων",
+    "noNotifications": "Δεν υπάρχουν νέες ειδοποιήσεις",
+    "testNotifications": "Δοκιμή Ειδοποιήσεων",
+    "language": "Γλώσσα",
+    "english": "Αγγλικά",
+    "greek": "Ελληνικά"
+  },
+  "header": {
+    "searchPlaceholder": "Αναζήτηση διαγραμμάτων...",
+    "bpmnManager": "Διαχειριστής BPMN",
+    "welcome": "Καλώς ήρθατε"
+  },
+  "sidebar": {
+    "dashboard": "Πίνακας Ελέγχου",
+    "diagrams": "Διαγράμματα",
+    "allDiagrams": "Όλα τα Διαγράμματα",
+    "myDiagrams": "Τα Διαγράμματά Μου",
+    "createDiagram": "Δημιουργία Διαγράμματος",
+    "sharedDiagrams": "Κοινόχρηστα Διαγράμματα",
+    "administration": "Διαχείριση",
+    "userManagement": "Διαχείριση Χρηστών",
+    "roleManagement": "Διαχείριση Ρόλων",
+    "groupManagement": "Διαχείριση Ομάδων",
+    "diagramAccess": "Πρόσβαση Διαγραμμάτων",
+    "profile": "Προφίλ",
+    "settings": "Ρυθμίσεις"
+  },
+  "dashboard": {
+    "title": "Πίνακας Ελέγχου",
+    "welcome": "Καλώς ήρθατε",
+    "subtitle": "Δείτε τι συμβαίνει με τις επιχειρηματικές σας διαδικασίες σήμερα.",
+    "recentDiagrams": "Πρόσφατα Διαγράμματα",
+    "sharedWithMe": "Κοινόχρηστα με Εμένα",
+    "myDiagrams": "Τα Διαγράμματά μου",
+    "statistics": "Στατιστικά",
+    "totalDiagrams": "Συνολικά Διαγράμματα",
+    "sharedDiagrams": "Κοινόχρηστα Διαγράμματα",
+    "collaborators": "Συνεργάτες"
+  },
+  "diagram": {
+    "createNew": "Δημιουργία Νέου Διαγράμματος",
+    "openExisting": "Άνοιγμα Υπάρχοντος",
+    "save": "Αποθήκευση Διαγράμματος",
+    "export": "Εξαγωγή",
+    "import": "Εισαγωγή",
+    "share": "Κοινή Χρήση",
+    "versionHistory": "Ιστορικό Εκδόσεων",
+    "properties": "Ιδιότητες",
+    "collaborators": "Συνεργάτες"
+  },
+  "auth": {
+    "loginTitle": "Σύνδεση στον Διαχειριστή BPMN",
+    "registerTitle": "Δημιουργία Λογαριασμού",
+    "email": "Email",
+    "password": "Κωδικός",
+    "confirmPassword": "Επιβεβαίωση Κωδικού",
+    "firstName": "Όνομα",
+    "lastName": "Επώνυμο",
+    "loginButton": "Σύνδεση",
+    "registerButton": "Εγγραφή",
+    "forgotPassword": "Ξεχάσατε τον κωδικό;",
+    "alreadyHaveAccount": "Έχετε ήδη λογαριασμό;",
+    "dontHaveAccount": "Δεν έχετε λογαριασμό;",
+    "rememberMe": "Θυμήσου με",
+    "signingIn": "Σύνδεση..."
+  },
+  "admin": {
+    "title": "Πίνακας Διαχείρισης",
+    "users": "Χρήστες",
+    "roles": "Ρόλοι",
+    "groups": "Ομάδες",
+    "permissions": "Δικαιώματα",
+    "systemSettings": "Ρυθμίσεις Συστήματος"
+  },
+  "errors": {
+    "genericError": "Παρουσιάστηκε σφάλμα",
+    "networkError": "Σφάλμα δικτύου. Ελέγξτε τη σύνδεσή σας.",
+    "unauthorized": "Μη εξουσιοδοτημένη πρόσβαση",
+    "forbidden": "Απαγορευμένη πρόσβαση",
+    "notFound": "Ο πόρος δεν βρέθηκε",
+    "serverError": "Σφάλμα διακομιστή. Παρακαλώ δοκιμάστε ξανά αργότερα."
+  },
+  "success": {
+    "saved": "Αποθηκεύτηκε επιτυχώς",
+    "deleted": "Διαγράφηκε επιτυχώς",
+    "updated": "Ενημερώθηκε επιτυχώς",
+    "created": "Δημιουργήθηκε επιτυχώς"
+  }
+}

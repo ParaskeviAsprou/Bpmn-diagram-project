@@ -16,7 +16,7 @@
              [class.active]="isActive(item.route!)"
              (click)="navigate(item.route!)">
             <i [class]="item.icon"></i>
-            <span class="nav-text">{{ item.label }}</span>
+            <span class="nav-text">{{ item.label | translate }}</span>
           </a>
 
           <!-- Menu with children -->
@@ -25,7 +25,7 @@
                     [class.expanded]="isExpanded(item.label)"
                     (click)="toggleGroup(item.label)">
               <i [class]="item.icon"></i>
-              <span class="nav-text">{{ item.label }}</span>
+              <span class="nav-text">{{ item.label | translate }}</span>
               <i class="icon-chevron-right expand-icon"
                  [class.rotated]="isExpanded(item.label)"></i>
             </button>
@@ -36,7 +36,7 @@
                    [class.active]="isActive(child.route!)"
                    (click)="navigate(child.route!)">
                   <i [class]="child.icon"></i>
-                  <span class="nav-text">{{ child.label }}</span>
+                  <span class="nav-text">{{ child.label | translate }}</span>
                 </a>
               </li>
             </ul>

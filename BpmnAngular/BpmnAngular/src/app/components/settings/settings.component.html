@@ -26,13 +26,13 @@
     <!-- Main Content -->
     <mat-card-content *ngIf="!loading">
       <mat-tab-group>
-        
+
         <!-- Profile Tab -->
         <mat-tab label="Profile">
           <form [formGroup]="profileForm" (ngSubmit)="onSaveProfile()">
             <div class="form-section">
               <h3>Personal Information</h3>
-              
+
               <div class="form-row">
                 <mat-form-field appearance="outline" class="half-width">
                   <mat-label>First Name *</mat-label>
@@ -69,19 +69,19 @@
                   <mat-icon matSuffix>phone</mat-icon>
                 </mat-form-field>
               </div>
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Address</mat-label>
+                  <input matInput type="text" formControlName="address" [disabled]="isFormDisabled" />
+                  <mat-icon matSuffix>home</mat-icon>
+                </mat-form-field>
 
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Address</mat-label>
-                <textarea matInput formControlName="address" [disabled]="isFormDisabled" rows="3"></textarea>
-                <mat-icon matSuffix>home</mat-icon>
-              </mat-form-field>
-
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Profile Picture URL</mat-label>
-                <input matInput type="text" formControlName="profilePicture" [disabled]="isFormDisabled" />
-                <mat-icon matSuffix>image</mat-icon>
-              </mat-form-field>
-
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Profile Picture URL</mat-label>
+                  <input matInput type="text" formControlName="profilePicture" [disabled]="isFormDisabled" />
+                  <mat-icon matSuffix>image</mat-icon>
+                </mat-form-field>
+              </div>
               <div class="button-group" *ngIf="!isFormDisabled">
                 <button mat-button type="button">Cancel</button>
                 <button mat-raised-button color="primary" type="submit" [disabled]="profileForm.invalid || saving">
@@ -98,7 +98,7 @@
           <form [formGroup]="preferencesForm" (ngSubmit)="onSavePreferences()">
             <div class="form-section">
               <h3>Application Preferences</h3>
-              
+
               <div class="form-row">
                 <mat-form-field appearance="outline" class="half-width">
                   <mat-label>Theme</mat-label>
@@ -171,7 +171,7 @@
           <form [formGroup]="securityForm" (ngSubmit)="onSaveSecurity()">
             <div class="form-section">
               <h3>Security Settings</h3>
-              
+
               <div class="checkbox-group">
                 <mat-checkbox formControlName="twoFactorAuth" [disabled]="isFormDisabled">
                   <div class="checkbox-content">
@@ -190,9 +190,11 @@
 
               <mat-form-field appearance="outline" class="session-timeout">
                 <mat-label>Session Timeout (minutes)</mat-label>
-                <input matInput type="number" formControlName="sessionTimeout" [disabled]="isFormDisabled" min="1" max="480" />
+                <input matInput type="number" formControlName="sessionTimeout" [disabled]="isFormDisabled" min="1"
+                  max="480" />
                 <mat-icon matSuffix>schedule</mat-icon>
-                <mat-error *ngIf="securityForm.get('sessionTimeout')?.invalid && securityForm.get('sessionTimeout')?.touched">
+                <mat-error
+                  *ngIf="securityForm.get('sessionTimeout')?.invalid && securityForm.get('sessionTimeout')?.touched">
                   Session timeout must be between 1 and 480 minutes
                 </mat-error>
               </mat-form-field>
@@ -213,12 +215,13 @@
           <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()">
             <div class="form-section">
               <h3>Change Password</h3>
-              
+
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Current Password *</mat-label>
                 <input matInput type="password" formControlName="currentPassword" [disabled]="isFormDisabled" />
                 <mat-icon matSuffix>lock</mat-icon>
-                <mat-error *ngIf="passwordForm.get('currentPassword')?.invalid && passwordForm.get('currentPassword')?.touched">
+                <mat-error
+                  *ngIf="passwordForm.get('currentPassword')?.invalid && passwordForm.get('currentPassword')?.touched">
                   Current password is required
                 </mat-error>
               </mat-form-field>
@@ -228,7 +231,8 @@
                   <mat-label>New Password *</mat-label>
                   <input matInput type="password" formControlName="newPassword" [disabled]="isFormDisabled" />
                   <mat-icon matSuffix>lock</mat-icon>
-                  <mat-error *ngIf="passwordForm.get('newPassword')?.invalid && passwordForm.get('newPassword')?.touched">
+                  <mat-error
+                    *ngIf="passwordForm.get('newPassword')?.invalid && passwordForm.get('newPassword')?.touched">
                     Password must be at least 8 characters long
                   </mat-error>
                 </mat-form-field>
@@ -237,13 +241,16 @@
                   <mat-label>Confirm New Password *</mat-label>
                   <input matInput type="password" formControlName="confirmPassword" [disabled]="isFormDisabled" />
                   <mat-icon matSuffix>lock</mat-icon>
-                  <mat-error *ngIf="passwordForm.get('confirmPassword')?.invalid && passwordForm.get('confirmPassword')?.touched">
+                  <mat-error
+                    *ngIf="passwordForm.get('confirmPassword')?.invalid && passwordForm.get('confirmPassword')?.touched">
                     Please confirm your password
                   </mat-error>
                 </mat-form-field>
               </div>
 
-              <mat-error *ngIf="passwordForm.hasError('passwordMismatch') && passwordForm.get('confirmPassword')?.touched" class="password-mismatch">
+              <mat-error
+                *ngIf="passwordForm.hasError('passwordMismatch') && passwordForm.get('confirmPassword')?.touched"
+                class="password-mismatch">
                 Passwords do not match
               </mat-error>
 

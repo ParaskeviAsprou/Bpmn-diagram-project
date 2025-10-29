@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Subject, takeUntil } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { AuthenticationService, User } from './services/authentication.service';
 import { HeaderComponent } from './components/header/header.component';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
@@ -11,7 +12,7 @@ import { NotificationComponent } from './components/notification/notification.co
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, HeaderComponent, SidebarComponent, FooterComponent, NotificationComponent],
+  imports: [CommonModule, RouterOutlet, TranslateModule, HeaderComponent, SidebarComponent, FooterComponent, NotificationComponent],
   template: `
     <div class="app-container" [class.authenticated]="currentUser">
       <!-- Header - only show when authenticated and not on auth pages -->
@@ -120,12 +121,16 @@ export class AppComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     console.log('AppComponent initializing...');
 
+    // Set initial auth page state based on current URL
+    const initialUrl = this.router.url;
+    this.isAuthPage = initialUrl.startsWith('/login') || initialUrl.startsWith('/register');
+    console.log('Initial URL:', this.router.url, 'Is auth page:', this.isAuthPage);
+
     // Subscribe to current user changes
     this.authService.currentUser$
       .pipe(takeUntil(this.destroy$))
       .subscribe(user => {
-        this.currentUser = user;
-        console.log('User state changed:', user ? 'Logged in' : 'Logged out');
+        this.currentUser = user
       });
 
     // Track navigation to determine if we're on auth pages
@@ -133,8 +138,8 @@ export class AppComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(event => {
         if (event instanceof NavigationEnd) {
-          this.isAuthPage = ['/login', '/register'].includes(event.url);
-          console.log('Navigation to:', event.url, 'Is auth page:', this.isAuthPage);
+          const url = (event as NavigationEnd).urlAfterRedirects || event.url;
+          this.isAuthPage = url.startsWith('/login') || url.startsWith('/register');
         }
       });
 
@@ -150,12 +155,24 @@ export class AppComponent implements OnInit, OnDestroy {
   private initializeApp(): void {
     console.log('Initializing application...');
     
+    // Initialize user from storage if available (only if not on auth pages)
+    if (!this.isAuthPage) {
+      this.authService.initializeUserFromStorage();
+    }
+    
     // Check if user is already authenticated on app start
     const isAuthenticated = this.authService.isAuthenticated();
     console.log('Initial authentication check:', isAuthenticated);
 
-    if (isAuthenticated) {
-      // Validate token and load user data
+    if (!isAuthenticated) {
+      // Ensure user state is cleared if not authenticated
+      console.log('User not authenticated, ensuring clean state');
+      // Force clear any potential user state
+      this.currentUser = null;
+    }
+
+    if (isAuthenticated && !this.isAuthPage) {
+      // Validate token and load user data (only if not on auth pages)
       this.authService.ensureValidToken()
         .pipe(takeUntil(this.destroy$))
         .subscribe({
@@ -166,9 +183,9 @@ export class AppComponent implements OnInit, OnDestroy {
               this.router.navigate(['/login']);
             } else {
               console.log('Token is valid, user is authenticated');
-              // If we're on the root or login page but authenticated, redirect to dashboard
+              // If we're on the root page but authenticated, redirect to dashboard
               const currentUrl = this.router.url;
-              if (currentUrl === '/' || currentUrl === '/login') {
+              if (currentUrl === '/') {
                 console.log('Redirecting authenticated user to dashboard');
                 this.router.navigate(['/dashboard']);
               }
@@ -180,7 +197,7 @@ export class AppComponent implements OnInit, OnDestroy {
             this.router.navigate(['/login']);
           }
         });
-    } else {
+    } else if (!isAuthenticated && !this.isAuthPage) {
       // Redirect to login if not authenticated and not on auth pages
       const currentUrl = this.router.url;
       if (!['/login', '/register'].includes(currentUrl)) {

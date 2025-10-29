@@ -1,103 +1,110 @@
-<div class="parent">
-  <mat-card class="container">
-    <mat-card-header>
-      <mat-card-title>
-        <h1>Create Account</h1>
-      </mat-card-title>
-      <mat-card-subtitle>
-        Already have an account? <a routerLink="/login">Sign In</a>
-      </mat-card-subtitle>
-    </mat-card-header>
-    
-    <!-- Display message if exists -->
-    <mat-card-content *ngIf="msg">
-      <div class="message-alert">
-        <mat-icon color="primary">info</mat-icon>
-        <span>{{ msg }}</span>
+<div class="register-container">
+  <div class="header">
+    <div class="logo">
+      <span class="material-icons">person_add</span>
+    </div>
+    <h1>Create Account</h1>
+    <p class="subtitle">Already have an account? <a href="#">Sign In</a></p>
+  </div>
+
+  <div class="success-message" style="display: none;" id="successMessage">
+    <span class="material-icons">check_circle</span>
+    <span>Registration successful! Redirecting to dashboard...</span>
+  </div>
+
+  <form onsubmit="handleSubmit(event)">
+    <!-- Personal Information -->
+    <div class="form-row">
+      <div class="form-field">
+        <label>First Name</label>
+        <div class="input-wrapper">
+          <span class="material-icons input-icon">person</span>
+          <input type="text" placeholder="Enter first name" required>
+        </div>
+        <span class="error-text">First name is required</span>
       </div>
-    </mat-card-content>
 
-    <mat-card-content>
-      <form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
-        <div class="form-row">
-          <mat-form-field appearance="outline" class="half-width">
-            <mat-label>First Name</mat-label>
-            <input matInput type="text" formControlName="firstName" />
-            <mat-icon matSuffix>person</mat-icon>
-            <mat-error *ngIf="signupForm.controls['firstName'].touched && signupForm.controls['firstName'].hasError('required')">
-              First name is required
-            </mat-error>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="half-width">
-            <mat-label>Last Name</mat-label>
-            <input matInput type="text" formControlName="lastName" />
-            <mat-icon matSuffix>person</mat-icon>
-            <mat-error *ngIf="signupForm.controls['lastName'].touched && signupForm.controls['lastName'].hasError('required')">
-              Last name is required
-            </mat-error>
-          </mat-form-field>
+      <div class="form-field">
+        <label>Last Name</label>
+        <div class="input-wrapper">
+          <span class="material-icons input-icon">person</span>
+          <input type="text" placeholder="Enter last name" required>
         </div>
+        <span class="error-text">Last name is required</span>
+      </div>
+    </div>
 
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Username</mat-label>
-          <input matInput type="text" formControlName="username" />
-          <mat-icon matSuffix>account_circle</mat-icon>
-          <mat-error *ngIf="signupForm.controls['username'].touched && signupForm.controls['username'].hasError('required')">
-            Username is required
-          </mat-error>
-        </mat-form-field>
+    <!-- Account Information -->
+    <div class="field-group-header">Account Details</div>
 
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Email</mat-label>
-          <input matInput type="email" formControlName="email" />
-          <mat-icon matSuffix>email</mat-icon>
-          <mat-error *ngIf="signupForm.controls['email'].touched">
-            <span *ngIf="signupForm.controls['email'].hasError('required')">Email is required</span>
-            <span *ngIf="signupForm.controls['email'].hasError('email')">Please enter a valid email address</span>
-          </mat-error>
-        </mat-form-field>
+    <div class="form-field">
+      <label>Username</label>
+      <div class="input-wrapper">
+        <span class="material-icons input-icon">account_circle</span>
+        <input type="text" placeholder="Choose a username" required minlength="3">
+      </div>
+      <span class="error-text">Username must be at least 3 characters</span>
+    </div>
 
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Password</mat-label>
-          <input matInput type="password" formControlName="password" />
-          <mat-icon matSuffix>lock</mat-icon>
-          <mat-error *ngIf="signupForm.controls['password'].touched">
-            <span *ngIf="signupForm.controls['password'].hasError('required')">Password is required</span>
-            <span *ngIf="signupForm.controls['password'].hasError('minlength')">Password must be at least 8 characters long</span>
-          </mat-error>
-        </mat-form-field>
+    <div class="form-field">
+      <label>Email Address</label>
+      <div class="input-wrapper">
+        <span class="material-icons input-icon">email</span>
+        <input type="email" placeholder="your.email@example.com" required>
+      </div>
+      <span class="error-text">Please enter a valid email address</span>
+    </div>
 
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Address (Optional)</mat-label>
-          <input matInput type="text" formControlName="address" />
-          <mat-icon matSuffix>home</mat-icon>
-        </mat-form-field>
+    <div class="form-field">
+      <label>Password</label>
+      <div class="input-wrapper">
+        <span class="material-icons input-icon">lock</span>
+        <input type="password" placeholder="Create a strong password" required minlength="6">
+      </div>
+      <span class="error-text">Password must be at least 6 characters</span>
+    </div>
 
-        <div class="form-row">
-          <mat-form-field appearance="outline" class="half-width">
-            <mat-label>Mobile No (Optional)</mat-label>
-            <input matInput type="text" formControlName="mobileno" />
-            <mat-icon matSuffix>phone</mat-icon>
-          </mat-form-field>
+    <!-- Optional Information -->
+    <div class="field-group-header">Additional Information (Optional)</div>
 
-          <mat-form-field appearance="outline" class="half-width">
-            <mat-label>Age (Optional)</mat-label>
-            <input matInput type="number" formControlName="age" />
-            <mat-icon matSuffix>cake</mat-icon>
-          </mat-form-field>
+    <div class="form-field">
+      <label>Address</label>
+      <div class="input-wrapper">
+        <span class="material-icons input-icon">home</span>
+        <input type="text" placeholder="Enter your address">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label>Mobile Number</label>
+        <div class="input-wrapper">
+          <span class="material-icons input-icon">phone</span>
+          <input type="tel" placeholder="Your phone number">
         </div>
+      </div>
 
-        <div class="terms-section">
-          <mat-checkbox formControlName="termsAccepted">
-            I have read and agree to the <a href="#">Terms of Service</a>
-          </mat-checkbox>
+      <div class="form-field">
+        <label>Age</label>
+        <div class="input-wrapper">
+          <span class="material-icons input-icon">cake</span>
+          <input type="number" placeholder="Your age" min="1" max="120">
         </div>
+      </div>
+    </div>
 
-        <button mat-raised-button color="primary" type="submit" class="signup-btn" [disabled]="!signupForm.valid">
-          Signup
-        </button>
-      </form>
-    </mat-card-content>
-  </mat-card>
+    <!-- Terms and Conditions -->
+    <div class="terms-section">
+      <input type="checkbox" id="terms" required>
+      <label for="terms">
+        I have read and agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+      </label>
+    </div>
+
+    <button type="submit" class="register-btn">Create Account</button>
+  </form>
+
+  <div class="login-link">
+    Already have an account? <a href="#">Sign in here</a>
+  </div>
 </div>

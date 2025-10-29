@@ -1,8 +1,8 @@
 <div class="dashboard">
   <div class="dashboard-header">
     <div class="welcome-section">
-      <h1>Welcome back, {{currentUser?.firstname}}!</h1>
-      <p>Here's what's happening with your business processes today.</p>
+      <h1>{{ 'dashboard.welcome' | translate }}, {{currentUser?.firstname}}!</h1>
+      <p>{{ 'dashboard.subtitle' | translate }}</p>
     </div>
     <div class="header-actions">
       <button 
@@ -10,7 +10,7 @@
         class="btn btn-primary" 
         (click)="createNewDiagram()">
         <i class="icon-plus"></i>
-        Create New Diagram
+        {{ 'diagram.createNew' | translate }}
       </button>
     </div>
   </div>
@@ -23,7 +23,7 @@
       </div>
       <div class="stat-content">
         <h3>{{stats.totalDiagrams}}</h3>
-        <p>Total Diagrams</p>
+        <p>{{ 'dashboard.totalDiagrams' | translate }}</p>
       </div>
     </div>
     
@@ -33,7 +33,7 @@
       </div>
       <div class="stat-content">
         <h3>{{stats.myDiagrams}}</h3>
-        <p>My Diagrams</p>
+        <p>{{ 'dashboard.myDiagrams' | translate }}</p>
       </div>
     </div>
     
@@ -43,7 +43,7 @@
       </div>
       <div class="stat-content">
         <h3>{{stats.sharedWithMe}}</h3>
-        <p>Shared with Me</p>
+        <p>{{ 'dashboard.sharedWithMe' | translate }}</p>
       </div>
     </div>
     
@@ -63,7 +63,7 @@
     <!-- Recent Diagrams -->
     <div class="dashboard-card">
       <div class="card-header">
-        <h2>Recent Diagrams</h2>
+        <h2>{{ 'dashboard.recentDiagrams' | translate }}</h2>
         <a (click)="navigateToFiles()" class="view-all">View All</a>
       </div>
       <div class="card-content">

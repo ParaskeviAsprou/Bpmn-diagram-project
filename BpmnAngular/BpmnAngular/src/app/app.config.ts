@@ -5,6 +5,7 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { TranslateModule } from '@ngx-translate/core';
 
 import { routes } from './app.routes';
 import { jwtInterceptor } from './interceptors/jwt.interceptor';
@@ -28,6 +29,14 @@ export const appConfig: ApplicationConfig = {
     importProvidersFrom(
       MatDialogModule,
       MatSnackBarModule
+    ),
+    
+    // Translation module
+    importProvidersFrom(
+      TranslateModule.forRoot({
+        defaultLanguage: 'en',
+        useDefaultLang: true
+      })
     )
   ]
 };

@@ -118,6 +118,20 @@ public class FolderController {
         }
     }
 
+    // =================== FOLDER FILES ===================
+
+    @GetMapping("/{folderId}/files")
+    @PreAuthorize("hasRole('ROLE_VIEWER') or hasRole('ROLE_MODELER') or hasRole('ROLE_ADMIN')")
+    public ResponseEntity<?> getFolderFiles(@PathVariable Long folderId) {
+        try {
+            List<File> files = folderService.getFilesInFolder(folderId);
+            return ok(files);
+        } catch (Exception e) {
+            return status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to retrieve files: " + e.getMessage()));
+        }
+    }
+
     // =================== FOLDER STATS ===================
 
     @GetMapping("/{folderId}/stats")

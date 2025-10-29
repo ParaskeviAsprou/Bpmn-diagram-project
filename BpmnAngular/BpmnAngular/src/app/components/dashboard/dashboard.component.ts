@@ -3,10 +3,12 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { Subject, takeUntil, forkJoin } from 'rxjs';
+import { TranslateModule } from '@ngx-translate/core';
 
 import { UserService } from '../../services/user.service';
 import { AuthenticationService, User } from '../../services/authentication.service';
 import { DiagramFile, DiagramService } from '../../services/diagram-assgnment.service';
+import { LanguageService } from '../../services/language.service';
 import { PermissionDirective } from '../../directives/permission.directive';
 import { RoleDirective } from '../../directives/role.directive';
 import { MatCardModule } from '@angular/material/card';
@@ -26,6 +28,7 @@ interface DashboardStats {
   imports: [
     CommonModule, 
     RouterModule, 
+    TranslateModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule
@@ -58,7 +61,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private authService: AuthenticationService,
     private diagramService: DiagramService,
     private userService: UserService,
-    private router: Router
+    private router: Router,
+    private languageService: LanguageService
   ) {}
 
   ngOnInit(): void {

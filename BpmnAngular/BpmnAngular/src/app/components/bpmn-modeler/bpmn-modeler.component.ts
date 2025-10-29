@@ -19,6 +19,9 @@ import { FolderService } from '../../services/folder.service';
 import { Folder } from '../../models/Folder';
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import BpmnViewer from 'bpmn-js/lib/Viewer';
+
+// Note: BPMN extension modules are available but not currently used
+// to avoid potential loading issues. They can be enabled later if needed.
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -382,6 +385,7 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
       });
 
       this.setupEventListeners();
+      this.enhancePalette();
 
 
       if (this.currentFile) {
@@ -394,6 +398,185 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
       console.error('Error initializing BPMN modeler:', error);
       this.showNotification('Failed to initialize diagram editor', 'error');
     }
+  }
+
+  private enhancePalette(): void {
+    console.log('🎨 Starting palette enhancement...');
+    
+    // Try multiple times with increasing delays to ensure modeler is ready
+    const tryEnhance = (attempt: number = 1) => {
+      console.log(`🎨 Palette enhancement attempt ${attempt}`);
+      
+      try {
+        if (!this.modeler) {
+          console.warn('Modeler not ready, retrying...');
+          if (attempt < 5) {
+            setTimeout(() => tryEnhance(attempt + 1), 500 * attempt);
+          }
+          return;
+        }
+        
+        const paletteProvider = this.modeler.get('paletteProvider');
+        console.log('🎨 Palette provider:', paletteProvider);
+        
+        if (!paletteProvider) {
+          console.warn('Palette provider not found, retrying...');
+          if (attempt < 5) {
+            setTimeout(() => tryEnhance(attempt + 1), 500 * attempt);
+          }
+          return;
+        }
+        
+        // Store original method
+        const originalGetPaletteEntries = paletteProvider.getPaletteEntries;
+        console.log('🎨 Original getPaletteEntries method:', originalGetPaletteEntries);
+        
+        // Override the method
+        paletteProvider.getPaletteEntries = (element: any) => {
+          console.log('🎨 Getting palette entries for element:', element);
+          const entries = originalGetPaletteEntries.call(paletteProvider, element);
+          console.log('🎨 Original entries:', Object.keys(entries));
+          
+          // Add custom entries
+          entries['custom-manual-task'] = {
+            group: 'activity',
+            className: 'bpmn-icon-manual-task',
+            title: 'Manual Task',
+            action: {
+              dragstart: this.createEvent('bpmn:ManualTask'),
+              click: this.createEvent('bpmn:ManualTask')
+            }
+          };
+          
+          entries['custom-user-task'] = {
+            group: 'activity', 
+            className: 'bpmn-icon-user-task',
+            title: 'User Task',
+            action: {
+              dragstart: this.createEvent('bpmn:UserTask'),
+              click: this.createEvent('bpmn:UserTask')
+            }
+          };
+          
+          entries['custom-service-task'] = {
+            group: 'activity',
+            className: 'bpmn-icon-service-task', 
+            title: 'Service Task',
+            action: {
+              dragstart: this.createEvent('bpmn:ServiceTask'),
+              click: this.createEvent('bpmn:ServiceTask')
+            }
+          };
+          
+          entries['custom-script-task'] = {
+            group: 'activity',
+            className: 'bpmn-icon-script-task',
+            title: 'Script Task', 
+            action: {
+              dragstart: this.createEvent('bpmn:ScriptTask'),
+              click: this.createEvent('bpmn:ScriptTask')
+            }
+          };
+          
+          entries['custom-message-event'] = {
+            group: 'event',
+            className: 'bpmn-icon-message',
+            title: 'Message Event',
+            action: {
+              dragstart: this.createEvent('bpmn:MessageEvent'),
+              click: this.createEvent('bpmn:MessageEvent')
+            }
+          };
+          
+          entries['custom-timer-event'] = {
+            group: 'event',
+            className: 'bpmn-icon-timer',
+            title: 'Timer Event',
+            action: {
+              dragstart: this.createEvent('bpmn:TimerEvent'),
+              click: this.createEvent('bpmn:TimerEvent')
+            }
+          };
+          
+          entries['custom-error-event'] = {
+            group: 'event',
+            className: 'bpmn-icon-error',
+            title: 'Error Event',
+            action: {
+              dragstart: this.createEvent('bpmn:ErrorEvent'),
+              click: this.createEvent('bpmn:ErrorEvent')
+            }
+          };
+          
+          entries['custom-signal-event'] = {
+            group: 'event',
+            className: 'bpmn-icon-signal',
+            title: 'Signal Event',
+            action: {
+              dragstart: this.createEvent('bpmn:SignalEvent'),
+              click: this.createEvent('bpmn:SignalEvent')
+            }
+          };
+          
+          entries['custom-exclusive-gateway'] = {
+            group: 'gateway',
+            className: 'bpmn-icon-exclusive-gateway',
+            title: 'Exclusive Gateway',
+            action: {
+              dragstart: this.createEvent('bpmn:ExclusiveGateway'),
+              click: this.createEvent('bpmn:ExclusiveGateway')
+            }
+          };
+          
+          entries['custom-parallel-gateway'] = {
+            group: 'gateway',
+            className: 'bpmn-icon-parallel-gateway',
+            title: 'Parallel Gateway',
+            action: {
+              dragstart: this.createEvent('bpmn:ParallelGateway'),
+              click: this.createEvent('bpmn:ParallelGateway')
+            }
+          };
+          
+          entries['custom-inclusive-gateway'] = {
+            group: 'gateway',
+            className: 'bpmn-icon-inclusive-gateway',
+            title: 'Inclusive Gateway',
+            action: {
+              dragstart: this.createEvent('bpmn:InclusiveGateway'),
+              click: this.createEvent('bpmn:InclusiveGateway')
+            }
+          };
+          
+          console.log('🎨 Enhanced entries:', Object.keys(entries));
+          return entries;
+        };
+        
+        console.log('✅ Palette enhancement completed successfully!');
+        
+      } catch (error) {
+        console.error('❌ Error in palette enhancement:', error);
+        if (attempt < 5) {
+          setTimeout(() => tryEnhance(attempt + 1), 500 * attempt);
+        }
+      }
+    };
+    
+    // Start the enhancement process
+    tryEnhance();
+  }
+
+  private createEvent(type: string) {
+    return (event: any) => {
+      const elementFactory = this.modeler.get('elementFactory');
+      const create = this.modeler.get('create');
+      
+      const shape = elementFactory.createShape({
+        type: type
+      });
+      
+      create.start(event, shape);
+    };
   }
 
   private setupEventListeners(): void {
@@ -526,8 +709,16 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    // Show folder selection dialog for new files
-    this.showFolderSelectionDialog(xml, fileName, customProperties, elementColors);
+    // Check if we already have a folder context from URL parameters
+    if (this.currentFolderContext.folderId !== undefined || this.currentFolderContext.folderName !== 'Root') {
+      // We have a specific folder context, save directly
+      console.log('Saving to existing folder context:', this.currentFolderContext);
+      this.performFileSave(xml, fileName, customProperties, elementColors);
+    } else {
+      // No specific folder context, show folder selection dialog
+      console.log('No folder context, showing folder selection dialog');
+      this.showFolderSelectionDialog(xml, fileName, customProperties, elementColors);
+    }
   }
 
   private showFolderSelectionDialog(xml: string, fileName: string, customProperties: any, elementColors: any): void {
@@ -836,11 +1027,21 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.modeler.saveSVG({ format: true }).then((result: any) => {
-      const svgBlob = new Blob([result.svg], { type: 'image/svg+xml' });
-      this.downloadBlob(svgBlob, options.fileName);
+      // Create SVG blob properly
+      const svgContent = result.svg;
+      const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
+      
+      // Append .svg extension if not present
+      let fileName = options.fileName;
+      if (!fileName.endsWith('.svg')) {
+        fileName += '.svg';
+      }
+      
+      this.downloadBlob(blob, fileName);
       this.showNotification('Diagram exported to SVG successfully', 'success');
       this.isExporting = false;
     }).catch((error: any) => {
+      console.error('SVG Export Error:', error);
       this.showNotification('Error exporting to SVG: ' + error.message, 'error');
       this.isExporting = false;
     });
@@ -858,32 +1059,42 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
       tempDiv.style.position = 'absolute';
       tempDiv.style.top = '-10000px';
       tempDiv.style.backgroundColor = '#ffffff';
+      tempDiv.style.width = 'auto';
+      tempDiv.style.height = 'auto';
       document.body.appendChild(tempDiv);
 
-      let scale = 2;
-      switch (options.quality) {
-        case 'high': scale = 4; break;
-        case 'medium': scale = 2; break;
-        case 'low': scale = 1; break;
-      }
-
       html2canvas(tempDiv, {
-        useCORS: true
+        useCORS: true,
+        logging: false,
+        allowTaint: false
       }).then(canvas => {
         canvas.toBlob((blob) => {
           if (blob) {
-            this.downloadBlob(blob, options.fileName);
+            // Append .png extension if not present
+            let fileName = options.fileName;
+            if (!fileName.endsWith('.png')) {
+              fileName += '.png';
+            }
+            
+            this.downloadBlob(blob, fileName);
             this.showNotification('Diagram exported to PNG successfully', 'success');
+          } else {
+            this.showNotification('Failed to create PNG blob', 'error');
           }
         }, 'image/png', 1.0);
 
         document.body.removeChild(tempDiv);
         this.isExporting = false;
       }).catch(error => {
+        console.error('PNG Export Error:', error);
         this.showNotification('Error exporting PNG: ' + error.message, 'error');
         document.body.removeChild(tempDiv);
         this.isExporting = false;
       });
+    }).catch((error: any) => {
+      console.error('SVG Generation Error:', error);
+      this.showNotification('Error generating SVG for PNG: ' + error.message, 'error');
+      this.isExporting = false;
     });
   }
 
@@ -1131,6 +1342,11 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
     };
 
     console.log('Loaded folder context:', this.currentFolderContext);
+    
+    // If we have a folderId, ensure it's properly set for new files
+    if (folderId) {
+      console.log(`Setting folder context for new files: folderId=${folderId}, folderName=${folderName}`);
+    }
   }
 
   exportAsArchive(): void {
@@ -1599,12 +1815,19 @@ export class BpmnModelerComponent implements OnInit, AfterViewInit, OnDestroy {
   private autoSaveTimer?: any;
 
   private downloadBlob(blob: Blob, fileName: string): void {
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-    link.click();
-    window.URL.revokeObjectURL(url);
+    try {
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download error:', error);
+      this.showNotification('Error downloading file: ' + error, 'error');
+    }
   }
 
 

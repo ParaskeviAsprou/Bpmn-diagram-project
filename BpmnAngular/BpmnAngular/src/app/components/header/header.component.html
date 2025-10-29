@@ -12,7 +12,7 @@
     <div class="search-container">
       <input 
         type="text" 
-        placeholder="Search diagrams..." 
+        [placeholder]="'header.searchPlaceholder' | translate" 
         class="search-input"
         [(ngModel)]="searchTerm"
         (keyup.enter)="search()">
@@ -23,6 +23,11 @@
   </div>
 
   <div class="header-right">
+    <!-- Language Selector -->
+    <div class="language-selector-container">
+      <app-language-selector></app-language-selector>
+    </div>
+
     <!-- Notifications -->
     <div class="notification-bell">
       <button class="icon-btn" (click)="toggleNotifications()">
@@ -31,13 +36,13 @@
       </button>
       <div class="notifications-dropdown" *ngIf="showNotifications">
         <div class="notifications-header">
-          <h4>Notifications</h4>
-          <button class="clear-all" (click)="clearAllNotifications()">Clear All</button>
+          <h4>{{ 'common.notifications' | translate }}</h4>
+          <button class="clear-all" (click)="clearAllNotifications()">{{ 'common.clearAll' | translate }}</button>
         </div>
         <div class="notifications-list">
           <div *ngIf="headerNotifications.length === 0" class="no-notifications">
             <i class="bx bx-bell-off"></i>
-            <p>No new notifications</p>
+            <p>{{ 'common.noNotifications' | translate }}</p>
           </div>
           <div *ngFor="let notification of headerNotifications" 
                class="notification-item"
@@ -62,7 +67,7 @@
         </div>
         <div class="notifications-footer" *ngIf="headerNotifications.length > 0">
           <button class="mark-all-read" (click)="markAllAsRead()">
-            Mark all as read
+            {{ 'common.markAllAsRead' | translate }}
           </button>
         </div>
       </div>
@@ -95,26 +100,26 @@
         <div class="menu-divider"></div>
         <a class="menu-item" (click)="navigateToProfile()">
           <i class="bx bx-user"></i>
-          Profile
+          {{ 'common.profile' | translate }}
         </a>
         <a class="menu-item" (click)="navigateToSettings()">
           <i class="bx bx-cog"></i>
-          Settings
+          {{ 'common.settings' | translate }}
         </a>
         <div class="menu-divider" *appHasRole="'ROLE_ADMIN'"></div>
         <a class="menu-item" *appHasRole="'ROLE_ADMIN'" (click)="navigateToAdmin()">
           <i class="bx bx-shield"></i>
-          Admin Panel
+          {{ 'common.admin' | translate }}
         </a>
         <div class="menu-divider"></div>
         <a class="menu-item" (click)="testNotifications()">
           <i class="bx bx-test-tube"></i>
-          Test Notifications
+          {{ 'common.testNotifications' | translate }}
         </a>
         <div class="menu-divider"></div>
-        <button class="logout-btn" (click)="logout()">
-          <i class="icon-logout"></i>
-          <span *ngIf="!isCollapsed">Logout</span>
+        <button class="menu-item logout-btn" (click)="logout()">
+          <i class="bx bx-log-out"></i>
+          <span>{{ 'common.logout' | translate }}</span>
         </button>
       </div>
     </div>

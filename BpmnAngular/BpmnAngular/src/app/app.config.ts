@@ -11,7 +11,6 @@ import { routes } from './app.routes';
 import { jwtInterceptor } from './interceptors/jwt.interceptor';
 import { authInterceptor } from './interceptors/auth.interceotir';
 
-
 export const appConfig: ApplicationConfig = {
   providers: [
     // Router
@@ -31,7 +30,7 @@ export const appConfig: ApplicationConfig = {
       MatSnackBarModule
     ),
     
-    // Translation module
+    // Translation module (LanguageService handles fetching JSON files)
     importProvidersFrom(
       TranslateModule.forRoot({
         defaultLanguage: 'en',

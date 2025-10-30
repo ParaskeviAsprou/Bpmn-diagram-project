@@ -36,31 +36,29 @@ export class LanguageService {
     
     // Set the language in translate service
     this.translate.setDefaultLang(this.DEFAULT_LANGUAGE);
-    
-    // Load translations for the saved language
     this.loadTranslations(savedLanguage);
-    
-    // Update current language subject
     this.currentLanguageSubject.next(savedLanguage);
     console.log('Language service initialized, current language:', savedLanguage);
+    
+    // Keep subject/localStorage in sync when language changes
+    this.translate.onLangChange.subscribe(event => {
+      this.currentLanguageSubject.next(event.lang);
+      localStorage.setItem(this.STORAGE_KEY, event.lang);
+    });
   }
 
   private loadTranslations(languageCode: string): void {
-    console.log('Loading translations for:', languageCode);
-    this.http.get(`/assets/i18n/${languageCode}.json`).subscribe({
+    this.http.get(`assets/i18n/${languageCode}.json`).subscribe({
       next: (translations: any) => {
-        console.log('Translations loaded successfully:', translations);
-        this.translate.setTranslation(languageCode, translations);
+        this.translate.setTranslation(languageCode, translations, true);
         this.translate.use(languageCode);
-        console.log('Language set to:', languageCode);
-        // Update the subject after translations are loaded
         this.currentLanguageSubject.next(languageCode);
       },
-      error: (error) => {
-        console.error('Failed to load translations:', error);
-        // Fallback to default language
-        this.translate.use(this.DEFAULT_LANGUAGE);
-        this.currentLanguageSubject.next(this.DEFAULT_LANGUAGE);
+      error: () => {
+        // fallback to default
+        if (languageCode !== this.DEFAULT_LANGUAGE) {
+          this.loadTranslations(this.DEFAULT_LANGUAGE);
+        }
       }
     });
   }
@@ -68,10 +66,10 @@ export class LanguageService {
   public setLanguage(languageCode: string): void {
     console.log('LanguageService.setLanguage called with:', languageCode);
     if (this.isValidLanguage(languageCode)) {
-      console.log('Language is valid, loading translations...');
-      this.loadTranslations(languageCode);
-      // Don't update the subject here - let loadTranslations handle it
+      // Optimistically update UI and persist choice
+      this.currentLanguageSubject.next(languageCode);
       localStorage.setItem(this.STORAGE_KEY, languageCode);
+      this.loadTranslations(languageCode);
     } else {
       console.log('Invalid language code:', languageCode);
     }

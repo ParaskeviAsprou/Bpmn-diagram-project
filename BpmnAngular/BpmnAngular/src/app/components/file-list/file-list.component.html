@@ -3,7 +3,7 @@
   <div class="header-section">
     <div class="header-content">
       <div class="header-title">
-        <h1>Your BPMN Files</h1>
+        <h1>{{ translate('fileList.title') }}</h1>
         <div class="user-badge">
           <span class="badge">{{ currentUserFullName }}</span>
           <span class="badge">{{ currentUserRole }}</span>
@@ -11,9 +11,9 @@
       </div>
       <div class="permissions">
         <div style="display: flex; gap: 0.5rem;">
-          <span class="badge" *ngIf="canView">View</span>
-          <span class="badge" *ngIf="canEdit">Edit</span>
-          <span class="badge" *ngIf="canCreate">Create</span>
+          <span class="badge" *ngIf="canView">{{ translate('fileList.view') }}</span>
+          <span class="badge" *ngIf="canEdit">{{ translate('fileList.edit') }}</span>
+          <span class="badge" *ngIf="canCreate">{{ translate('common.create') }}</span>
         </div>
       </div>
     </div>
@@ -24,7 +24,7 @@
     <div class="breadcrumb">
       <button class="breadcrumb-item" (click)="navigateToRoot()" [class.active]="!isInFolder()">
         <span class="material-icons">home</span>
-        All Files
+        {{ translate('fileList.allFiles') }}
       </button>
       <span class="breadcrumb-separator" *ngIf="isInFolder()">
         <span class="material-icons">chevron_right</span>
@@ -39,19 +39,19 @@
   <!-- Search & Actions -->
   <div class="search-container">
     <div class="search-wrapper">
-      <input type="text" class="search-input" placeholder="Search files..." [(ngModel)]="searchTerm" (input)="filterFiles()">
+      <input type="text" class="search-input" [placeholder]="translate('fileList.searchPlaceholder')" [(ngModel)]="searchTerm" (input)="filterFiles()">
       <div class="action-buttons">
         <button class="btn btn-primary" (click)="navigateToModeler()" *ngIf="canCreate">
           <span class="material-icons">add</span>
-          New Diagram
+          {{ translate('fileList.newDiagram') }}
         </button>
         <button class="btn btn-secondary" (click)="uploadFile()" *ngIf="canCreate">
           <span class="material-icons">upload</span>
-          Upload
+          {{ translate('fileList.upload') }}
         </button>
         <button class="btn btn-secondary" (click)="openCreateFolderDialog()" *ngIf="shouldShowCreateFolderButton()">
           <span class="material-icons">create_new_folder</span>
-          New Folder
+          {{ translate('fileList.newFolder') }}
         </button>
       </div>
     </div>
@@ -61,7 +61,7 @@
   <div class="folders-section" *ngIf="shouldShowFolders()">
     <h3 class="section-title">
       <span class="material-icons">folder</span>
-      Folders
+      {{ translate('fileList.folders') }}
     </h3>
     <div class="folders-grid">
       <div class="folder-card" *ngFor="let folder of folders; trackBy: trackByFolderId">
@@ -70,10 +70,10 @@
             <span class="material-icons">folder</span>
           </div>
           <div class="folder-actions">
-            <button class="icon-btn" (click)="renameFolder(folder)" *ngIf="canEdit" title="Rename">
+            <button class="icon-btn" (click)="renameFolder(folder)" *ngIf="canEdit" [title]="translate('fileList.edit')">
               <span class="material-icons">edit</span>
             </button>
-            <button class="icon-btn delete" (click)="deleteFolder(folder)" *ngIf="canDelete" title="Delete">
+            <button class="icon-btn delete" (click)="deleteFolder(folder)" *ngIf="canDelete" [title]="translate('fileList.delete')">
               <span class="material-icons">delete</span>
             </button>
           </div>
@@ -81,7 +81,7 @@
         
         <div class="folder-content" (click)="navigateToFolder(folder)">
           <h4 class="folder-name">{{ folder.folderName }}</h4>
-          <p class="folder-description">{{ folder.description || 'No description' }}</p>
+          <p class="folder-description">{{ folder.description || translate('fileList.noDescription') }}</p>
           
           <div class="folder-meta">
             <div class="meta-item">
@@ -90,7 +90,7 @@
             </div>
             <div class="meta-item">
               <span class="material-icons">person</span>
-              <span>{{ folder.createdBy || 'Unknown' }}</span>
+              <span>{{ folder.createdBy || translate('fileList.unknown') }}</span>
             </div>
           </div>
         </div>
@@ -98,7 +98,7 @@
         <div class="folder-footer">
           <button class="btn btn-primary" (click)="navigateToFolder(folder)">
             <span class="material-icons">folder_open</span>
-            Open
+            {{ translate('fileList.open') }}
           </button>
         </div>
       </div>
@@ -116,22 +116,22 @@
           <span class="file-type">{{ getFileTypeLabel(file) }}</span>
         </div>
         <div class="file-actions">
-          <button class="icon-btn edit" (click)="openFile(file)" *ngIf="canEditFile(file)" title="Edit">
+          <button class="icon-btn edit" (click)="openFile(file)" *ngIf="canEditFile(file)" [title]="translate('fileList.edit')">
             <span class="material-icons">edit</span>
           </button>
-          <button class="icon-btn" (click)="downloadFile(file)" *ngIf="canDownloadFile(file)" title="Download Original">
+          <button class="icon-btn" (click)="downloadFile(file)" *ngIf="canDownloadFile(file)" [title]="translate('fileList.download')">
             <span class="material-icons">download</span>
           </button>
-          <button class="icon-btn" (click)="downloadFile(file, 'pdf')" *ngIf="canExportFile(file)" title="Export as PDF">
+          <button class="icon-btn" (click)="downloadFile(file, 'pdf')" *ngIf="canExportFile(file)" [title]="translate('fileList.exportPdf')">
             <span class="material-icons">picture_as_pdf</span>
           </button>
-          <button class="icon-btn" (click)="downloadFile(file, 'png')" *ngIf="canExportFile(file)" title="Export as PNG">
+          <button class="icon-btn" (click)="downloadFile(file, 'png')" *ngIf="canExportFile(file)" [title]="translate('fileList.exportPng')">
             <span class="material-icons">image</span>
           </button>
-          <button class="icon-btn" (click)="openVersionHistory(file)" *ngIf="canView" title="Version History">
+          <button class="icon-btn" (click)="openVersionHistory(file)" *ngIf="canView" [title]="translate('fileList.versionHistory')">
             <span class="material-icons">history</span>
           </button>
-          <button class="icon-btn delete" (click)="deleteFile(file.id!)" *ngIf="canDeleteFile(file)" title="Delete">
+          <button class="icon-btn delete" (click)="deleteFile(file.id!)" *ngIf="canDeleteFile(file)" [title]="translate('fileList.delete')">
             <span class="material-icons">delete</span>
           </button>
         </div>
@@ -139,7 +139,7 @@
       
       <div class="file-content">
         <h3 class="file-name">{{ file.fileName || 'Untitled' }}</h3>
-        <p class="file-description">{{ file.description || 'No description available' }}</p>
+        <p class="file-description">{{ file.description || translate('fileList.noDescription') }}</p>
         
         <div class="file-meta">
           <div class="meta-item">
@@ -152,7 +152,7 @@
           </div>
           <div class="meta-item">
             <span class="material-icons">person</span>
-            <span>{{ file.createdBy || 'Unknown' }}</span>
+            <span>{{ file.createdBy || translate('fileList.unknown') }}</span>
           </div>
           <div class="meta-item">
             <span class="material-icons">bookmark</span>
@@ -163,11 +163,11 @@
         <div class="file-permissions">
           <span class="permission-badge view" *ngIf="canView">
             <span class="material-icons">visibility</span>
-            View
+            {{ translate('fileList.view') }}
           </span>
           <span class="permission-badge edit" *ngIf="canEditFile(file)">
             <span class="material-icons">edit</span>
-            Edit
+            {{ translate('fileList.edit') }}
           </span>
         </div>
       </div>
@@ -175,12 +175,12 @@
       <div class="file-footer">
         <button class="btn btn-primary" (click)="openFile(file)">
           <span class="material-icons">edit</span>
-          Open
+          {{ translate('fileList.open') }}
         </button>
-        <button class="btn btn-secondary" (click)="downloadFile(file, 'pdf')" *ngIf="canExportFile(file)" title="Export as PDF">
+        <button class="btn btn-secondary" (click)="downloadFile(file, 'pdf')" *ngIf="canExportFile(file)" [title]="translate('fileList.exportPdf')">
           <span class="material-icons">picture_as_pdf</span>
         </button>
-        <button class="btn btn-secondary" (click)="downloadFile(file, 'png')" *ngIf="canExportFile(file)" title="Export as PNG">
+        <button class="btn btn-secondary" (click)="downloadFile(file, 'png')" *ngIf="canExportFile(file)" [title]="translate('fileList.exportPng')">
           <span class="material-icons">image</span>
         </button>
       </div>
@@ -190,8 +190,8 @@
   <!-- Loading State -->
   <div *ngIf="isLoading" class="loading-state">
     <div class="loading-spinner"></div>
-    <h3>Loading files...</h3>
-    <p>Please wait while we fetch your BPMN diagrams.</p>
+    <h3>{{ translate('fileList.loadingFiles') }}</h3>
+    <p>{{ translate('fileList.loadingMessage') }}</p>
   </div>
 
   <!-- Empty State -->
@@ -199,16 +199,16 @@
     <div class="empty-icon">
       <span class="material-icons">folder_open</span>
     </div>
-    <h3>{{ getEmptyStateTitle() }}</h3>
-    <p>{{ getEmptyStateMessage() }}</p>
+    <h3>{{ translate('fileList.emptyStateTitle') }}</h3>
+    <p>{{ translate('fileList.emptyStateMessage') }}</p>
     <div class="action-buttons">
       <button class="btn btn-primary" (click)="navigateToModeler()" *ngIf="canCreate">
         <span class="material-icons">add</span>
-        Create New Diagram
+        {{ translate('fileList.createNewDiagram') }}
       </button>
       <button class="btn btn-secondary" (click)="uploadFile()" *ngIf="canCreate">
         <span class="material-icons">upload</span>
-        Upload File
+        {{ translate('fileList.uploadFile') }}
       </button>
     </div>
   </div>

@@ -528,7 +528,7 @@ body {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.75rem;
-  margin-left: 20px;
+  margin-left: 0;
 }
 
 .folder-header-left {

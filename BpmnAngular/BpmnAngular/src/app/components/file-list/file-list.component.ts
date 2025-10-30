@@ -26,6 +26,7 @@ import { CreateFolderDialogComponent, CreateFolderDialogData, CreateFolderDialog
 import { VersionHistoryDialogComponent, VersionHistoryDialogData } from '../version-history-dialog/version-history-dialog.component';
 import { FolderService } from '../../services/folder.service';
 import { Folder } from '../../models/Folder';
+import { LanguageService } from '../../services/language.service';
 
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import BpmnViewer from 'bpmn-js/lib/Viewer';
@@ -89,7 +90,8 @@ export class FileListComponent implements OnInit, OnDestroy {
     private customPropertyService: CustomPropertyService,
     private authService: AuthenticationService,
     private router: Router,
-    private folderService: FolderService
+    private folderService: FolderService,
+    private languageService: LanguageService
   ) { }
 
   ngOnInit() {
@@ -185,13 +187,13 @@ export class FileListComponent implements OnInit, OnDestroy {
         console.log('Loaded folders successfully:', folders.length);
         this.folders = folders;
         this.isLoading = false;
-        this.showNotification(`Loaded ${this.appFile.length} files and ${folders.length} folders successfully`, 'success');
+        this.showNotification(`${this.translate('fileList.loadedFilesSuccessfully')} ${this.appFile.length} files and ${folders.length} folders`, 'success');
       },
       error: (error: any) => {
         console.error('Error loading folders:', error);
         this.folders = [];
         this.isLoading = false;
-        this.showNotification('Error loading folders: ' + (error.message || 'Unknown error'), 'error');
+        this.showNotification(this.translate('fileList.errorLoadingFolders') + (error.message || this.translate('fileList.unknown')), 'error');
       }
     });
   }
@@ -206,7 +208,7 @@ export class FileListComponent implements OnInit, OnDestroy {
         this.appFile = files;
         this.originalAppFile = [...files];
         this.isLoading = false;
-        this.showNotification(`Loaded ${files.length} files successfully`, 'success');
+        this.showNotification(`${this.translate('fileList.loadedFilesSuccessfully')} ${files.length} files`, 'success');
       },
       error: (error: any) => {
         console.error('Error loading files:', error);
@@ -226,7 +228,7 @@ export class FileListComponent implements OnInit, OnDestroy {
 
   openFile(file: AppFile): void {
     if (!this.canView || !file.id) {
-      this.showNotification('Cannot open this file.', 'error');
+      this.showNotification(this.translate('fileList.cannotOpenFile'), 'error');
       return;
     }
 
@@ -242,7 +244,7 @@ export class FileListComponent implements OnInit, OnDestroy {
 
   deleteFile(id: number): void {
     if (!this.canDelete) {
-      this.showNotification('You do not have permission to delete files.', 'error');
+      this.showNotification(this.translate('fileList.noPermissionDeleteFiles'), 'error');
       return;
     }
 
@@ -252,11 +254,11 @@ export class FileListComponent implements OnInit, OnDestroy {
     const dialogRef = this.popup.open(DialogBoxComponent, {
       width: '400px',
       data: {
-        title: 'Delete File',
-        message: `Are you sure you want to delete "${fileName}"?`,
-        warning: 'This action cannot be undone.',
-        confirmText: 'Delete',
-        cancelText: 'Cancel',
+        title: this.translate('fileList.deleteFile'),
+        message: `${this.translate('fileList.deleteConfirm')} "${fileName}"?`,
+        warning: this.translate('fileList.deleteWarning'),
+        confirmText: this.translate('fileList.delete'),
+        cancelText: this.translate('fileList.cancel'),
         type: 'warning'
       }
     });
@@ -266,7 +268,7 @@ export class FileListComponent implements OnInit, OnDestroy {
         this.fileService.deleteFile(id).subscribe({
           next: () => {
             this.appFile = this.appFile.filter(file => file.id !== id);
-            this.showNotification('File deleted successfully', 'success');
+            this.showNotification(this.translate('fileList.fileDeleted'), 'success');
           },
           error: (error: any) => {
             this.showNotification('Error deleting file: ' + error.message, 'error');
@@ -992,17 +994,17 @@ export class FileListComponent implements OnInit, OnDestroy {
   }
 
   getFileTypeLabel(file: AppFile): string {
-    if (file.fileName?.endsWith('.bpmn')) return 'BPMN';
-    if (file.fileName?.endsWith('.xml')) return 'XML';
-    return 'DIAGRAM';
+    if (file.fileName?.endsWith('.bpmn')) return this.translate('fileList.bpmn');
+    if (file.fileName?.endsWith('.xml')) return this.translate('fileList.xml');
+    return this.translate('fileList.diagram');
   }
 
   getEmptyStateTitle(): string {
-    return 'No files found';
+    return this.translate('fileList.emptyStateTitle');
   }
 
   getEmptyStateMessage(): string {
-    return 'Start by creating your first BPMN diagram or uploading an existing one.';
+    return this.translate('fileList.emptyStateMessage');
   }
 
   formatFileSize(bytes: number): string {
@@ -1015,7 +1017,7 @@ export class FileListComponent implements OnInit, OnDestroy {
 
   formatDate(dateString: string | Date | undefined): string {
     if (!dateString) {
-      return 'Unknown';
+      return this.translate('fileList.unknown');
     }
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -1093,7 +1095,7 @@ export class FileListComponent implements OnInit, OnDestroy {
   }
 
   get currentFolderName(): string {
-    return this.currentFolder ? this.currentFolder.folderName : 'All Files';
+    return this.currentFolder ? this.currentFolder.folderName : this.translate('fileList.allFiles');
   }
 
   isInFolder(): boolean {
@@ -1289,5 +1291,15 @@ export class FileListComponent implements OnInit, OnDestroy {
 
   trackByFolderId(index: number, folder: Folder): any {
     return folder.id || index;
+  }
+
+  // =================== TRANSLATION METHODS ===================
+
+  getTranslation(key: string, params?: any): string {
+    return this.languageService.instant(key, params);
+  }
+
+  translate(key: string, params?: any): string {
+    return this.getTranslation(key, params);
   }
 }
